@@ -1,0 +1,6 @@
+*.o
+*.hi
+*.pbm
+*.png
+
+gen_pic
