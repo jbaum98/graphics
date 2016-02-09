@@ -1,7 +1,7 @@
 module Pbm (
   writePbm,
-  blankPic,
-  mathPic,
+  blankPic, mathPic,
+  red, green, blue,
   Picture, Pixel, Coord,
   Pair(..), Triple(..)
   )
@@ -13,10 +13,19 @@ maxPixel :: ColorVal
 maxPixel = 256
 
 type ColorVal = Integer
-data Pixel = Pixel { red :: ColorVal, green :: ColorVal, blue :: ColorVal }
+type Pixel = Triple ColorVal
 type Picture = [[Pixel]]
 type Coord = Pair Integer
 type PixelFunc = Coord -> ColorVal
+
+red   :: Pixel -> ColorVal
+red   (Triple r _ _) = r
+
+green :: Pixel -> ColorVal
+green (Triple _ g _) = g
+
+blue  :: Pixel -> ColorVal
+blue  (Triple _ _ b) = b
 
 apF :: Functor f => f (a -> b) -> a -> f b
 apF fs val = fmap ($val) fs
@@ -44,10 +53,10 @@ pixelStr = unwords . map show . colorList
 
 blankPic :: Coord -> Picture
 blankPic (Pair xr yr) = take (fromInteger yr) $ repeat oneRow
-  where oneRow = take (fromInteger xr) $ repeat (Pixel 0 0 0)
+  where oneRow = take (fromInteger xr) $ repeat (Triple 0 0 0)
 
 mathPic :: Triple PixelFunc -> Coord -> Picture
 mathPic funcs (Pair xr yr) =
   [[ genPixel (Pair x y) | x <- [0..xr]] | y <- [0..yr]]
-  where genPixel = uncurryTriple Pixel . apF cappedFuncs
+  where genPixel = apF cappedFuncs
         cappedFuncs = fmap ((`mod` maxPixel).) funcs
