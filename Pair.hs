@@ -6,7 +6,7 @@ where
 
 import Control.Applicative
 
-data Pair a = Pair a a deriving Show
+data Pair a = Pair a a deriving (Show, Eq)
 
 instance Functor Pair where
   fmap f (Pair a b) = Pair (f a) (f b)
@@ -15,7 +15,7 @@ instance Applicative Pair where
   pure f = Pair f f
   Pair f1 f2 <*> Pair a b = Pair (f1 a) (f2 b)
 
-data Triple a = Triple a a a deriving Show
+data Triple a = Triple a a a deriving (Show, Eq)
 
 instance Functor Triple where
   fmap f (Triple a b c) = Triple (f a) (f b) (f c)
