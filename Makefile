@@ -1,9 +1,15 @@
-.PHONY: gen_pic
-gen_pic:
-	ghc -O2 --make gen_pic.hs
+.PHONY: run convert clean
 
-run: gen_pic
-	./gen_pic && convert pic.pbm pic.png
+main:
+	ghc -O2 -ilib --make Main.hs -o main
+
+run: pic.pbm
+pic.pbm: main
+	./main
+
+convert: pic.png
+pic.png: pic.pbm
+	convert pic.pbm pic.png
 
 clean:
 	rm -f gen_pic *.hi *.o
