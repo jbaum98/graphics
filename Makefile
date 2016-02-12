@@ -12,4 +12,4 @@ pic.png: pic.pbm
 	convert pic.pbm pic.png
 
 clean:
-	rm -f gen_pic *.hi *.o
+	rm -f main pic.pbm pic.png *.hi *.o
