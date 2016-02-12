@@ -3,6 +3,6 @@
 *.pbm
 *.png
 
-gen_pic
+main
 
 TAGS
