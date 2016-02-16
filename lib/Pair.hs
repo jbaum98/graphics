@@ -4,8 +4,6 @@ module Pair (
   )
 where
 
-import Control.Applicative
-
 data Pair a = Pair a a deriving (Show, Eq)
 
 instance Functor Pair where
