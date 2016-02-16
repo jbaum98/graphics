@@ -1,62 +1,37 @@
 module Pbm (
   writePbm,
-  blankPic, mathPic,
-  red, green, blue,
-  Picture, Pixel, Point,
+  module Picture, module Line,
   Pair(..), Triple(..)
   )
 where
 
-import Pair
-
-maxPixel :: ColorVal
-maxPixel = 256
-
-type ColorVal = Integer
-type Pixel = Triple ColorVal
-type Picture = [[Pixel]]
-type Point = Pair Integer
-type PixelFunc = Point -> ColorVal
-
-red   :: Pixel -> ColorVal
-red   (Triple r _ _) = r
-
-green :: Pixel -> ColorVal
-green (Triple _ g _) = g
-
-blue  :: Pixel -> ColorVal
-blue  (Triple _ _ b) = b
-
-apF :: Functor f => f (a -> b) -> a -> f b
-apF fs val = fmap ($val) fs
-
-size :: Picture -> Point
-size = apF (Pair xres yres)
-  where xres = fromIntegral . length . head
-        yres = fromIntegral . length
+import Picture
+import Line
+import Control.Applicative ((<$>))
+import qualified Data.Vector as V
 
 writePbm :: FilePath -> Picture -> IO ()
 writePbm path pic = foldl (>>) clearFile $ map (appendFileLine path) pieces
   where pieces = ["P3", xresStr, yresStr, show maxPixel, pixels]
-        Pair xresStr yresStr = fmap show $ size pic
+        Pair xresStr yresStr = show <$> size pic
         pixels = pixelsStr pic
-        appendFileLine file s = (appendFile file s) >> (appendFile file "\n")
+        appendFileLine file s = appendFile file s >> appendFile file "\n"
         clearFile = writeFile path ""
 
 pixelsStr :: Picture -> String
-pixelsStr = unlines . map rowStr
-  where rowStr = unwords . map pixelStr
+pixelsStr = unlinesV . fmap rowStr
+  where rowStr = unwordsV . fmap pixelStr
 
 pixelStr :: Pixel -> String
-pixelStr = unwords . map show . colorList
-  where colorList =  apF [red, green, blue]
+pixelStr = unwordsV . fmap show . colorList
+  where colorList =  apF $ V.fromList [getRed, getGreen, getBlue]
 
-blankPic :: Point -> Picture
-blankPic (Pair xr yr) = take (fromInteger yr) $ repeat oneRow
-  where oneRow = take (fromInteger xr) $ repeat (Triple 0 0 0)
+unwordsV :: V.Vector String -> String
+unwordsV v = case V.length v of
+  0 ->  ""
+  _ -> V.foldr1 (\w s -> w ++ ' ':s) v
 
-mathPic :: Triple PixelFunc -> Point -> Picture
-mathPic funcs (Pair xr yr) =
-  [[ genPixel (Pair x y) | x <- [0..xr]] | y <- [0..yr]]
-  where genPixel = apF cappedFuncs
-        cappedFuncs = fmap ((`mod` maxPixel).) funcs
+unlinesV :: V.Vector String -> String
+unlinesV v = case V.length v of
+  0 ->  ""
+  _ -> V.foldr1 (\w s -> w ++ '\n':s) v

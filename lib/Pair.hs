@@ -1,8 +1,4 @@
-module Pair (
-  Pair(..), Triple(..),
-  uncurryPair, uncurryTriple
-  )
-where
+module Pair where
 
 import Control.Applicative
 
