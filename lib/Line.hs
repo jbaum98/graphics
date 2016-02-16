@@ -1,10 +1,11 @@
-module Line where
+module Line (
+  first,
+  module Point
+  ) where
 
-import           Pair
-import           Pbm
+import Point
 
 type LineState = (Point, Integer)
-
 
 first :: Point -> Point -> [Point]
 first p1 p2 = takeWhile (\p -> getX p <= getX p2) $ map getPoint $ first' p1 p2

@@ -1,4 +1,4 @@
-.PHONY: run convert clean
+.PHONY: main run convert clean
 
 main:
 	ghc -O2 -ilib --make Main.hs -o main

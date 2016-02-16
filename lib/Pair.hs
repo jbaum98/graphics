@@ -1,8 +1,6 @@
-module Pair (
-  Pair(..), Triple(..),
-  uncurryPair, uncurryTriple
-  )
-where
+module Pair where
+
+import Control.Applicative
 
 data Pair a = Pair a a deriving (Show, Eq)
 
