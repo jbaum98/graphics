@@ -1,11 +1,19 @@
 module Line (
-  first,
+  drawLine,
   module Point
   ) where
 
+import Picture
 import Point
+import Control.Applicative ((<$>))
 
 type LineState = (Point, Integer)
+
+drawLine :: Point -> Point -> Picture -> Picture
+drawLine p1 p2 = foldl (.) id $ setPixel black <$> line p1 p2
+
+line :: Point -> Point -> [Point]
+line = first
 
 first :: Point -> Point -> [Point]
 first p1 p2 = takeWhile (\p -> getX p <= getX p2) $ map getPoint $ first' p1 p2

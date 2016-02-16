@@ -1,14 +1,12 @@
 module Pbm (
   writePbm,
-  blankPic, mathPic,
-  red, green, blue,
-  Picture, Pixel, Point,
+  module Picture, module Line,
   Pair(..), Triple(..)
   )
 where
 
 import Picture
-import State
+import Line
 import Control.Applicative ((<$>))
 import qualified Data.Vector as V
 
@@ -26,7 +24,7 @@ pixelsStr = unlinesV . fmap rowStr
 
 pixelStr :: Pixel -> String
 pixelStr = unwordsV . fmap show . colorList
-  where colorList =  apF $ V.fromList [red, green, blue]
+  where colorList =  apF $ V.fromList [getRed, getGreen, getBlue]
 
 unwordsV :: V.Vector String -> String
 unwordsV v = case V.length v of

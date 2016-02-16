@@ -1,7 +1,8 @@
 module Pixel (
   ColorVal, Pixel, Triple(..),
   maxPixel,
-  red, green, blue
+  getRed, getGreen, getBlue,
+  black, white
   ) where
 
 import Pair
@@ -12,11 +13,17 @@ type Pixel = Triple ColorVal
 maxPixel :: ColorVal
 maxPixel = 256
 
-red   :: Pixel -> ColorVal
-red   (Triple r _ _) = r
+getRed   :: Pixel -> ColorVal
+getRed   (Triple r _ _) = r
 
-green :: Pixel -> ColorVal
-green (Triple _ g _) = g
+getGreen :: Pixel -> ColorVal
+getGreen (Triple _ g _) = g
 
-blue  :: Pixel -> ColorVal
-blue  (Triple _ _ b) = b
+getBlue  :: Pixel -> ColorVal
+getBlue  (Triple _ _ b) = b
+
+black :: Pixel
+black = Triple 0 0 0
+
+white :: Pixel
+white = Triple maxPixel maxPixel maxPixel
