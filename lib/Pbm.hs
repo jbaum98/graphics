@@ -7,8 +7,9 @@ where
 
 import Picture
 import Line
+import Data.Foldable
 import Control.Applicative ((<$>))
-import qualified Data.Vector as V
+import Prelude hiding (unlines, unwords, foldl, foldr)
 
 writePbm :: FilePath -> Picture -> IO ()
 writePbm path pic = foldl (>>) clearFile $ map (appendFileLine path) pieces
@@ -19,19 +20,15 @@ writePbm path pic = foldl (>>) clearFile $ map (appendFileLine path) pieces
         clearFile = writeFile path ""
 
 pixelsStr :: Picture -> String
-pixelsStr = unlinesV . fmap rowStr
-  where rowStr = unwordsV . fmap pixelStr
+pixelsStr = unlines . fmap rowStr
+  where rowStr = unwords . fmap pixelStr
 
 pixelStr :: Pixel -> String
-pixelStr = unwordsV . fmap show . colorList
-  where colorList =  apF $ V.fromList [getRed, getGreen, getBlue]
+pixelStr = unwords . fmap show . colorList
+  where colorList =  apF $ fromList [getRed, getGreen, getBlue]
 
-unwordsV :: V.Vector String -> String
-unwordsV v = case V.length v of
-  0 ->  ""
-  _ -> V.foldr1 (\w s -> w ++ ' ':s) v
+unChar :: Foldable f => Char -> f String -> String
+unChar c = foldr (\w s -> w ++ c:s) ""
 
-unlinesV :: V.Vector String -> String
-unlinesV v = case V.length v of
-  0 ->  ""
-  _ -> V.foldr1 (\w s -> w ++ '\n':s) v
+unwords = unChar ' '
+unlines = unChar '\n'
