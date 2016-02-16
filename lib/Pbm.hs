@@ -30,5 +30,8 @@ pixelStr = unwords . fmap show . colorList
 unChar :: Foldable f => Char -> f String -> String
 unChar c = foldr (\w s -> w ++ c:s) ""
 
+unwords :: Foldable f => f String -> String
 unwords = unChar ' '
+
+unlines :: Foldable f => f String -> String
 unlines = unChar '\n'
