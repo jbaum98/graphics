@@ -1,7 +1,8 @@
 module Point (
   Coord, Point, Pair(..),
+  uncurryPair,
   translate
-             ) where
+  ) where
 
 import Pair
 import Control.Applicative
