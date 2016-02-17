@@ -2,4 +2,6 @@
 ;;; For more information see (info "(emacs) Directory Variables")
 
 ((haskell-mode
-  (flycheck-ghc-search-path "lib")))
+  (flycheck-ghc-search-path "lib")
+  (flycheck-disabled-checkers haskell-stack-ghc)
+  (flycheck-mode . t)))
