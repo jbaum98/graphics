@@ -1,15 +1,16 @@
 module Picture (
   Picture,
   apF, size, blankPic, mathPic,
-  setPixel,
+  setPixel, setPixels, setColor, setOrigin,
   module X,
   fromList
   ) where
 
-import Point as X
-import Pixel as X
-import Prelude hiding (length, head, replicate)
-import Data.Sequence
+import           Control.Applicative ((<$>), (<*>))
+import           Data.Sequence       hiding (zip)
+import           Pixel               as X
+import           Point               as X
+import           Prelude             hiding (head, length, replicate)
 
 type Picture = Seq (Seq Pixel)
 type PixelFunc = Point -> ColorVal
@@ -36,3 +37,15 @@ setPixel :: Pixel -> Point -> Picture -> Picture
 setPixel pixel (Pair x y) pic = update (fromInteger y) newRow pic
   where newRow = update (fromInteger x) pixel oldRow
         oldRow = index pic $ fromInteger y
+
+setPixels :: [Pixel] -> [Point] -> Picture -> Picture
+setPixels pixels points = foldl (.) id setAllPixels
+  where setAllPixels = map (uncurry setPixel) pairs
+        pairs = zip pixels points
+
+setColor :: Pixel -> [Point] -> Picture -> Picture
+setColor color = setPixels (repeat color)
+
+setOrigin :: Point -> (Point -> Point)
+setOrigin o = translate o . reflect
+  where reflect = (<*>) $ Pair id negate

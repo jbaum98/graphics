@@ -1,5 +1,5 @@
 module Line (
-  drawLine,
+  drawLine, line,
   module Point
   ) where
 
@@ -10,7 +10,7 @@ import Control.Applicative ((<$>))
 type LineState = (Point, Integer)
 
 drawLine :: Point -> Point -> Picture -> Picture
-drawLine p1 p2 = foldl (.) id $ setPixel black <$> line p1 p2
+drawLine p1 p2 = setColor black $ line p1 p2
 
 line :: Point -> Point -> [Point]
 line = first
