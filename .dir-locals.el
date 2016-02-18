@@ -4,4 +4,4 @@
 ((haskell-mode
   (flycheck-ghc-search-path "lib")
   (flycheck-disabled-checkers haskell-stack-ghc)
-  (flycheck-mode . t)))
+  (global-flycheck-mode . t)))
