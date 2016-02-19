@@ -7,7 +7,7 @@ module Point (
 import Pair
 import Control.Applicative
 
-type Coord = Integer
+type Coord = Int
 type Point = Pair Coord
 
 translate :: Point -> Point -> Point

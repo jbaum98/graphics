@@ -20,13 +20,13 @@ apF fs val = fmap ($val) fs
 
 size :: Picture -> Point
 size = apF (Pair xres yres)
-  where xres = fromIntegral . length . head
-        yres = fromIntegral . length
+  where xres = length . head
+        yres = length
         head = flip index 1
 
 blankPic :: Point -> Picture
-blankPic (Pair xr yr) = replicate (fromInteger yr + 1) oneRow
-  where oneRow = replicate (fromInteger xr + 1) white
+blankPic (Pair xr yr) = replicate (yr + 1) oneRow
+  where oneRow = replicate (xr + 1) white
 
 mathPic :: Triple PixelFunc -> Point -> Picture
 mathPic funcs (Pair xr yr) = fromList [fromList [ genPixel (Pair x y) | x <- [0..xr]] | y <- [0..yr] ]
@@ -34,9 +34,9 @@ mathPic funcs (Pair xr yr) = fromList [fromList [ genPixel (Pair x y) | x <- [0.
         cappedFuncs = fmap ((`mod` maxPixel).) funcs
 
 setPixel :: Pixel -> Point -> Picture -> Picture
-setPixel pixel (Pair x y) pic = update (fromInteger y) newRow pic
-  where newRow = update (fromInteger x) pixel oldRow
-        oldRow = index pic $ fromInteger y
+setPixel pixel (Pair x y) pic = update y newRow pic
+  where newRow = update x pixel oldRow
+        oldRow = index pic y
 
 setPixels :: [Pixel] -> [Point] -> Picture -> Picture
 setPixels pixels points = foldl (.) id setAllPixels
