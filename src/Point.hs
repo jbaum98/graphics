@@ -5,7 +5,6 @@ module Point (
   ) where
 
 import Pair
-import Control.Applicative
 
 type Coord = Int
 type Point = Pair Coord
