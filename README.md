@@ -24,3 +24,6 @@ To compile, run `make`.
 To generate the NetPBM image file, run `make run`.
 
 To generate a PNG image file, run `make convert`.
+
+To generate Haddock documentation which is similar to JDOC,
+run `make doc`, and to view it run `make doc-view`
