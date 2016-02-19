@@ -1,34 +1,90 @@
 module Line (
-  drawLine,
+  line,
   module Point
   ) where
 
-import Picture
 import Point
-import Control.Applicative ((<$>))
 
-type LineState = (Point, Integer)
-
-drawLine :: Point -> Point -> Picture -> Picture
-drawLine p1 p2 = foldl (.) id $ setPixel black <$> line p1 p2
+data Octant = First | Second | Third   | Fourth |
+              Fifth | Sixth  | Seventh | Eighth
 
 line :: Point -> Point -> [Point]
-line = first
+line p1@(Pair x1 y1) p2@(Pair x2 y2) = line' oct p1 p2
+  where oct = if x2 > x1
+              then if y2 > y1 -- Right Half
+                   then if dx > dy -- Q1
+                        then First
+                        else Second
+                   else if dx > -dy -- Q4
+                        then Eighth
+                        else Seventh
+              else if y2 > y1 -- Left Half
+                   then if -dx > dy -- Q2
+                        then Fourth
+                        else Third
+                   else if -dx > -dy -- Q3
+                        then Fifth
+                        else Sixth
+        dx = x2 - x1
+        dy = y2 - y1
 
-first :: Point -> Point -> [Point]
-first p1 p2 = takeWhile (\p -> getX p <= getX p2) $ map getPoint $ first' p1 p2
-  where getX (Pair x _) = x
-        getPoint (p, _) = p
+line' :: Octant -> Point -> Point -> [Point]
+line' Third  p1 p2 = line' Seventh p2 p1
+line' Fourth p1 p2 = line' Eighth  p2 p1
+line' Fifth  p1 p2 = line' First   p2 p1
+line' Sixth  p1 p2 = line' Second  p2 p1
 
-first' :: Point -> Point -> [LineState]
-first' p1@(Pair x1 y1) p2@(Pair x2 y2) = (p1, di) : map nextState (first' p1 p2)
+line' oct p1@(Pair x1 y1) p2@(Pair x2 y2) = iter di [p1]
   where a = y2 - y1
         b = x1 - x2
-        di = a + a + b
-        nextState :: LineState -> LineState
-        nextState lastState = (nextPoint, newD)
-          where (Pair x y, d) = lastState
-                nextPoint = if d > 0 then upper else lower
-                upper = Pair (x+1) (y+1)
-                lower = Pair (x+1) y
-                newD =  if d > 0 then d + a + a + b + b else d + a + a
+        di = case oct of First   -> a + a + b
+                         Second  -> a + a + b
+                         Seventh -> a + a - b
+                         Eighth  -> a + a - b
+        iter = iterMaker oct p2 a b
+
+iterMaker :: (Num a, Ord a) => Octant -> Point -> a -> a -> (a -> [Point] -> [Point])
+iterMaker oct p2 a b = iter
+  where iter oldD soFar@(lastP:_)
+          | stillGoing lastP = iter newD (nextP:soFar)
+          | otherwise = soFar
+          where (newD, nextP) =
+                  if oldD `ord` 0
+                  then (oldD + dOffset + extraD, upper lastP)
+                  else (oldD + dOffset,          lower lastP)
+
+        stillGoing lastP = case oct of First   -> getX lastP < getX p2
+                                       Second  -> getY lastP < getY p2
+                                       Seventh -> getY lastP > getY p2
+                                       Eighth  -> getX lastP < getX p2
+
+        ord = case oct of First   -> (>)
+                          Second  -> (<)
+                          Seventh -> (>)
+                          Eighth  -> (<)
+
+        dOffset = case oct of First   -> a + a
+                              Second  -> b + b
+                              Seventh -> -b - b
+                              Eighth  -> a + a
+
+        extraD = case oct of First   -> b + b
+                             Second  -> a + a
+                             Seventh -> a + a
+                             Eighth  -> -b - b
+
+        upper (Pair x y) = case oct of First   -> Pair (x+1) (y+1)
+                                       Second  -> Pair (x+1) (y+1)
+                                       Seventh -> Pair (x+1) (y-1)
+                                       Eighth  -> Pair (x+1) (y-1)
+
+        lower (Pair x y) = case oct of First   -> Pair (x+1)  y
+                                       Second  -> Pair  x    (y+1)
+                                       Seventh -> Pair  x    (y-1)
+                                       Eighth  -> Pair (x+1)  y
+
+getX :: Pair a -> a
+getX (Pair x _) = x
+
+getY :: Pair a -> a
+getY (Pair _ y) = y
