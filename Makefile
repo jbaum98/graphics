@@ -1,15 +1,13 @@
 .PHONY: main run convert clean
 
-main:
-	ghc -O2 -ilib --make Main.hs -o main
+all:
+	stack build
 
-run: pic.pbm
-pic.pbm: main
-	./main
+run: all
+	stack exec graphics-exe
 
-convert: pic.png
-pic.png: pic.pbm
+convert: run
 	convert pic.pbm pic.png
 
 clean:
-	rm -f main pic.pbm pic.png *.hi *.o
+	rm -f pic.pbm pic.png

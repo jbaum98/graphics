@@ -3,6 +3,6 @@
 *.pbm
 *.png
 
-main
-
 TAGS
+
+.stack-work
