@@ -1,19 +1,19 @@
-module Pbm (
-  writePbm,
-  module Picture, module Line,
-  Pair(..), Triple(..)
-  )
-where
+{-|
+Module      : Pbm
+Description : NetPBM format
+
+Write a 'Picture' to a file in the NetPBM format.
+-}
+module Pbm (writePbm) where
 
 import Picture
-import Line
+import Pixel (maxPixel)
 import Data.Sequence
 import Data.ByteString.Builder
-import Data.Foldable
 import Data.Monoid
-import Control.Applicative ((<$>))
 import System.IO
 
+-- |Write a 'Picture' to a 'FilePath' in the NetPBM format
 writePbm :: FilePath -> Picture -> IO ()
 writePbm path pic = clearFile >> writeContents
   where writeContents = do
@@ -22,6 +22,8 @@ writePbm path pic = clearFile >> writeContents
           hClose h
         clearFile = writeFile path ""
 
+-- |Produce the 'Builder' string representation of the file
+-- for a 'Picture' including the header
 fileContents :: Picture -> Builder
 fileContents pic = foldMap (<> char7 ' ') pieces <> char7 '\n' <> pixels
   where pieces = [string7 "P3", xresStr, yresStr, intDec maxPixel]
