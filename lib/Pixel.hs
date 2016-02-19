@@ -9,7 +9,7 @@ module Pixel (
 import Pair
 import Control.Applicative((<$>))
 
-type ColorVal = Integer
+type ColorVal = Int
 type Pixel = Triple ColorVal
 
 maxPixel :: ColorVal

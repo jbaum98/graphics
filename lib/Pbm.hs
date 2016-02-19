@@ -20,8 +20,8 @@ writePbm path pic = clearFile >> writeContents
           h <- openFile path WriteMode
           hPutBuilder h fileContents
         fileContents = join (char7 ' ') id pieces <> pixels
-        pieces = [string7 "P3", xresStr, yresStr, intDec . fromIntegral $ maxPixel]
-        Pair xresStr yresStr = intDec . fromIntegral <$> size pic
+        pieces = [string7 "P3", xresStr, yresStr, intDec maxPixel]
+        Pair xresStr yresStr = intDec <$> size pic
         pixels = renderPic pic
         clearFile = writeFile path ""
 
@@ -35,4 +35,4 @@ renderRow :: Seq Pixel -> Builder
 renderRow = foldMap renderPixel
 
 renderPixel :: Pixel -> Builder
-renderPixel = join (char7 ' ') intDec . fmap fromIntegral
+renderPixel = join (char7 ' ') intDec
