@@ -18,12 +18,15 @@ writePbm :: FilePath -> Picture -> IO ()
 writePbm path pic = clearFile >> writeContents
   where writeContents = do
           h <- openFile path WriteMode
-          hPutBuilder h fileContents
-        fileContents = join (char7 ' ') id pieces <> pixels
-        pieces = [string7 "P3", xresStr, yresStr, intDec maxPixel]
+          hPutBuilder h $ fileContents pic
+          hClose h
+        clearFile = writeFile path ""
+
+fileContents :: Picture -> Builder
+fileContents pic = join (char7 ' ') id pieces <> char7 '\n' <> pixels
+  where pieces = [string7 "P3", xresStr, yresStr, intDec maxPixel]
         Pair xresStr yresStr = intDec <$> size pic
         pixels = renderPic pic
-        clearFile = writeFile path ""
 
 join :: (Foldable f, Monoid m) => m -> (a -> m) -> f a -> m
 join c func = foldMap (\x -> func x <> c)

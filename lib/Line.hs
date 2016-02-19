@@ -4,7 +4,6 @@ module Line (
   ) where
 
 import Point
-import Control.Applicative ((<$>))
 
 data Octant = First | Second | Third   | Fourth |
               Fifth | Sixth  | Seventh | Eighth
