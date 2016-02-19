@@ -1,4 +1,7 @@
+import Picture
 import Pbm
+import Pixel
+import Line
 
 main :: IO ()
 main = writePbm "pic.pbm" pic
@@ -22,8 +25,7 @@ main = writePbm "pic.pbm" pic
           (Pair 0 (-300), Pair (-1000) (-700), blue),
           -- Sixth - indigo
           (Pair 0 0,      Pair (-700) (-1000), indigo),
-          (Pair 0 300,    Pair (-700) (-1000), indigo),
-          -- Seventh - violet
+          (Pair 0 300,    Pair (-700) (-1000), indigo), -- Seventh - violet
           (Pair 0 0,      Pair 700 (-1000),    yellow),
           (Pair 0 300,    Pair 700 (-1000),    yellow),
           -- Eighth - black
@@ -44,4 +46,4 @@ main = writePbm "pic.pbm" pic
 
 drawLines :: Point -> [(Point, Point, Pixel)] -> Picture -> Picture
 drawLines origin points = foldl (.) id $ map drawLine points
-  where drawLine (p1, p2, color) = setColor color . fmap (setOrigin origin) $ line p1 p2
+  where drawLine (p1, p2, color) = setColor color . fmap (transformOrigin origin) $ line p1 p2

@@ -1,16 +1,30 @@
+{-|
+Module      : Pixel
+Description : RGB pixel type
+
+The 'Pixel' type represents an RGB pixel.
+-}
 module Pixel (
-  ColorVal, Pixel, Triple(..),
+  ColorVal, Pixel,
+  Triple(..),
   maxPixel,
+  -- * Getters
   getRed, getGreen, getBlue,
+  -- * Color Constants
   black, white, red, orange, yellow, green, blue,
   indigo, violet, pink, turqouise
   ) where
 
-import Pair
+import Pair (Triple(..))
 
+-- |The type of a singe color value
 type ColorVal = Int
+
+-- |An RGB pixel consists of three numbers
+-- representing the amount of red, green, and blue respectively
 type Pixel = Triple ColorVal
 
+-- |The maximum color value
 maxPixel :: ColorVal
 maxPixel = 255
 
@@ -23,10 +37,17 @@ getGreen (Triple _ g _) = g
 getBlue  :: Pixel -> ColorVal
 getBlue  (Triple _ _ b) = b
 
-relative :: RealFrac a => a -> a -> ColorVal
+-- |Convert a color value from a system with a different maximum color value
+-- to the system with a maximum color value of 'maxPixel'
+relative :: RealFrac a
+           => a -- ^The maximum color value of the original system
+           -> a -- ^The color value to be converted in the original system
+           -> ColorVal -- ^The converted color value for our system
 relative oldMax oldVal = round $ fromIntegral maxPixel * oldVal / oldMax
 
-
+-- |Convert from a 255-based color system
+-- This allows us to specify colors in the very common 255-based system
+-- and still switch to a new system only by changing 'maxPixel'
 rel255 :: RealFrac a => a -> ColorVal
 rel255 = relative 255
 

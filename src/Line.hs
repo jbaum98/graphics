@@ -1,6 +1,12 @@
+{-|
+Module      : Line
+Description : Draw lines between two 'Point's
+
+Provides an implementation of Bresenham's Line Algorithm.
+-}
 module Line (
-  line,
-  module Point
+  Point, Pair(..),
+  line
   ) where
 
 import Point
@@ -8,7 +14,10 @@ import Point
 data Octant = First | Second | Third   | Fourth |
               Fifth | Sixth  | Seventh | Eighth
 
-line :: Point -> Point -> [Point]
+-- |Draw a line between two 'Point's
+line :: Point -- ^Starting point
+     -> Point -- ^Ending point
+     -> [Point] -- ^A list of 'Point's that make up the line
 line p1@(Pair x1 y1) p2@(Pair x2 y2) = line' oct p1 p2
   where oct = if x2 > x1
               then if y2 > y1 -- Right Half
@@ -82,9 +91,3 @@ iterMaker oct p2 a b = iter
                                        Second  -> Pair  x    (y+1)
                                        Seventh -> Pair  x    (y-1)
                                        Eighth  -> Pair (x+1)  y
-
-getX :: Pair a -> a
-getX (Pair x _) = x
-
-getY :: Pair a -> a
-getY (Pair _ y) = y
