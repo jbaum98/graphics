@@ -1,9 +1,5 @@
 module Pair where
 
-import Data.Monoid
-import Data.Foldable
-import Control.Applicative
-
 data Pair a = Pair a a deriving (Show, Eq)
 
 instance Functor Pair where

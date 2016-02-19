@@ -9,9 +9,7 @@ import Picture
 import Line
 import Data.Sequence
 import Data.ByteString.Builder
-import Data.Foldable
 import Data.Monoid
-import Control.Applicative ((<$>))
 import System.IO
 
 writePbm :: FilePath -> Picture -> IO ()

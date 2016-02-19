@@ -1,5 +1,4 @@
 import Pbm
-import Control.Applicative ((<$>), (<*>))
 
 main :: IO ()
 main = writePbm "pic.pbm" pic

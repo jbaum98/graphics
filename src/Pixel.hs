@@ -7,7 +7,6 @@ module Pixel (
   ) where
 
 import Pair
-import Control.Applicative((<$>))
 
 type ColorVal = Int
 type Pixel = Triple ColorVal

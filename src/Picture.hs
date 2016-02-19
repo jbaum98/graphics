@@ -6,11 +6,10 @@ module Picture (
   fromList
   ) where
 
-import           Control.Applicative ((<$>), (<*>))
-import           Data.Sequence       hiding (zip)
-import           Pixel               as X
-import           Point               as X
-import           Prelude             hiding (head, length, replicate)
+import Data.Sequence hiding (zip)
+import Pixel         as X
+import Point         as X
+import Prelude       hiding (head, length, replicate)
 
 type Picture = Seq (Seq Pixel)
 type PixelFunc = Point -> ColorVal
