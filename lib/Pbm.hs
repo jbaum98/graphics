@@ -7,31 +7,32 @@ where
 
 import Picture
 import Line
+import Data.Sequence
+import Data.ByteString.Builder
 import Data.Foldable
+import Data.Monoid
 import Control.Applicative ((<$>))
-import Prelude hiding (unlines, unwords, foldl, foldr)
+import System.IO
 
 writePbm :: FilePath -> Picture -> IO ()
-writePbm path pic = foldl (>>) clearFile $ map (appendFileLine path) pieces
-  where pieces = ["P3", xresStr, yresStr, show maxPixel, pixels]
-        Pair xresStr yresStr = show <$> size pic
-        pixels = pixelsStr pic
-        appendFileLine file s = appendFile file s >> appendFile file "\n"
+writePbm path pic = clearFile >> writeContents
+  where writeContents = do
+          h <- openFile path WriteMode
+          hPutBuilder h fileContents
+        fileContents = join (char7 ' ') id pieces <> pixels
+        pieces = [string7 "P3", xresStr, yresStr, intDec . fromIntegral $ maxPixel]
+        Pair xresStr yresStr = intDec . fromIntegral <$> size pic
+        pixels = renderPic pic
         clearFile = writeFile path ""
 
-pixelsStr :: Picture -> String
-pixelsStr = unlines . fmap rowStr
-  where rowStr = unwords . fmap pixelStr
+join :: (Foldable f, Monoid m) => m -> (a -> m) -> f a -> m
+join c func = foldMap (\x -> func x <> c)
 
-pixelStr :: Pixel -> String
-pixelStr = unwords . fmap show . colorList
-  where colorList =  apF $ fromList [getRed, getGreen, getBlue]
+renderPic :: Picture -> Builder
+renderPic = join (char7 '\n') renderRow
 
-unChar :: Foldable f => Char -> f String -> String
-unChar c = foldr (\w s -> w ++ c:s) ""
+renderRow :: Seq Pixel -> Builder
+renderRow = foldMap renderPixel
 
-unwords :: Foldable f => f String -> String
-unwords = unChar ' '
-
-unlines :: Foldable f => f String -> String
-unlines = unChar '\n'
+renderPixel :: Pixel -> Builder
+renderPixel = join (char7 ' ') intDec . fmap fromIntegral

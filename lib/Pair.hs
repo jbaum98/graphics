@@ -1,5 +1,7 @@
 module Pair where
 
+import Data.Monoid
+import Data.Foldable
 import Control.Applicative
 
 data Pair a = Pair a a deriving (Show, Eq)
@@ -11,6 +13,9 @@ instance Applicative Pair where
   pure f = Pair f f
   Pair f1 f2 <*> Pair a b = Pair (f1 a) (f2 b)
 
+instance Foldable Pair where
+  foldMap m (Pair a1 a2) = m a1 `mappend` m a2
+
 data Triple a = Triple a a a deriving (Show, Eq)
 
 instance Functor Triple where
@@ -19,6 +24,9 @@ instance Functor Triple where
 instance Applicative Triple where
   pure f = Triple f f f
   Triple f1 f2 f3 <*> Triple a b c = Triple (f1 a) (f2 b) (f3 c)
+
+instance Foldable Triple where
+  foldMap m (Triple a1 a2 a3) = m a1 `mappend` m a2 `mappend` m a3
 
 uncurryPair :: (a -> a -> b) -> Pair a -> b
 uncurryPair f (Pair a1 a2) = f a1 a2
