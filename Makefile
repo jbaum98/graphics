@@ -1,11 +1,15 @@
+PIC_NAME := pic
+PPM_NAME := $(addsuffix .ppm, $(PIC_NAME))
+PNG_NAME := $(addsuffix .png, $(PIC_NAME))
+
 all:
 	stack build
 
 run: all
-	stack exec graphics-exe
+	stack exec graphics-exe $(PPM_NAME)
 
 convert: run
-	convert pic.pbm pic.png
+	convert $(PPM_NAME) $(PNG_NAME)
 
 doc:
 	stack exec which HsColour >/dev/null || stack install hscolour
@@ -16,4 +20,4 @@ doc-view: doc
 	open "$$DOC_PATH" 2>/dev/null || xdg-open "$$DOC_PATH" 2>/dev/null
 
 clean:
-	rm -f pic.pbm pic.png
+	rm -f *.ppm *.png
