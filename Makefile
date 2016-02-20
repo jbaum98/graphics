@@ -1,5 +1,5 @@
 all:
-	stack build
+	stack build || stack setup && stack build
 
 run: all
 	stack exec graphics-exe
@@ -16,4 +16,5 @@ doc-view: doc
 	open "$$DOC_PATH" 2>/dev/null || xdg-open "$$DOC_PATH" 2>/dev/null
 
 clean:
+	stack clean
 	rm -f pic.pbm pic.png
