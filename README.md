@@ -7,7 +7,7 @@ The only required tool is [Stack](http://haskellstack.org).
 
 It can be installed on OSX with Homebrew
 
-    $ brew install stack
+    $ brew install haskell-stack
 
 And on Ubuntu 14.04 with `apt`
 
