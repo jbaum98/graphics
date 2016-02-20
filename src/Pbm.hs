@@ -7,7 +7,7 @@ Write a 'Picture' to a file in the NetPBM format.
 module Pbm (writePbm) where
 
 import Picture
-import Pixel (maxPixel)
+import Color (maxColor)
 import Data.Sequence
 import Data.ByteString.Builder
 import Data.Monoid
@@ -26,15 +26,15 @@ writePbm path pic = clearFile >> writeContents
 -- for a 'Picture' including the header
 fileContents :: Picture -> Builder
 fileContents pic = foldMap (<> char7 ' ') pieces <> char7 '\n' <> pixels
-  where pieces = [string7 "P3", xresStr, yresStr, intDec maxPixel]
+  where pieces = [string7 "P3", xresStr, yresStr, intDec maxColor]
         Pair xresStr yresStr = intDec <$> size pic
         pixels = renderPic pic
 
 renderPic :: Picture -> Builder
 renderPic = foldMap $ (<> char7 '\n') . renderRow
 
-renderRow :: Seq Pixel -> Builder
-renderRow = foldMap renderPixel
+renderRow :: Seq Color -> Builder
+renderRow = foldMap renderColor
 
-renderPixel :: Pixel -> Builder
-renderPixel = foldMap $ (<> char7 ' ') . intDec
+renderColor :: Color -> Builder
+renderColor = foldMap $ (<> char7 ' ') . intDec
