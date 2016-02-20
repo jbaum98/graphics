@@ -1,6 +1,6 @@
 import Picture
 import Pbm
-import Pixel
+import Color
 import Line
 
 main :: IO ()
@@ -44,6 +44,6 @@ main = writePbm "pic.pbm" pic
           ]
         pic = drawLines origin lineList $ blankPic maxPoint
 
-drawLines :: Point -> [(Point, Point, Pixel)] -> Picture -> Picture
+drawLines :: Point -> [(Point, Point, Color)] -> Picture -> Picture
 drawLines origin points = foldl (.) id $ map drawLine points
   where drawLine (p1, p2, color) = setColor color . fmap (transformOrigin origin) $ line p1 p2
