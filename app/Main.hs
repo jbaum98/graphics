@@ -2,9 +2,18 @@ import Picture
 import Pbm
 import Color
 import Line
+import System.Environment
 
 main :: IO ()
-main = writePbm "pic.pbm" pic
+main = do args <- getArgs
+          respond args
+
+respond :: [String] -> IO ()
+respond [] = putStrLn "You didn't supply any args\nUsage: ./main <output file>"
+respond (path:_) = makeFile path
+
+makeFile :: String -> IO ()
+makeFile path = writePbm path pic
   where maxPoint = Pair 1000 1000
         origin = (round . (/2) . fromIntegral) <$> maxPoint
         lineList = [

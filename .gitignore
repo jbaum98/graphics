@@ -1,6 +1,6 @@
 *.o
 *.hi
-*.pbm
+*.ppm
 *.png
 
 TAGS
