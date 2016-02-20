@@ -7,7 +7,7 @@ The only required tool is [Stack](http://haskellstack.org).
 
 It can be installed on OSX with Homebrew
 
-    $ brew install stack
+    $ brew install haskell-stack
 
 And on Ubuntu 14.04 with `apt`
 
@@ -25,5 +25,5 @@ To generate the NetPBM image file, run `make run`.
 
 To generate a PNG image file, run `make convert`.
 
-To generate Haddock documentation which is similar to JDOC,
+To generate [Haddock](https://www.haskell.org/haddock/doc/html/index.html) documentation which is similar to [JavaDoc](http://www.oracle.com/technetwork/articles/java/index-jsp-135444.html),
 run `make doc`, and to view it run `make doc-view`

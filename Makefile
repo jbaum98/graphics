@@ -3,7 +3,7 @@ PPM_NAME := $(addsuffix .ppm, $(PIC_NAME))
 PNG_NAME := $(addsuffix .png, $(PIC_NAME))
 
 all:
-	stack build
+	stack build || stack setup && stack build
 
 run: all
 	stack exec graphics-exe $(PPM_NAME)
@@ -20,4 +20,5 @@ doc-view: doc
 	open "$$DOC_PATH" 2>/dev/null || xdg-open "$$DOC_PATH" 2>/dev/null
 
 clean:
+	stack clean
 	rm -f *.ppm *.png
