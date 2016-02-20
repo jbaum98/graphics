@@ -5,22 +5,22 @@ Description : Create and manipulate 'Picture's
 Provides various methods to create and manipulate 'Picture's.
 -}
 module Picture (
-  Picture, Point, Pixel,
+  Picture, Point, Color,
   Pair(..), Triple(..),
   size,
   -- * Creation
   blankPic, mathPic,
   -- * Manipulation
-  setPixel, setPixels, setColor, transformOrigin
+  setPointColor, setColors, setColor, transformOrigin
   ) where
 
-import Pixel
+import Color
 import Point
 import Data.Sequence hiding (zip)
 import Prelude hiding (head, length, replicate)
 
 -- |A picture is a two-dimensional 'Seq' of pixels
-type Picture = Seq (Seq Pixel)
+type Picture = Seq (Seq Color)
 
 -- |Compute the size of a 'Picture'
 size :: Picture ->
@@ -44,26 +44,26 @@ mathPic :: Triple (Point -> ColorVal) -- ^The three functions to produce the RGB
           -> Point                   -- ^The size of the 'Picture'
           -> Picture
 mathPic funcs (Pair xr yr) =
-  fromList [fromList [ genPixel (Pair x y) | x <- [0..xr]] | y <- [0..yr] ]
-  where genPixel = (cappedFuncs <*>) . pure
-        cappedFuncs = fmap ((`mod` maxPixel).) funcs
+  fromList [fromList [ genColor (Pair x y) | x <- [0..xr]] | y <- [0..yr] ]
+  where genColor = (cappedFuncs <*>) . pure
+        cappedFuncs = fmap ((`mod` maxColor).) funcs
 
--- |Set the value of a single 'Point' in a 'Picture' to a given 'Pixel'
-setPixel :: Pixel -> Point -> Picture -> Picture
-setPixel pixel (Pair x y) pic = update y newRow pic
+-- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
+setPointColor :: Color -> Point -> Picture -> Picture
+setPointColor pixel (Pair x y) pic = update y newRow pic
   where newRow = update x pixel oldRow
         oldRow = index pic y
 
 -- |Set the value of a every 'Point' in a list
--- to the corresponding 'Pixel' at the corresponding position in the '[Pixel]'.
-setPixels :: [Pixel] -> [Point] -> Picture -> Picture
-setPixels pixels points = foldl (.) id setAllPixels
-  where setAllPixels = map (uncurry setPixel) pairs
+-- to the corresponding 'Color' at the corresponding position in the '[Color]'.
+setColors :: [Color] -> [Point] -> Picture -> Picture
+setColors pixels points = foldl (.) id setAllColors
+  where setAllColors = map (uncurry setPointColor) pairs
         pairs = zip pixels points
 
--- |Set every 'Point' in a list to a single 'Pixel'
-setColor :: Pixel -> [Point] -> Picture -> Picture
-setColor color = setPixels (repeat color)
+-- |Set every 'Point' in a list to a single 'Color'
+setColor :: Color -> [Point] -> Picture -> Picture
+setColor color = setColors (repeat color)
 
 -- |transform a 'Point' so that a given 'Point'is the origin
 -- instead of the top-left corner
