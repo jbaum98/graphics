@@ -1,8 +1,8 @@
 module Main where
 
-import Pbm
+import Pair
 import System.Environment
-import MakeFile
+import GenerateFile
 
 main :: IO ()
 main = do args <- getArgs
@@ -10,4 +10,4 @@ main = do args <- getArgs
 
 respond :: [String] -> IO ()
 respond [] = putStrLn "You didn't supply any args\nUsage: ./main <output file>"
-respond (path:_) = makeFile path
+respond (path:_) = generateFile path (Pair 1000 1000)
