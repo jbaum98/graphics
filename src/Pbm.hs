@@ -31,10 +31,13 @@ fileContents pic = foldMap (<> char7 ' ') pieces <> char7 '\n' <> pixels
         pixels = renderPic pic
 
 renderPic :: Picture -> Builder
+{-# INLINE renderPic #-}
 renderPic = foldMap $ (<> char7 '\n') . renderRow
 
 renderRow :: Seq Color -> Builder
+{-# INLINE renderRow #-}
 renderRow = foldMap renderColor
 
 renderColor :: Color -> Builder
+{-# INLINE renderColor #-}
 renderColor = foldMap $ (<> char7 ' ') . intDec
