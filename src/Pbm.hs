@@ -4,7 +4,7 @@ Description : NetPBM format
 
 Write a 'Picture' to a file in the NetPBM format.
 -}
-module Pbm (writePbm) where
+module Pbm (writePbm, fileContents) where
 
 import Picture
 import Color (maxColor)
@@ -18,6 +18,8 @@ writePbm :: FilePath -> Picture -> IO ()
 writePbm path pic = clearFile >> writeContents
   where writeContents = do
           h <- openFile path WriteMode
+          hSetBinaryMode h True
+          hSetBuffering h $ BlockBuffering Nothing
           hPutBuilder h $ fileContents pic
           hClose h
         clearFile = writeFile path ""
@@ -31,10 +33,13 @@ fileContents pic = foldMap (<> char7 ' ') pieces <> char7 '\n' <> pixels
         pixels = renderPic pic
 
 renderPic :: Picture -> Builder
+{-# INLINE renderPic #-}
 renderPic = foldMap $ (<> char7 '\n') . renderRow
 
 renderRow :: Seq Color -> Builder
+{-# INLINE renderRow #-}
 renderRow = foldMap renderColor
 
 renderColor :: Color -> Builder
+{-# INLINE renderColor #-}
 renderColor = foldMap $ (<> char7 ' ') . intDec
