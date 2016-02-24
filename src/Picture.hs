@@ -23,7 +23,7 @@ import Control.Monad
 import Control.Applicative
 import Prelude (($), (.), mod, negate, zip, uncurry, id, repeat, (>=), (<), (||), flip)
 
--- |A picture is a two-dimensional 'Seq' of pixels
+-- |A 'Picture' is a grid of pixels
 type Row = Vector Color
 type Picture = Vector Row
 
