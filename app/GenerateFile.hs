@@ -4,11 +4,14 @@ import Picture
 import Pbm
 import Color
 import Line
+import Control.Monad (foldM)
 
 generateFile :: String -> Point -> IO ()
-generateFile path = writePbm path . pic
+generateFile path maxPoint= do
+  p <- pic maxPoint
+  writePbm path p
 
-pic :: Point -> Picture
+pic :: Point -> IO Picture
 pic maxPoint = drawLines origin lineList $ blankPic maxPoint
   where origin = (round . (/2) . fromIntegral) <$> maxPoint
         lineList = [
@@ -48,6 +51,6 @@ pic maxPoint = drawLines origin lineList $ blankPic maxPoint
           (Pair 0 0, Pair 500 (-500),          turqouise)
           ]
 
-drawLines :: Point -> [(Point, Point, Color)] -> Picture -> Picture
-drawLines origin points = foldl (.) id $ map drawLine points
+drawLines :: Point -> [(Point, Point, Color)] -> Picture -> IO Picture
+drawLines origin points pic = foldM (flip drawLine) pic points
   where drawLine (p1, p2, color) = setColor color . fmap (transformOrigin origin) $ line p1 p2

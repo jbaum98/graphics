@@ -8,7 +8,6 @@ module Pbm (writePbm, fileContents) where
 
 import Picture
 import Color (maxColor)
-import Data.Sequence
 import Data.ByteString.Builder
 import Data.Monoid
 import System.IO
@@ -36,7 +35,7 @@ renderPic :: Picture -> Builder
 {-# INLINE renderPic #-}
 renderPic = foldMap $ (<> char7 '\n') . renderRow
 
-renderRow :: Seq Color -> Builder
+renderRow :: Row -> Builder
 {-# INLINE renderRow #-}
 renderRow = foldMap renderColor
 
