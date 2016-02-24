@@ -2,6 +2,9 @@
 *.hi
 *.ppm
 *.png
+*.html
+*.prof
+bin/*
 
 TAGS
 

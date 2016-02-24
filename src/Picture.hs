@@ -5,22 +5,27 @@ Description : Create and manipulate 'Picture's
 Provides various methods to create and manipulate 'Picture's.
 -}
 module Picture (
-  Picture, Point, Color,
+  Picture, Row, Point, Color,
   Pair(..), Triple(..),
   size,
   -- * Creation
-  blankPic, mathPic,
+   blankPic, mathPic,
   -- * Manipulation
-  setPointColor, setColors, setColor, transformOrigin
+   setPointColor, setColors, setColor, transformOrigin
   ) where
 
 import Color
 import Point
-import Data.Sequence hiding (zip)
-import Prelude hiding (head, length, replicate)
+import Data.Vector hiding (zip, foldM)
+import Data.Vector.Mutable (read, write)
+import Control.Monad.Primitive
+import Control.Monad
+import Control.Applicative
+import Prelude (($), (.), mod, negate, zip, uncurry, id, repeat, (>=), (<), (||), flip)
 
--- |A picture is a two-dimensional 'Seq' of pixels
-type Picture = Seq (Seq Color)
+-- |A 'Picture' is a grid of pixels
+type Row = Vector Color
+type Picture = Vector Row
 
 -- |Compute the size of a 'Picture'
 size :: Picture ->
@@ -30,7 +35,6 @@ size :: Picture ->
 size = (Pair xres yres <*>) . pure
   where xres = length . head
         yres = length
-        head = flip index 1
 
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
@@ -43,26 +47,32 @@ blankPic (Pair xr yr) = replicate yr oneRow
 mathPic :: Triple (Point -> ColorVal) -- ^The three functions to produce the RGB values
           -> Point                   -- ^The size of the 'Picture'
           -> Picture
-mathPic funcs (Pair xr yr) =
-  fromList [fromList [ genColor (Pair x y) | x <- [0..xr]] | y <- [0..yr] ]
-  where genColor = (cappedFuncs <*>) . pure
-        cappedFuncs = fmap ((`mod` maxColor).) funcs
+mathPic funcs (Pair xr yr) = generate yr genRow
+  where genRow y = generate xr (\x -> pointToColor $ Pair x y)
+        pointToColor = (cappedFuncs <*>) . pure
+        cappedFuncs = ((`mod` maxColor).) <$> funcs
 
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
-setPointColor :: Color -> Point -> Picture -> Picture
-setPointColor pixel (Pair x y) pic = update y newRow pic
-  where newRow = update x pixel oldRow
-        oldRow = index pic y
+setPointColor :: PrimMonad m => Color -> Point -> Picture -> m (Picture)
+setPointColor _ (Pair x y) pic | x >= xLen || x < 0 || y >= yLen || y < 0 = return pic
+  where Pair xLen yLen = size pic
+setPointColor pixel (Pair x y) pic = do
+  mutPic <- unsafeThaw pic
+  oldRow <- read mutPic y
+  mutOldRow <- unsafeThaw oldRow
+  write mutOldRow x pixel
+  newRow <- unsafeFreeze mutOldRow
+  write mutPic y newRow
+  unsafeFreeze mutPic
 
 -- |Set the value of a every 'Point' in a list
 -- to the corresponding 'Color' at the corresponding position in the '[Color]'.
-setColors :: [Color] -> [Point] -> Picture -> Picture
-setColors pixels points = foldl (.) id setAllColors
-  where setAllColors = map (uncurry setPointColor) pairs
-        pairs = zip pixels points
+setColors :: PrimMonad m => [Color] -> [Point] -> Picture -> m (Picture)
+setColors pixels points pic = foldM (flip . uncurry $ setPointColor) pic pairs
+  where pairs = zip pixels points
 
 -- |Set every 'Point' in a list to a single 'Color'
-setColor :: Color -> [Point] -> Picture -> Picture
+setColor :: PrimMonad m => Color -> [Point] -> Picture -> m (Picture)
 setColor color = setColors (repeat color)
 
 -- |transform a 'Point' so that a given 'Point'is the origin
