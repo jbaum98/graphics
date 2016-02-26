@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 {-|
 Module      : Pair
 Description : Types to represent a fixed number objects of the same type
@@ -10,8 +12,14 @@ These types provide fixed-length homogenous containers.
 -}
 module Pair (Pair(..), Triple(..), uncurryPair, uncurryTriple) where
 
+import Control.DeepSeq
+import GHC.Generics
+
 -- |Represents two objects of the same type
-data Pair a = Pair a a deriving (Show, Eq)
+data Pair a = Pair a a
+            deriving (Show, Eq, Generic)
+
+instance NFData a => NFData (Pair a)
 
 instance Functor Pair where
   fmap f (Pair a b) = Pair (f a) (f b)
@@ -24,7 +32,10 @@ instance Foldable Pair where
   foldMap m (Pair a1 a2) = m a1 `mappend` m a2
 
 -- |Represents three objects of the same type
-data Triple a = Triple a a a deriving (Show, Eq)
+data Triple a = Triple a a a
+              deriving (Show, Eq, Generic)
+
+instance NFData a => NFData (Triple a)
 
 instance Functor Triple where
   fmap f (Triple a b c) = Triple (f a) (f b) (f c)

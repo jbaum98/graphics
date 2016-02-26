@@ -9,7 +9,7 @@ import Control.Monad (foldM)
 generateFile :: String -> Point -> IO ()
 generateFile path maxPoint= do
   p <- pic maxPoint
-  writePbm path p
+  writePbmFile path p
 
 pic :: Point -> IO Picture
 pic maxPoint = drawLines origin lineList $ blankPic maxPoint

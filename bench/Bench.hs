@@ -1,24 +1,38 @@
-import Criterion.Main
-import Pair
-import GenerateFile (pic)
-import Pbm (writePbm)
-import Picture (blankPic)
+import           Criterion.Main
+import           Point
+import           GenerateFile (pic)
+import           Pbm (writePbm)
+import           Picture (blankPic)
+import           System.IO.Temp
+import           Control.DeepSeq
+
+sizes :: [Coord]
+sizes = [100, 500, 1000]
+
+benchIO :: NFData a
+        => (Point -> IO a) -> Coord -> Benchmark
+benchIO f size = bench (showPair point) . nfIO . f $ point
+  where
+    point = pure size
+
+benchPure :: NFData a
+          => (Point -> a) -> Coord -> Benchmark
+benchPure f size = bench (showPair point) . nf f $ point
+  where
+    point = pure size
 
 main :: IO ()
-main = defaultMain [
-         bgroup "rendering lines" [
-             bench "100x100"   $ whnf pic (Pair 100 100)
-           , bench "500x500"   $ whnf pic (Pair 500 500)
-           , bench "1000x1000" $ whnf pic (Pair 1000 1000)
-             ]
-         , bgroup "create blank picture" [
-              bench "100x100"   $ whnf blankPic (Pair 100 100)
-            , bench "500x500"   $ whnf blankPic (Pair 500 500)
-            , bench "1000x1000" $ whnf blankPic (Pair 1000 1000)
-             ]
-         , bgroup "writing" [
-               bench "100x100"   . nfIO . writePbm "bench.ppm" . blankPic $ Pair 100 100
-             , bench "500x500"   . nfIO . writePbm "bench.ppm" . blankPic $ Pair 500 500
-             , bench "1000x1000" . nfIO . writePbm "bench.ppm" . blankPic $ Pair 1000 1000
-             ]
-          ]
+main =
+  defaultMain
+    [ bgroup "rendering lines" $ map (benchIO pic) sizes
+    , bgroup "create blank picture" $ map (benchPure blankPic) sizes
+    , bgroup "writing tmp" $ map (benchIO writeBlank) sizes
+    ]
+  where
+    writeBlank =
+      withTempFile "." "graphics-benchmark.ppm" .
+      const . writePbm . blankPic
+
+showPair :: Show a
+         => Pair a -> String
+showPair (Pair x y) = show x ++ "x" ++ show y
