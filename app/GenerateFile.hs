@@ -5,7 +5,7 @@ import Pbm
 import Picture
 
 generateFile :: String -> Point -> IO ()
-generateFile path = writePbm path . pic
+generateFile path = writePbmFile path . pic
 
 pic :: Point -> Picture
 pic maxPoint = mathPic (Triple f1 f2 f3) maxPoint

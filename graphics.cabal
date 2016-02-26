@@ -45,6 +45,9 @@ benchmark graphics-benchmark
   build-depends:       base
                      , graphics
                      , criterion
+                     , temporary
+                     , directory
+                     , deepseq
   other-modules:       GenerateFile
   default-language:    Haskell2010
 
