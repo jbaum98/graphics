@@ -32,4 +32,4 @@ translate :: Point -- ^The 'Point' by which to translate, for example
                   -- @translate (Pair 1 1)@ would translate up 1 and right 1
           -> Point -- ^The 'Point' to be translated
           -> Point -- ^The resulting point
-translate by p = (+) <$> by <*> p
+translate = (+)
