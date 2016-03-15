@@ -13,8 +13,9 @@ module Picture (
     Picture,
     solidPic,
     blankPic,
+    mathPic,
     size,
-    (!),
+    (!), elems,
     setPointColor,
     setColor,
     transformOrigin,
@@ -27,22 +28,24 @@ import           Color
 import           Point
 import           Line
 import           Utils (compose)
-import           Data.Array hiding ((!))
+import           Data.Array.Unboxed
 import           Data.Array.MArray
 import           Data.Array.Unsafe
 import           Data.Array.ST
-import qualified Data.Array as A ((!))
 import           Control.Monad.Primitive
 import           Control.Monad.ST
 
 -- |A 'Picture' is a grid of pixels
-type Picture = Array (Coord, Coord) Color
+type Picture = UArray (Coord, Coord, Int) ColorVal
 
 -- |Create a solid 'Picture' of a single 'Color
 solidPic :: Color
          -> Point -- ^The size of the 'Picture'
          -> Picture
-solidPic color maxPoint = listArray (toSize maxPoint) . repeat $ color
+solidPic color maxPoint = listArray (toSize maxPoint) . cycleColor $ color
+  where
+    cycleColor = cycle . toList
+    toList (Triple r g b) = [r, g, b]
 
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
@@ -50,17 +53,26 @@ blankPic :: Point -- ^The size of the 'Picture'
 blankPic = solidPic white
 
 -- |Create a picture that generates the RGB values for each 'Point' from three different functions
-mathPic :: Triple (Point -> ColorVal) -- ^The three functions to produce the RGB values
+mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
         -> Point                   -- ^The size of the 'Picture'
         -> Picture
-mathPic funcs maxPoint = listArray (toSize maxPoint) $ map pointToColor (allPoints maxPoint)
+mathPic funcs maxPoint = listArray (toSize maxPoint) (allPoints maxPoint)
   where
-    allPoints (Pair xr yr) = [ Pair x y
+    allPoints :: Point -> [ColorVal]
+    allPoints (Pair xr yr) = [ colorFunc x y ci
                              | x <- [0 .. xr - 1]
-                             , y <- [0 .. yr - 1] ]
-    pointToColor p = fmap ($p) cappedFuncs
-    cappedFuncs :: Triple (Point -> ColorVal)
-    cappedFuncs = ((`mod` maxColor) .) <$> funcs
+                             , y <- [0 .. yr - 1]
+                             , ci <- [0 .. 2] ]
+    colorFunc :: Coord -> Coord -> Int -> ColorVal
+    colorFunc x y ci = colorValFunc x y `mod` maxColor
+      where
+        colorValFunc = funcs `tIndex` ci
+
+tIndex :: Triple a -> Int -> a
+(Triple x _ _) `tIndex` 0 = x
+(Triple _ x _) `tIndex` 1 = x
+(Triple _ _ x) `tIndex` 2 = x
+_ `tIndex` _ = error "Tried to access an index greater than 2 of a Triple"
 
 -- |Compute the size of a 'Picture'
 size :: Picture
@@ -69,31 +81,29 @@ size :: Picture
 -- index is out of bounds.
 size pic = Pair xsize ysize
   where
-    (_, (xsize, ysize)) = bounds pic
+    (_, (xsize, ysize, _)) = bounds pic
 
-(!) :: Picture -> Point -> Color
-pic !point = pic A.! (toTup point)
+toTup :: Pair a -> Int -> (a, a, Int)
+toTup (Pair x y) ci = (x, y, ci)
 
-fromTup :: (a, a) -> Pair a
-fromTup (x, y) = Pair x y
-
-toTup :: Pair a -> (a, a)
-toTup (Pair x y) = (x, y)
-
-toSize :: Pair Coord -> ((Coord, Coord), (Coord, Coord))
-toSize point = ((0, 0), toTup point)
+toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
+toSize point = ((0, 0, 0), toTup point 3)
 
 inBounds :: Point -> Picture -> Bool
-inBounds point pic = inRange (bounds pic) (toTup point)
+inBounds point pic = inRange (bounds pic) (toTup point 0)
 
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
 setPointColor :: Color -> Point -> Picture -> Picture
 setPointColor _ point pic
   | not $ inBounds point pic = pic
 setPointColor color point pic = unsafeInlineST $ do
-  mutPic <- unsafeThaw pic :: ST s (STArray s (Coord, Coord) Color)
-  writeArray mutPic (toTup point) color
+  mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
+  writeArray mutPic (toTup point 0) (color `tIndex` 0)
+  writeArray mutPic (toTup point 1) (color `tIndex` 1)
+  writeArray mutPic (toTup point 2) (color `tIndex` 2)
   unsafeFreeze mutPic
+  {-where
+    writeColorVal p ci = writeArray p (toTup point ci) (color `tIndex` ci)-}
 
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Point] -> Picture -> Picture
