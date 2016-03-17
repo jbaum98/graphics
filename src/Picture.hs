@@ -96,14 +96,12 @@ inBounds point pic = inRange (bounds pic) (toTup point 0)
 setPointColor :: Color -> Point -> Picture -> Picture
 setPointColor _ point pic
   | not $ inBounds point pic = pic
-setPointColor color point pic = unsafeInlineST $ do
+setPointColor color point pic = runST $ do
   mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
   writeArray mutPic (toTup point 0) (color `tIndex` 0)
   writeArray mutPic (toTup point 1) (color `tIndex` 1)
   writeArray mutPic (toTup point 2) (color `tIndex` 2)
   unsafeFreeze mutPic
-  {-where
-    writeColorVal p ci = writeArray p (toTup point ci) (color `tIndex` ci)-}
 
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Point] -> Picture -> Picture
