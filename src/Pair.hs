@@ -12,6 +12,7 @@ These types provide fixed-length homogenous containers.
 -}
 module Pair (Pair(..), Triple(..), uncurryPair, uncurryTriple) where
 
+import Control.Applicative
 import Control.DeepSeq
 import GHC.Generics
 
@@ -31,6 +32,14 @@ instance Applicative Pair where
 instance Foldable Pair where
   foldMap m (Pair a1 a2) = m a1 `mappend` m a2
 
+instance Num a => Num (Pair a) where
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  abs = liftA abs
+  negate = liftA negate
+  signum = liftA signum
+  fromInteger = pure . fromInteger
+
 -- |Represents three objects of the same type
 data Triple a = Triple a a a
               deriving (Show, Eq, Generic)
@@ -46,6 +55,14 @@ instance Applicative Triple where
 
 instance Foldable Triple where
   foldMap m (Triple a1 a2 a3) = m a1 `mappend` m a2 `mappend` m a3
+
+instance Num a => Num (Triple a) where
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  abs = liftA abs
+  negate = liftA negate
+  signum = liftA signum
+  fromInteger = pure . fromInteger
 
 -- |Converts a function taking two arguments of the same type
 -- to a function taking single 'Pair'

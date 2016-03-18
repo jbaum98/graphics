@@ -24,7 +24,7 @@ benchPure f size = bench (showPair point) . nf f $ point
 main :: IO ()
 main =
   defaultMain
-    [ bgroup "rendering lines" $ map (benchIO pic) sizes
+    [ bgroup "rendering lines" $ map (benchPure pic) sizes
     , bgroup "create blank picture" $ map (benchPure blankPic) sizes
     , bgroup "writing tmp" $ map (benchIO writeBlank) sizes
     ]
