@@ -32,11 +32,14 @@ import           Data.Array.Unboxed
 import           Data.Array.MArray
 import           Data.Array.Unsafe
 import           Data.Array.ST
-import           Control.Monad.Primitive
 import           Control.Monad.ST
+import           Control.DeepSeq
 
 -- |A 'Picture' is a grid of pixels
 type Picture = UArray (Coord, Coord, Int) ColorVal
+
+instance (Ix a, NFData a, NFData b, IArray UArray b) => NFData (UArray a b) where
+  rnf x = rnf (bounds x, elems x)
 
 -- |Create a solid 'Picture' of a single 'Color
 solidPic :: Color
