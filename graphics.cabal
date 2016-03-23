@@ -15,8 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Line, Pbm, Picture, Color, Point, Pair, Utils
-  build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive
+  exposed-modules:     Line, Pbm, Picture, Color, Point, Pair, Utils, Matrix, EdgeMatrix
+  build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive, repa
   default-language:    Haskell2010
 
 executable graphics-exe
