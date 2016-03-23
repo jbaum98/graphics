@@ -21,7 +21,7 @@ module Picture (
     transformOrigin,
     centerPoint,
     drawColorLine,
-    drawLine,
+    drawLine, transLine,
     ) where
 
 import           Color
@@ -87,10 +87,10 @@ size pic = Pair xsize ysize
     (_, (xsize, ysize, _)) = bounds pic
 
 toTup :: Pair a -> Int -> (a, a, Int)
-toTup (Pair x y) ci = (x, y, ci)
+toTup (Pair x y) ci = (y, x, ci)
 
 toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
-toSize point = ((0, 0, 0), toTup point 3)
+toSize point = ((1, 1, 0), toTup point 2)
 
 inBounds :: Point -> Picture -> Bool
 inBounds point pic = inRange (bounds pic) (toTup point 0)
@@ -101,10 +101,9 @@ setPointColor _ point pic
   | not $ inBounds point pic = pic
 setPointColor color point pic = runST $ do
   mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
-  writeArray mutPic (toTup point 0) (color `tIndex` 0)
-  writeArray mutPic (toTup point 1) (color `tIndex` 1)
-  writeArray mutPic (toTup point 2) (color `tIndex` 2)
+  mapM_ (mutColorVal mutPic) [0..2]
   unsafeFreeze mutPic
+  where mutColorVal mp n = writeArray mp (toTup point n) (color `tIndex` n)
 
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Point] -> Picture -> Picture
@@ -124,9 +123,12 @@ centerPoint = fmap (round . half . fromIntegral) . size
     half = (/ (2 :: Double))
 
 drawColorLine :: Color -> Point -> Point -> Picture -> Picture
-drawColorLine color p1 p2 pic = setColor color (line p1' p2') $ pic
-  where
-    Pair p1' p2' = (transformOrigin $ centerPoint pic) <$> Pair p1 p2
+drawColorLine color p1 p2 pic = setColor color (transLine o p1 p2) pic
+  where o = centerPoint pic
+
+transLine :: Point -> Point -> Point -> [Point]
+transLine o p1 p2 = map t $ line p1 p2
+  where t = transformOrigin o
 
 drawLine :: Point -> Point -> Picture -> Picture
 drawLine = drawColorLine black
