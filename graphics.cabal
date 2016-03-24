@@ -15,8 +15,13 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Line, Pbm, Picture, Color, Point, Pair, Utils, Matrix, EdgeMatrix
+  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix
   build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive, repa
+  other-modules:       Matrix.Base
+                       Matrix.Mult
+                       Matrix.Transform
+                       Matrix.EdgeMatrix
+                       Matrix.D3Point
   default-language:    Haskell2010
 
 executable graphics-exe

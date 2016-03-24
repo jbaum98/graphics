@@ -1,56 +1,59 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module EdgeMatrix (
-  EdgeMatrix, Coord,
-  -- * Construction
-  empty, fromPoints, addEdge,
-  -- * Retrieving 'Point's
-  toPoints, toPointPairs, drawMatLinesColor, drawMatLines
-  ) where
+module Matrix.EdgeMatrix (
+    EdgeMatrix,
+    -- * Point Representation
+    D3Point,
+    D3Coord,
+    Triple(..),
+    -- * Construction
+    fromPoints,
+    addEdge,
+    -- * Retrieving 'Point's
+    toPoints,
+    toPointPairs,
+    drawMatLinesColor,
+    drawMatLines,
+    ) where
 
-import           Matrix
+import           Matrix.Base
+import           Matrix.D3Point
+import           D2Point
 import           Pair
 import           Color
 import           Picture (Picture, drawColorLine)
 import           Utils
 import           Data.Array.Repa
-import qualified Line as L
 import           Control.Monad.ST
 import           Prelude hiding ((++))
 
-type Coord = Double
+type EdgeMatrix = Matrix D D3Coord
 
-type Point = Triple Coord
-
-type EdgeMatrix = Matrix Coord
-
-type D2Point = L.Point
-
-fromPoints :: [Point] -> EdgeMatrix
+fromPoints :: [D3Point] -> EdgeMatrix
 fromPoints ps = fromFunction (ix2 4 len) f
   where
     f (Z :. r :. c) = pointToMatF r (ps !! c)
     len = length ps
 
-pointToMatF :: Int -> Point -> Coord
+pointToMatF :: Int -> D3Point -> D3Coord
 pointToMatF 0 (Triple x _ _) = x
 pointToMatF 1 (Triple _ y _) = y
 pointToMatF 2 (Triple _ _ z) = z
 pointToMatF 3 (Triple _ _ _) = 1
 pointToMatF _ (Triple _ _ _) = 0
 
-singlePointMat :: Point -> EdgeMatrix
+singlePointMat :: D3Point -> EdgeMatrix
 singlePointMat p = fromFunction (ix2 4 1) f
   where
     f (Z :. r :. _) = pointToMatF r p
 
-addPoint :: Point -> EdgeMatrix -> EdgeMatrix
+addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
 addPoint = flip (++) . singlePointMat
 
-addEdge :: Point -> Point -> EdgeMatrix -> EdgeMatrix
+addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
 addEdge p1 p2 m = addPoint p2 $ addPoint p1 m
 
-getPoint :: Source r Coord => Array r DIM2 Coord -> Int -> D2Point
+getPoint :: Source r D3Coord => Array r DIM2 D3Coord -> Int -> D2Point
 getPoint s n = pointFromList . fmap round . toList . slice s $ (Any :. n)
 
 pointFromList :: [a] -> Pair a

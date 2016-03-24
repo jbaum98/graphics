@@ -5,11 +5,13 @@ Description : Draw lines between two 'Point's
 Provides an implementation of Bresenham's Line Algorithm.
 -}
 module Line (
-  Point, Pair(..),
+  D2Point, Pair(..),
   line
   ) where
 
-import Point
+import D2Point
+
+type Point = D2Point
 
 data Octant = First | Second | Third   | Fourth |
               Fifth | Sixth  | Seventh | Eighth

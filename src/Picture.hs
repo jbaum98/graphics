@@ -8,7 +8,7 @@ Provides various methods to create and manipulate 'Picture's.
 -}
 module Picture (
     module Color,
-    module Point,
+    module D2Point,
     module Line,
     Picture,
     solidPic,
@@ -25,7 +25,7 @@ module Picture (
     ) where
 
 import           Color
-import           Point
+import           D2Point
 import           Line
 import           Utils (compose)
 import           Data.Array.Unboxed
@@ -34,6 +34,9 @@ import           Data.Array.Unsafe
 import           Data.Array.ST
 import           Control.Monad.ST
 import           Control.DeepSeq
+
+type Coord = D2Coord
+type Point = D2Point
 
 -- |A 'Picture' is a grid of pixels
 type Picture = UArray (Coord, Coord, Int) ColorVal
