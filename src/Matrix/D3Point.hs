@@ -5,5 +5,8 @@ module Matrix.D3Point (
 
 import Pair
 
+-- |Represents a single coordinate of a point in 3D space
 type D3Coord = Double
+
+-- |Represents a point in 3D space
 type D3Point = Triple D3Coord

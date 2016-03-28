@@ -1,14 +1,27 @@
+{-|
+Module      : Matrix.Base
+Description : Defines a basic Matrix type
+
+Defines a basic Matrix type using REPA arrays.
+-}
+
 module Matrix.Base (
-  Matrix, U, D,
-  fromListUnboxed,
-  prettyPrint,
-  ) where
+    Matrix,
+    U,
+    D,
+    fromListUnboxed,
+    prettyPrint,
+    ) where
 
 import           Data.Array.Repa
 
+-- |A 'Matrix' is a 2D Repa 'Array' with representation @r@
+--  and holding elements of type @a@
 type Matrix r a = Array r DIM2 a
 
-prettyPrint :: (Show e, Source r e) => Array r DIM2 e -> IO ()
+-- |Prints a 'Matrix' in rows and columns.
+--  Doesn't align elements if they are too long.
+prettyPrint :: (Show e, Source r e) => Matrix r e -> IO ()
 prettyPrint a = putStrLn . dropLast . unlines . fmap unwords $ fmap (fmap show) list
   where
     list = [ [ a `index` (Z :. r :. c)

@@ -1,19 +1,20 @@
 {-# LANGUAGE FlexibleContexts #-}
 
+
 module Matrix.EdgeMatrix (
     EdgeMatrix,
-    -- * Point Representation
-    D3Point,
-    D3Coord,
-    Triple(..),
-    -- * Construction
+    -- ** Point Representation
+    module Matrix.D3Point,
+    -- ** Construction
     fromPoints,
+    connectPoints,
     addEdge,
-    -- * Retrieving 'Point's
+    (++),
+    -- ** Retrieving 'Point's
     toPoints,
     toPointPairs,
-    drawMatLinesColor,
-    drawMatLines,
+    drawLinesColor,
+    drawLines,
     ) where
 
 import           Matrix.Base
@@ -23,49 +24,80 @@ import           Pair
 import           Color
 import           Picture (Picture, drawColorLine)
 import           Utils
-import           Data.Array.Repa
+import           Data.Array.Repa hiding ((++))
+import qualified Data.Array.Repa  as R
 import           Control.Monad.ST
 import           Prelude hiding ((++))
 
+-- | An 'EdgeMatrix' is a 'Matrix' that stores points in 3D space as columns. To
+-- make transformations simpler, it uses homogenous coordinates: a point (x,y,z)
+-- is stored in the matrix as a column (x,y,z,1). In addition, consecutive pairs
+-- of points are interpreted as endpoints of line segments. An 'EdgeMatrix' is
+-- implemented using a 'Matrix' of 'D3Coord's that is defferred. Functions that
+-- consume 'EdgeMatrix's evaluate them so all the calulation happens once.
 type EdgeMatrix = Matrix D D3Coord
 
+-- |Converts a list of 'D3Point's to an 'EdgeMatrix' containg them. It does not
+-- check that the length of the list is even.
 fromPoints :: [D3Point] -> EdgeMatrix
-fromPoints ps = fromFunction (ix2 4 len) f
+fromPoints points = fromFunction (ix2 4 len) f
   where
-    f (Z :. r :. c) = pointToMatF r (ps !! c)
-    len = length ps
+    f (Z :. r :. c) = pointToMatF r (points !! c)
+    len = length points
 
+-- |Converts a list of 'D3Points' to an 'EdgeMatrix' containing edges connecting
+-- them: every point appears twice as the ending point of one segment and as the
+-- starting point of the next segment.
+connectPoints :: [D3Point] -> EdgeMatrix
+connectPoints points = fromPoints . merge points $ tail . cycle $ points
+  where
+    merge _ [] = []
+    merge [] _ = []
+    merge (x:xs) (y:ys) = x : y : merge xs ys
+
+-- |Given a 'D3Point' and the row of a matrix, extracts the correct coordinate.
 pointToMatF :: Int -> D3Point -> D3Coord
 pointToMatF 0 (Triple x _ _) = x
 pointToMatF 1 (Triple _ y _) = y
 pointToMatF 2 (Triple _ _ z) = z
-pointToMatF 3 (Triple _ _ _) = 1
-pointToMatF _ (Triple _ _ _) = 0
+pointToMatF 3 Triple {}      = 1
+pointToMatF _ Triple {}      = 0
 
+-- |Converts a single D3Point to an 'EdgeMatrix'
 singlePointMat :: D3Point -> EdgeMatrix
 singlePointMat p = fromFunction (ix2 4 1) f
   where
     f (Z :. r :. _) = pointToMatF r p
 
+-- |Adds a single D3Point to an 'EdgeMatrix'
 addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
 addPoint = flip (++) . singlePointMat
 
+-- |Adds an edge conecting to 'D3Point's to an 'EdgeMatrix'
 addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
 addEdge p1 p2 m = addPoint p2 $ addPoint p1 m
 
+-- |Combine two 'EdgeMatrix's
+(++) :: EdgeMatrix -> EdgeMatrix -> EdgeMatrix
+(++) = (R.++)
+
+-- |Gets the @n@th point from an 'EdgeMatrix' as a 'D2Point', dropping the
+-- z-coordinate
 getPoint :: Source r D3Coord => Array r DIM2 D3Coord -> Int -> D2Point
-getPoint s n = pointFromList . fmap round . toList . slice s $ (Any :. n)
-
-pointFromList :: [a] -> Pair a
-pointFromList (x:y:_) = Pair x y
-pointFromList _ = error "Tried to convert a list without two elements to a Point"
-
-toPoints :: EdgeMatrix -> [D2Point]
-toPoints s = [ getPoint s n
-             | n <- [0 .. len - 1] ]
+getPoint m n = pointFromList . fmap round . toList $ slice m (Any :. n)
   where
-    Z :. _ :. len = extent s
+    pointFromList (x:y:_) = Pair x y
 
+-- |Converts an 'EdgeMatrix' to a list of 'D2Point's, dropping their
+-- z-coordinates. Evaluates the 'EdgeMatrix' in parallel.
+toPoints :: EdgeMatrix -> [D2Point]
+toPoints m = fmap (getPoint compM)  [0 .. len - 1]
+  where
+    compM = runST $ computeUnboxedP m
+    Z :. _ :. len = extent m
+
+-- |Converts an 'EdgeMatrix' to a list of 'Pair's of 'D2Point's, dropping their
+-- z-coordinates. Evaluates the 'EdgeMatrix' in parallel.
 toPointPairs :: EdgeMatrix -> [Pair D2Point]
 toPointPairs m = [ Pair (getPoint compM n) (getPoint compM (n + 1))
                  | n <- [0,2 .. len - 1] ]
@@ -73,8 +105,11 @@ toPointPairs m = [ Pair (getPoint compM n) (getPoint compM (n + 1))
     Z :. _ :. len = extent m
     compM = runST $ computeUnboxedP m
 
-drawMatLinesColor :: Color -> EdgeMatrix -> Picture -> Picture
-drawMatLinesColor color = compose . fmap (uncurryPair $ drawColorLine color) . toPointPairs
+-- |Draws all lines specified by an 'EdgeMatrix' in a 'Color'
+drawLinesColor :: Color -> EdgeMatrix -> Picture -> Picture
+drawLinesColor color =
+  compose . fmap (uncurryPair $ drawColorLine color) . toPointPairs
 
-drawMatLines :: EdgeMatrix -> Picture -> Picture
-drawMatLines = drawMatLinesColor black
+-- |Draws all lines specified by an 'EdgeMatrix' in a black
+drawLines :: EdgeMatrix -> Picture -> Picture
+drawLines = drawLinesColor black

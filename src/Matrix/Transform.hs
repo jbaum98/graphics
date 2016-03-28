@@ -1,64 +1,101 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
+
+{-|
+Module      : Matrix.Transform
+Description : Defines transformation 'Matrix's
+
+-}
 
 module Matrix.Transform (
-  transMatrix, scaleMatrix, rotXMatrix, rotYMatrix, rotZMatrix,
-  ) where
+    TransformMatrix,
+    transMatrix,
+    scaleMatrix,
+    rotXMatrix,
+    rotYMatrix,
+    rotZMatrix,
+    ) where
 
-import Matrix.Base
-import Matrix.D3Point
-import Angle
-import Data.Array.Repa
+import           Matrix.Base
+import           Matrix.Mult
+import           Matrix.D3Point
+import           Angle
+import           Data.Array.Repa
 
-type Coord = D3Coord
-type Point = D3Point
+-- |'Matrix's that apply transformations using matrix multiplication and
+-- homogenous coordinates. To apply the transformation, matrix multiply the
+-- preimage on the left by the 'TansformMatrix'. Because of matrix
+-- multiplication's associativity, they can be composed themselves using matrix
+-- multiplication and will be applied from right to left.
+type TransformMatrix = Matrix D D3Coord
 
-transMatrix :: Point -> Matrix U Coord
+instance Monoid TransformMatrix where
+  mempty = delay $ idMatrix 4
+  mappend = matMult
+
+-- |Create a translation 'Matrix'
+transMatrix :: D3Point -> TransformMatrix
 {-# INLINE transMatrix #-}
-transMatrix (Triple x y z) = fromListUnboxed (Z:. 4 :. 4) [
-  1, 0, 0, x,
-  0, 1, 0, y,
-  0, 0, 1, z,
-  0, 0, 0, 1
+transMatrix (Triple x y z) = delay $ fromListUnboxed (Z :. 4 :. 4)
+  [
+    1, 0, 0, x,
+    0, 1, 0, y,
+    0, 0, 1, z,
+    0, 0, 0, 1
   ]
 
-scaleMatrix :: Point -> Matrix U Coord
+-- |Create a scaling matrix that independently scales the x, y, and z
+-- directions.
+scaleMatrix :: D3Point -> TransformMatrix
 {-# INLINE scaleMatrix #-}
-scaleMatrix (Triple x y z) = fromListUnboxed (Z:. 4 :. 4) [
-  x, 0, 0, 0,
-  0, y, 0, 0,
-  0, 0, z, 0,
-  0, 0, 0, 1
+scaleMatrix (Triple x y z) = delay $ fromListUnboxed (Z :. 4 :. 4)
+  [
+    x, 0, 0, 0,
+    0, y, 0, 0,
+    0, 0, z, 0,
+    0, 0, 0, 1
   ]
 
-rotXMatrix :: Double -> Matrix U Coord
+-- |Create a rotation matrix that rotates clockwise about the x-axis when the
+-- positive x-axis is pointing at you.
+rotXMatrix :: Double -- ^The angle of rotation in degrees
+           -> TransformMatrix
 {-# INLINE rotXMatrix #-}
-rotXMatrix = rotXMatrixRad . degToRad
+rotXMatrix = delay . rotXMatrixRad . degToRad
   where
-    rotXMatrixRad theta = fromListUnboxed (Z:. 4 :. 4) [
-      1, 0,         0,          0,
-      0, cos theta, -sin theta, 0,
-      0, sin theta, cos theta,  0,
-      0, 0,         0,          1
+    rotXMatrixRad theta = fromListUnboxed (Z :. 4 :. 4)
+      [
+        1, 0,          0,         0,
+        0, cos theta, -sin theta, 0,
+        0, sin theta,  cos theta, 0 ,
+        0, 0,          0,         1
       ]
 
-rotYMatrix :: Double -> Matrix U Coord
+-- |Create a rotation matrix that rotates clockwise about the y-axis when the
+-- positive y-axis is pointing at you.
+rotYMatrix :: Double -- ^The angle of rotation in degrees
+           -> TransformMatrix
 {-# INLINE rotYMatrix #-}
-rotYMatrix = rotYMatrixRad . degToRad
+rotYMatrix = delay . rotYMatrixRad . degToRad
   where
-    rotYMatrixRad theta = fromListUnboxed (Z:. 4 :. 4) [
-      cos theta,  0, sin theta, 0,
-      0,          1, 0,         0,
-      -sin theta, 0, cos theta, 0,
-      0,          0, 0,         1
+    rotYMatrixRad theta = fromListUnboxed (Z :. 4 :. 4)
+      [
+        cos theta, 0, sin theta, 0,
+         0,         1, 0,         0,
+        -sin theta, 0, cos theta, 0,
+         0,         0, 0,         1
       ]
 
-rotZMatrix :: Double -> Matrix U Coord
+-- |Create a rotation matrix that rotates clockwise about the z-axis when the
+-- positive z-axis is pointing at you.
+rotZMatrix :: Double -- ^The angle of rotation in degrees
+           -> TransformMatrix
 {-# INLINE rotZMatrix #-}
-rotZMatrix = rotZMatrixRad . degToRad
+rotZMatrix = delay . rotZMatrixRad . degToRad
   where
-    rotZMatrixRad theta = fromListUnboxed (Z:. 4 :. 4) [
-      cos theta, -sin theta, 0, 0,
-      sin theta, cos theta,  0, 0,
-      0,         0,          1, 0,
-      0,         0,           0, 1
+    rotZMatrixRad theta = fromListUnboxed (Z :. 4 :. 4)
+      [
+        cos theta, -sin theta, 0, 0,
+        sin theta,  cos theta, 0, 0,
+        0,          0,         1, 0,
+        0,          0,         0, 1
       ]

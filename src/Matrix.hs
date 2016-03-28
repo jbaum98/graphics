@@ -1,13 +1,13 @@
 module Matrix (
-  Matrix, prettyPrint,
-  -- * Transformation
-  idMatrix, matMult,
-  transMatrix, scaleMatrix, rotXMatrix, rotYMatrix, rotZMatrix,
-  -- * EdgeMatrix
-  module Matrix.EdgeMatrix
-  ) where
+    -- * Edge Matrix
+    module Matrix.EdgeMatrix,
+    Matrix,
+    -- * Transformation
+    module Matrix.Mult,
+    module Matrix.Transform
+    ) where
 
-import Matrix.Base
-import Matrix.Mult
-import Matrix.Transform
-import Matrix.EdgeMatrix
+import           Matrix.EdgeMatrix
+import           Matrix.Transform
+import           Matrix.Mult
+import           Matrix.Base
