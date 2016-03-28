@@ -1,6 +1,6 @@
-PIC_NAME := pic
-PPM_NAME := $(addsuffix .ppm, $(PIC_NAME))
-PNG_NAME := $(addsuffix .png, $(PIC_NAME))
+PIC_NAME ?= pic
+PPM_NAME ?= $(addsuffix .ppm, $(PIC_NAME))
+PNG_NAME ?= $(addsuffix .png, $(PIC_NAME))
 DOC_PATH := $(shell stack path --local-doc-root)/index.html
 
 all:
