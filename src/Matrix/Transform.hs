@@ -8,17 +8,24 @@ Description : Defines transformation 'Matrix's
 
 module Matrix.Transform (
     TransformMatrix,
+    idMatrix,
     transMatrix,
     scaleMatrix,
     rotXMatrix,
     rotYMatrix,
     rotZMatrix,
+    progress,
+    drawProgress,
+    drawProgressColors
     ) where
 
 import           Matrix.Base
 import           Matrix.Mult
 import           Matrix.D3Point
+import           Matrix.EdgeMatrix
+import           Picture
 import           Angle
+import           Utils
 import           Data.Array.Repa
 
 -- |'Matrix's that apply transformations using matrix multiplication and
@@ -28,9 +35,16 @@ import           Data.Array.Repa
 -- multiplication and will be applied from right to left.
 type TransformMatrix = Matrix D D3Coord
 
-instance Monoid TransformMatrix where
-  mempty = delay $ idMatrix 4
-  mappend = matMult
+-- |Produces an 4 by 4 identity 'Matrix'
+idMatrix :: TransformMatrix
+{-# INLINE idMatrix #-}
+idMatrix = delay $ fromListUnboxed (Z :. 4 :. 4)
+  [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
 
 -- |Create a translation 'Matrix'
 transMatrix :: D3Point -> TransformMatrix
@@ -99,3 +113,21 @@ rotZMatrix = delay . rotZMatrixRad . degToRad
         0,          0,         1, 0,
         0,          0,         0, 1
       ]
+
+progress' :: (a -> a -> a) -> [a] -> [a]
+progress' _ [] = []
+progress' _ [t] = [t]
+progress' f (t1:ts) = t1 : fmap (f t1) (progress' f ts)
+
+progress :: [TransformMatrix] -> EdgeMatrix -> EdgeMatrix
+progress ts e = foldl (Data.Array.Repa.++) empty . fmap (`matMult` e) . progress' (flip matMult) $ ts
+  where
+    empty = delay $ fromListUnboxed (ix2 4 0) []
+
+drawProgress :: [TransformMatrix] -> EdgeMatrix -> Picture -> Picture
+drawProgress ts = drawLines . progress ts
+
+drawProgressColors :: [(TransformMatrix, Color)] -> EdgeMatrix -> Picture -> Picture
+drawProgressColors tcs e = compose $ fmap (\(ls, color) -> drawLinesColor color ls) edges
+  where
+    edges = fmap (\(t, color) -> (t `matMult` e, color)) . progress' (\(t1, _) (t2, color) -> (t2 `matMult` t1, color)) $ tcs
