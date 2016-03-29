@@ -21,8 +21,8 @@ type Matrix r a = Array r DIM2 a
 
 -- |Prints a 'Matrix' in rows and columns.
 --  Doesn't align elements if they are too long.
-prettyPrint :: (Show e, Source r e) => Matrix r e -> IO ()
-prettyPrint a = putStrLn . dropLast . unlines . fmap unwords $ fmap (fmap show) list
+prettyPrint :: (Show e, Source r e) => Matrix r e -> String
+prettyPrint a = dropLast . unlines . fmap unwords $ fmap (fmap show) list
   where
     list = [ [ a `index` (Z :. r :. c)
              | c <- [0 .. cols - 1] ]

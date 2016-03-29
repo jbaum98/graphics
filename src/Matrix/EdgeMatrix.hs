@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
 
 module Matrix.EdgeMatrix (
     EdgeMatrix,
@@ -36,6 +35,9 @@ import           Prelude hiding ((++))
 -- implemented using a 'Matrix' of 'D3Coord's that is defferred. Functions that
 -- consume 'EdgeMatrix's evaluate them so all the calulation happens once.
 type EdgeMatrix = Matrix D D3Coord
+
+instance Show EdgeMatrix where
+  show = prettyPrint
 
 -- |Converts a list of 'D3Point's to an 'EdgeMatrix' containg them. It does not
 -- check that the length of the list is even.

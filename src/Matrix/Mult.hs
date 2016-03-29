@@ -7,7 +7,7 @@ Description : Provides fucntions for matrix multiplication.
 Provides fucntions for matrix multiplication.
 -}
 
-module Matrix.Mult (idMatrix, matMult) where
+module Matrix.Mult (matMult) where
 
 import           Matrix.Base
 import           Data.Array.Repa
@@ -15,14 +15,6 @@ import           Data.Array.Repa.Unsafe
 import           Data.Array.Repa.Eval
 import           Data.Array.Repa.Repr.Unboxed
 import           Prelude hiding ()
-
--- |Produces an @n@ by @n@ identity 'Matrix'
-idMatrix :: (Num a, Unbox a) => Int -> Matrix U a
-idMatrix n = computeUnboxedS $ fromFunction (ix2 n n) f
-  where
-    f (Z :. r :. c)
-      | r == c = 1
-      | otherwise = 0
 
 -- |Multiplies two 'Matrix's using matrix multiplication
 matMult :: (Num a, Unbox a, Elt a, Source r1 a, Source r2 a)
