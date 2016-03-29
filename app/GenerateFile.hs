@@ -1,8 +1,38 @@
-module GenerateFile (generateFile) where
+module GenerateFile (generateFile, pic) where
 
-import Point
+import Picture hiding (drawLine)
+import Matrix
+import Pbm
 
-generateFile :: String -> Point -> IO ()
-generateFile path maxPoint = putStrLn $ "This is a dummy main. It would have created a picture of size " ++ size ++ " at " ++ path
-  where size = x ++ "x" ++ y
-        Pair x y = show <$> maxPoint
+generateFile :: String -> D2Point -> IO ()
+generateFile path maxPair= writePbmFile path $ pic maxPair
+
+pic :: D2Point -> Picture
+pic = drawProgressColors transforms edges . blankPic
+
+transforms :: [(TransformMatrix, Color)]
+transforms = [
+  (idMatrix, black),
+  (scaleMatrix $ Triple 7 7 7, red),
+  (rotZMatrix 30, blue),
+  (transMatrix $ Triple 200 200 0, orange),
+  (rotXMatrix 45, green),
+  (transMatrix $ Triple (-500) 0 0, violet),
+  (rotYMatrix 60, yellow)
+  ]
+
+edges :: EdgeMatrix
+edges = fromPoints [
+  Triple  (-10)  (-10)  10,  Triple  (-10)  10     10,
+  Triple  (-10)  10     10,  Triple  10     10     10,
+  Triple  10     10     10,  Triple  10     (-10)  10,
+  Triple  10     (-10)  10,  Triple  (-10)  (-10)  10,
+  Triple  10     10     10,  Triple  10     10     (-10),
+  Triple  10     (-10)  10,  Triple  10     (-10)  (-10),
+  Triple  (-10)  10     10,  Triple  (-10)  10     (-10),
+  Triple  (-10)  (-10)  10,  Triple  (-10)  (-10)  (-10),
+  Triple  (-10)  (-10)  (-10),  Triple  (-10)  10     (-10),
+  Triple  (-10)  10     (-10),  Triple  10     10     (-10),
+  Triple  10     10     (-10),  Triple  10     (-10)  (-10),
+  Triple  10     (-10)  (-10),  Triple  (-10)  (-10)  (-10)
+  ]
