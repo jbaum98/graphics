@@ -5,6 +5,7 @@ module Matrix.EdgeMatrix (
     -- ** Point Representation
     module Matrix.D3Point,
     -- ** Construction
+    empty,
     fromPoints,
     connectPoints,
     addEdge,
@@ -38,6 +39,9 @@ type EdgeMatrix = Matrix D D3Coord
 
 instance Show EdgeMatrix where
   show = prettyPrint
+
+empty :: EdgeMatrix
+empty = delay $ fromListUnboxed (ix2 4 0) []
 
 -- |Converts a list of 'D3Point's to an 'EdgeMatrix' containg them. It does not
 -- check that the length of the list is even.
