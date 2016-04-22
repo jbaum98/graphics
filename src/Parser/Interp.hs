@@ -8,10 +8,11 @@ module Parser.Interp (
 
 import Picture
 import Pbm
-import Matrix
+import Matrix hiding ((++))
 import Parser.Parser
 import Control.Monad.State
 import System.Process
+import System.IO
 
 type ParseState = (EdgeMatrix, TransformMatrix, D2Point)
 type Interp = StateT ParseState IO ()
@@ -56,19 +57,19 @@ eval Apply = do
   (em, tm, s) <- get
   put (tm `matMult` em, tm, s)
 
-eval Display = do
-  (em, tm, s) <- get
-  (Just hin, _, _, ps) <-
-    liftIO $ createProcess (proc "display" []){ std_in = CreatePipe }
-  let pic = drawLines em (blankPic s)
-  liftIO $ writePbm pic hin
-  _ <- ($) liftIO $ waitForProcess ps
-  put (em, tm, s)
+eval Display = writePicToProcess "display"
 
-eval (Save path) = do
-  (em, _, s) <- get
+eval (Save path) = writePicToProcess $ "convert - " ++ path
+
+writePicToProcess :: String -> Interp
+writePicToProcess cmd = do
+  (em, tm, s) <- get
   let pic = drawLines em (blankPic s)
-  liftIO $ writePbmFile path pic
+  liftIO $ do
+    (Just hin, _, _, ps) <-
+      createProcess (shell cmd) { std_in = CreatePipe }
+    writePbm pic hin >> waitForProcess ps
+  put (em, tm, s)
 
 addTrans :: TransformMatrix -> Interp
 addTrans t = do
