@@ -90,7 +90,7 @@ addTrans t = do
   (em, tm, s) <- get
   put (em, t `matMult` tm, s)
 
-modEdges :: (EdgeMatrix -> EdgeMatrix) -> Interp
-modEdges f = do
+addEdges :: EdgeMatrix -> Interp
+addEdges em2 = do
   (em, tm, s) <- get
-  put (f em, tm , s)
+  put (em M.++ em2, tm , s)
