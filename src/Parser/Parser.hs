@@ -1,11 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser.Parser (
-  Command(..),
-  parseFile,
-  readScriptH,
-  readScript,
-  ) where
+module Parser.Parser (Command(..), parseFile, readScriptH, readScript) where
 
 import           Matrix.D3Point
 import           Data.Attoparsec.ByteString.Lazy (skipWhile, takeWhile)
@@ -30,7 +25,7 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Apply
              | Display
              | Save FilePath
-             deriving Show
+  deriving Show
 
 uncurryList1 :: (a -> b) -> [a] -> b
 uncurryList1 f (x:_) = f x
@@ -46,7 +41,7 @@ uncurryList8 f (x1:x2:x3:x4:x5:x6:x7:x8:_) =
   f x1 x2 x3 x4 x5 x6 x7 x8
 
 restOfLine :: Parser ByteString
-restOfLine = takeWhile  (not . isEndOfLine)
+restOfLine = takeWhile (not . isEndOfLine)
 
 parseComment :: Parser ByteString
 parseComment = do

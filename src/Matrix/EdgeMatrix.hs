@@ -8,6 +8,8 @@ module Matrix.EdgeMatrix (
     empty,
     fromPoints,
     connectPoints,
+    point,
+    edge,
     addEdge,
     (++),
     -- ** Retrieving 'Point's
@@ -70,14 +72,17 @@ pointToMatF 3 Triple {}      = 1
 pointToMatF _ Triple {}      = 0
 
 -- |Converts a single D3Point to an 'EdgeMatrix'
-singlePointMat :: D3Point -> EdgeMatrix
-singlePointMat p = fromFunction (ix2 4 1) f
+point :: D3Point -> EdgeMatrix
+point p = fromFunction (ix2 4 1) f
   where
     f (Z :. r :. _) = pointToMatF r p
 
 -- |Adds a single D3Point to an 'EdgeMatrix'
 addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
-addPoint = flip (++) . singlePointMat
+addPoint = flip (++) . point
+
+edge :: D3Point -> D3Point -> EdgeMatrix
+edge p1 p2 = point p1 ++ point p2
 
 -- |Adds an edge conecting to 'D3Point's to an 'EdgeMatrix'
 addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix

@@ -9,12 +9,11 @@ module Parser.Interp (
 import Picture
 import Pbm
 import Matrix hiding ((++))
-import Data.Array.Repa (computeP, delay)
+import qualified Matrix as M ((++))
 import Parser.Parser
 import Control.Monad.State
-import Control.Monad.ST
 import System.Process
-import Parametric
+import Shapes
 
 type ParseState = (EdgeMatrix, TransformMatrix, D2Point)
 type Interp = StateT ParseState IO ()
@@ -30,15 +29,15 @@ initState = (empty, idMatrix, )
 
 -- eval :: Command -> ParseState -> ((IO (), ParseState))
 eval :: Command -> Interp
-eval (Line x0 y0 z0 x1 y1 z1) = modEdges $ addEdge p0 p1
+eval (Line x0 y0 z0 x1 y1 z1) = addEdges $ edge p0 p1
   where
     p0 = Triple x0 y0 z0
     p1 = Triple x1 y1 z1
 
-eval (Circle cx cy r) = modEdges $ addCircle center r
+eval (Circle cx cy r) = addEdges $ circle center r
   where center = Triple cx cy 0
 
-eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = modEdges $ addHermite p0 r0 p1 r1
+eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = addEdges $ hermite p0 r0 p1 r1
   where
    p0   = Triple x0 y0 0
    p1   = Triple x2 y2 0
@@ -47,7 +46,7 @@ eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = modEdges $ addHermite p0 r0 p1 r1
    r0   = ctl0 - p0
    r1   = ctl1 - p1
 
-eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = modEdges $ addBezier p1 p2 p3 p4
+eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = addEdges $ bezier p1 p2 p3 p4
   where
     p1  = Triple x1 y1 0
     p2  = Triple x2 y2 0
