@@ -25,6 +25,7 @@ library
                        Parser.Parser
                        Parser.Interp
                        Angle
+                       Parametric
   default-language:    Haskell2010
 
 executable graphics-exe

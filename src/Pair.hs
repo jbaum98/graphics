@@ -40,6 +40,11 @@ instance Num a => Num (Pair a) where
   signum = liftA signum
   fromInteger = pure . fromInteger
 
+instance Fractional a => Fractional (Pair a) where
+  (/) = liftA2 (/)
+  recip = liftA recip
+  fromRational = pure . fromRational
+
 -- |Represents three objects of the same type
 data Triple a = Triple a a a
               deriving (Show, Eq, Generic)
@@ -63,6 +68,11 @@ instance Num a => Num (Triple a) where
   negate = liftA negate
   signum = liftA signum
   fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (Triple a) where
+  (/) = liftA2 (/)
+  recip = liftA recip
+  fromRational = pure . fromRational
 
 -- |Converts a function taking two arguments of the same type
 -- to a function taking single 'Pair'
