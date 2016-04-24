@@ -13,8 +13,9 @@ import Prelude hiding ((++))
 import Data.Array.Repa hiding ((++))
 
 parametric :: (Double -> D3Point) -> EdgeMatrix
-parametric f = fromFunction (ix2 4 20000) $ \(Z :. r :. c) ->
-  pointToMatF r $ f (0.0001 * fromIntegral ((c + 1) `quot` 2))
+parametric f = fromFunction (ix2 4 (2 * steps)) $ \(Z :. r :. c) ->
+  pointToMatF r $ f $ fromIntegral ((c + 1) `quot` 2) / fromIntegral steps
+  where steps = 1000
 
 circle :: D3Point -> D3Coord -> EdgeMatrix
 circle (Triple cx cy cz) r = parametric f
