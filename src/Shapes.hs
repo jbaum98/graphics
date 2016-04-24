@@ -5,6 +5,7 @@ module Shapes (
   circle,
   hermite,
   bezier,
+  box
   ) where
 
 import Matrix
@@ -40,6 +41,27 @@ bezier = matCurve bezMat
           ,  3, -6,  3, 0
           , -3,  3,  0, 0
           ,  1,  0,  0, 0 ]
+
+box :: D3Point -> D3Point -> EdgeMatrix
+box botLeft (Triple x y z) = fromPoints
+  [ botLeft, topLeft
+  , topLeft, topRight
+  , topRight, botRight
+  , botRight, botLeft
+  , botLeft, botLeft + d
+  , topLeft, topLeft + d
+  , botRight, botRight + d
+  , topRight, topRight + d
+  , botLeft + d, topLeft + d
+  , topLeft + d, topRight + d
+  , topRight + d, botRight + d
+  , botRight + d, botLeft + d
+  ]
+  where
+    topLeft = botLeft + Triple 0 y 0
+    botRight = botLeft + Triple x 0 0
+    topRight = botLeft + Triple x y 0
+    d = Triple 0 0 z
 
 matCurve :: Matrix U D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> EdgeMatrix
 matCurve cMat p1 p2 p3 p4 = parametric $ \t -> let t' = pure t in t' * (t' * (t' * a + b) + c) + d

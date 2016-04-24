@@ -16,6 +16,7 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Circle D3Coord D3Coord D3Coord
              | Hermite D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Bezier D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
+             | Box D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Identity
              | Scale D3Coord D3Coord D3Coord
              | Translate D3Coord D3Coord D3Coord
@@ -80,6 +81,9 @@ parseHermite = makeCmdArgParser "hermite" 8 $ uncurryList8 Hermite
 parseBezier :: Parser Command
 parseBezier = makeCmdArgParser "bezier" 8 $ uncurryList8 Bezier
 
+parseBox :: Parser Command
+parseBox = makeCmdArgParser "box" 6 $ uncurryList6 Box
+
 parseIdentity :: Parser Command
 parseIdentity = makeCmdParser "ident" Identity
 
@@ -116,6 +120,7 @@ parseFile = many $
   parseCircle    <|>
   parseHermite   <|>
   parseBezier    <|>
+  parseBox       <|>
   parseIdentity  <|>
   parseScale     <|>
   parseTranslate <|>

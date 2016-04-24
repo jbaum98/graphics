@@ -53,6 +53,8 @@ eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = addEdges $ bezier p1 p2 p3 p4
     p3  = Triple x3 y3 0
     p4  = Triple x4 y4 0
 
+eval (Box x y z w h d) = addEdges $ box (Triple x y z) (Triple w h d)
+
 eval Identity = do
   (em, _, s) <- get
   put (em, idMatrix, s)
