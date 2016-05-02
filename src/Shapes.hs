@@ -1,16 +1,18 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, FlexibleContexts #-}
 
 module Shapes (
   parametric,
   circle,
   hermite,
   bezier,
-  box
+  box,
+  torus,
+  sphere
   ) where
 
 import Matrix
-import Prelude hiding ((++))
 import Data.Array.Repa hiding ((++))
+import Prelude hiding ((++))
 
 parametric :: (Double -> D3Point) -> EdgeMatrix
 parametric f = fromFunction (ix2 4 (2 * steps)) $ \(Z :. r :. c) ->
@@ -63,6 +65,24 @@ box botLeft (Triple x y z) = fromPoints
     botRight = botLeft + Triple x 0 0
     topRight = botLeft + Triple x y 0
     d = Triple 0 0 z
+
+torus :: D3Point -> D3Coord -> D3Coord -> EdgeMatrix
+torus c r1 r2 = foldl1 (++) circles
+  where
+    circles = take steps $ trans <$> iterate (rotBy $ 360.0 / fromIntegral steps) circ0
+    trans = matMult $ transMatrix c
+    circ0 = circle (Triple r2 0 0) r1
+    steps = 100
+
+sphere :: D3Point -> D3Coord -> EdgeMatrix
+sphere c r  = foldl1 (++) circles
+  where
+    circles = take steps $ trans <$> iterate (rotBy $ 180 / fromIntegral steps) circ0
+    circ0 = circle (Triple 0 0 0) r
+    trans = matMult $ transMatrix c
+    steps = 15
+
+rotBy a = matMult $ rotYMatrix a
 
 matCurve :: Matrix U D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> EdgeMatrix
 matCurve cMat p1 p2 p3 p4 = parametric $ \t -> let t' = pure t in t' * (t' * (t' * a + b) + c) + d

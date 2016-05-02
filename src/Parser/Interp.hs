@@ -55,6 +55,10 @@ eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = addEdges $ bezier p1 p2 p3 p4
 
 eval (Box x y z w h d) = addEdges $ box (Triple x y z) (Triple w h d)
 
+eval (Torus x y r1 r2) = addEdges $ torus (Triple x y 0) r1 r2
+
+eval (Sphere x y r) = addEdges $ sphere (Triple x y 0) r
+
 eval Identity = do
   (em, _, s) <- get
   put (em, idMatrix, s)

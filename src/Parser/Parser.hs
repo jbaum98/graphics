@@ -17,6 +17,8 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Hermite D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Bezier D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Box D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
+             | Torus D3Coord D3Coord D3Coord D3Coord
+             | Sphere D3Coord D3Coord D3Coord
              | Identity
              | Scale D3Coord D3Coord D3Coord
              | Translate D3Coord D3Coord D3Coord
@@ -33,6 +35,9 @@ uncurryList1 f (x:_) = f x
 
 uncurryList3 :: (a -> a -> a -> b) -> [a] -> b
 uncurryList3 f (x1:x2:x3:_) = f x1 x2 x3
+
+uncurryList4 :: (a -> a -> a -> a -> b) -> [a] -> b
+uncurryList4 f (x1:x2:x3:x4:_) = f x1 x2 x3 x4
 
 uncurryList6 :: (a -> a -> a -> a -> a -> a -> b) -> [a] -> b
 uncurryList6 f (x1:x2:x3:x4:x5:x6:_) = f x1 x2 x3 x4 x5 x6
@@ -84,6 +89,12 @@ parseBezier = makeCmdArgParser "bezier" 8 $ uncurryList8 Bezier
 parseBox :: Parser Command
 parseBox = makeCmdArgParser "box" 6 $ uncurryList6 Box
 
+parseTorus :: Parser Command
+parseTorus = makeCmdArgParser "torus" 4 $ uncurryList4 Torus
+
+parseSphere :: Parser Command
+parseSphere = makeCmdArgParser "sphere" 3 $ uncurryList3 Sphere
+
 parseIdentity :: Parser Command
 parseIdentity = makeCmdParser "ident" Identity
 
@@ -121,6 +132,8 @@ parseFile = many $
   parseHermite   <|>
   parseBezier    <|>
   parseBox       <|>
+  parseTorus     <|>
+  parseSphere    <|>
   parseIdentity  <|>
   parseScale     <|>
   parseTranslate <|>
