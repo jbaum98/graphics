@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Parser
-  build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive, repa, attoparsec, mtl, process, loop
+  build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive, repa, attoparsec, mtl, process, vector, loop
   other-modules:       Matrix.Base
                        Matrix.Mult
                        Matrix.Transform
@@ -31,7 +31,8 @@ library
 executable graphics-exe
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -O2 -threaded -rtsopts "-with-rtsopts= -A8M -H4M"
+  ghc-options:         -O2 -threaded
+                       -- -rtsopts "-with-rtsopts= -A8M -H4M"
   build-depends:       base
                      , graphics
   other-modules:       GenerateFile

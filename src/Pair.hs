@@ -17,7 +17,7 @@ import Control.DeepSeq
 import GHC.Generics
 
 -- |Represents two objects of the same type
-data Pair a = Pair a a
+data Pair a = Pair !a !a
             deriving (Show, Eq, Generic)
 
 instance NFData a => NFData (Pair a)
@@ -46,7 +46,7 @@ instance Fractional a => Fractional (Pair a) where
   fromRational = pure . fromRational
 
 -- |Represents three objects of the same type
-data Triple a = Triple a a a
+data Triple a = Triple !a !a !a
               deriving (Show, Eq, Generic)
 
 instance NFData a => NFData (Triple a)

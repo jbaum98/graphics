@@ -8,8 +8,7 @@ module Parser.Interp (
 
 import Picture
 import Pbm
-import Matrix hiding ((++))
-import qualified Matrix as M ((++))
+import Matrix
 import Parser.Parser
 import Control.Monad.State
 import System.Process
@@ -29,15 +28,15 @@ initState = (empty, idMatrix, )
 
 -- eval :: Command -> ParseState -> ((IO (), ParseState))
 eval :: Command -> Interp
-eval (Line x0 y0 z0 x1 y1 z1) = addEdges $ edge p0 p1
+eval (Line x0 y0 z0 x1 y1 z1) = modEM $ addEdge p0 p1
   where
     p0 = Triple x0 y0 z0
     p1 = Triple x1 y1 z1
 
-eval (Circle cx cy r) = addEdges $ circle center r
+eval (Circle cx cy r) = modEM $ addCircle center r 0.01
   where center = Triple cx cy 0
 
-eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = addEdges $ hermite p0 r0 p1 r1
+eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = modEM $ addHermite p0 r0 p1 r1 0.01
   where
    p0   = Triple x0 y0 0
    p1   = Triple x2 y2 0
@@ -46,18 +45,18 @@ eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = addEdges $ hermite p0 r0 p1 r1
    r0   = ctl0 - p0
    r1   = ctl1 - p1
 
-eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = addEdges $ bezier p1 p2 p3 p4
+eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = modEM $ addBezier p1 p2 p3 p4 0.01
   where
     p1  = Triple x1 y1 0
     p2  = Triple x2 y2 0
     p3  = Triple x3 y3 0
     p4  = Triple x4 y4 0
 
-eval (Box x y z w h d) = addEdges $ box (Triple x y z) (Triple w h d)
+eval (Box x y z w h d) = modEM $ addBox (Triple x y z) (Triple w h d)
 
-eval (Torus x y r1 r2) = addEdges $ torus (Triple x y 0) r1 r2
+eval (Torus x y r1 r2) = modEM $ addTorus (Triple x y 0) r1 r2 0.01
 
-eval (Sphere x y r) = addEdges $ sphere (Triple x y 0) r
+eval (Sphere x y r) = modEM $ addSphere (Triple x y 0) r 0.01
 
 eval Identity = do
   (em, _, s) <- get
@@ -75,7 +74,8 @@ eval (RotateZ degs) = addTrans $ rotZMatrix degs
 
 eval Apply = do
   (em, tm, s) <- get
-  put (tm `matMult` em, tm, s)
+  em' <- liftIO (tm `matMult` em)
+  put (em', tm, s)
 
 eval Display = writePicToProcess "display"
 
@@ -94,9 +94,11 @@ writePicToProcess cmd = do
 addTrans :: TransformMatrix -> Interp
 addTrans t = do
   (em, tm, s) <- get
-  put (em, t `matMult` tm, s)
+  tm' <- liftIO (t `matMult` tm)
+  put (em, tm', s)
 
-addEdges :: EdgeMatrix -> Interp
-addEdges em2 = do
+modEM :: (EdgeMatrix -> IO EdgeMatrix) -> Interp
+modEM f = do
   (em, tm, s) <- get
-  put (em M.++ em2, tm , s)
+  em' <- liftIO (f em)
+  put (em', tm , s)

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Matrix.EdgeMatrix (
     EdgeMatrix,
@@ -7,119 +7,99 @@ module Matrix.EdgeMatrix (
     -- ** Construction
     empty,
     fromPoints,
-    connectPoints,
-    point,
+--   connectPoints,
+--   point,
     edge,
     addEdge,
-    (++),
+    addPoint,
+    mergeCols,
     -- ** Retrieving 'Point's
-    toPoints,
-    toPointPairs,
-    drawLinesColor,
-    drawLines,
+   drawLinesColor,
+   drawLines,
     ) where
 
 import           Matrix.Base
 import           Matrix.D3Point
-import           D2Point
-import           Pair
-import           Color
-import           Picture (Picture, drawColorLine)
-import           Utils
-import           Data.Array.Repa hiding ((++))
-import qualified Data.Array.Repa  as R
-import           Control.Monad.ST
-import           Prelude hiding ((++))
+import Pair
+import D2Point
+import Picture
+import Utils
+import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Unboxed.Mutable as MV
+import Control.Monad
+import Control.Monad.ST
+import Control.Monad.Primitive
+import Control.Loop (numLoop)
+import Debug.Trace
 
--- | An 'EdgeMatrix' is a 'Matrix' that stores points in 3D space as columns. To
--- make transformations simpler, it uses homogenous coordinates: a point (x,y,z)
--- is stored in the matrix as a column (x,y,z,1). In addition, consecutive pairs
--- of points are interpreted as endpoints of line segments. An 'EdgeMatrix' is
--- implemented using a 'Matrix' of 'D3Coord's that is defferred. Functions that
--- consume 'EdgeMatrix's evaluate them so all the calulation happens once.
-type EdgeMatrix = Matrix D D3Coord
-
-instance Show EdgeMatrix where
-  show = prettyPrint
+type EdgeMatrix = Matrix D3Coord
 
 empty :: EdgeMatrix
-empty = delay $ fromListUnboxed (ix2 4 0) []
+empty = Matrix 4 0 (-1) $ V.create $ MV.new 400
 
--- |Converts a list of 'D3Point's to an 'EdgeMatrix' containg them. It does not
--- check that the length of the list is even.
+addPoint :: PrimMonad m => D3Point -> EdgeMatrix -> m EdgeMatrix
+addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) <$> newV
+                                             | otherwise = addPoint p $ runST $ growMat m 400
+  where
+    newV = do
+      v' <- V.unsafeThaw v
+      set v' 1 x >> set v' 2 y >> set v' 3 z >> set v' 4 1
+      V.unsafeFreeze v'
+    set w n = MV.write w (encode (r,c+1) (n,c+1))
+
+growMat :: (PrimMonad m, MV.Unbox a) => Matrix a -> Int -> m (Matrix a)
+growMat m n = do
+  let v = vector m
+  v' <- V.unsafeThaw v
+  v'' <- MV.grow v' n
+  newV <- V.unsafeFreeze v''
+  return $ m { vector = newV }
+
+mergeCols :: (MV.Unbox a, PrimMonad m) => Matrix a -> Matrix a -> m (Matrix a)
+mergeCols a b | rows a  /= rows b = error "The two matrices have a different number of rows"
+              | otherwise = do
+                  b' <- V.unsafeThaw $ vector b
+                  a' <- if space a < lastIndex b + 1
+                       then V.unsafeThaw (vector a) >>= \w -> MV.unsafeGrow w (lastIndex b + 1 - space a)
+                       else V.unsafeThaw (vector a)
+                  let newLast = lastIndex a + lastIndex b + 1
+                  numLoop 0 (lastIndex b) $
+                    \i -> do
+                      el <- MV.unsafeRead b' i
+                      MV.unsafeWrite a' (lastIndex a + i + 1) el
+                  newV <- V.unsafeFreeze a'
+                  return $ Matrix (rows a) (cols a + cols b) newLast newV
+
 fromPoints :: [D3Point] -> EdgeMatrix
-fromPoints points = fromFunction (ix2 4 len) f
-  where
-    f (Z :. r :. c) = pointToMatF r (points !! c)
-    len = length points
-
--- |Converts a list of 'D3Points' to an 'EdgeMatrix' containing edges connecting
--- them: every point appears twice as the ending point of one segment and as the
--- starting point of the next segment.
-connectPoints :: [D3Point] -> EdgeMatrix
-connectPoints points = fromPoints . merge points $ tail . cycle $ points
-  where
-    merge _ [] = []
-    merge [] _ = []
-    merge (x:xs) (y:ys) = x : y : merge xs ys
-
--- |Given a 'D3Point' and the row of a matrix, extracts the correct coordinate.
-pointToMatF :: Int -> D3Point -> D3Coord
-pointToMatF 0 (Triple x _ _) = x
-pointToMatF 1 (Triple _ y _) = y
-pointToMatF 2 (Triple _ _ z) = z
-pointToMatF 3 Triple {}      = 1
-pointToMatF _ Triple {}      = 0
-
--- |Converts a single D3Point to an 'EdgeMatrix'
-point :: D3Point -> EdgeMatrix
-point p = fromFunction (ix2 4 1) f
-  where
-    f (Z :. r :. _) = pointToMatF r p
-
--- |Adds a single D3Point to an 'EdgeMatrix'
-addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
-addPoint = flip (++) . point
+fromPoints points = Matrix 4 (length points) 0 $ V.generate (length points * 4) f
+  where f i = cIndex cN $ points !! pN
+          where (pN, cN) = i `quotRem` 4
+        cIndex 0 (Triple x _ _) = x
+        cIndex 1 (Triple _ y _) = y
+        cIndex 2 (Triple _ _ z) = z
+        cIndex 3 _ = 1
 
 edge :: D3Point -> D3Point -> EdgeMatrix
-edge p1 p2 = point p1 ++ point p2
+edge (Triple x1 y1 z1) (Triple x2 y2 z2) = Matrix 4 2 7 $
+  V.fromList [x1, y1, z1, 1, x2, y2, z2, 1]
 
 -- |Adds an edge conecting to 'D3Point's to an 'EdgeMatrix'
-addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addEdge p1 p2 m = addPoint p2 $ addPoint p1 m
-
--- |Combine two 'EdgeMatrix's
-(++) :: EdgeMatrix -> EdgeMatrix -> EdgeMatrix
-(++) = (R.++)
+addEdge :: PrimMonad m => D3Point -> D3Point -> EdgeMatrix -> m EdgeMatrix
+addEdge p1 p2 = addPoint p1 >=> addPoint p2
 
 -- |Gets the @n@th point from an 'EdgeMatrix' as a 'D2Point', dropping the
 -- z-coordinate
-getPoint :: Source r D3Coord => Array r DIM2 D3Coord -> Int -> D2Point
-getPoint m n = pointFromList . fmap round . toList $ slice m (Any :. n)
-  where
-    pointFromList (x:y:_) = Pair x y
 
--- |Converts an 'EdgeMatrix' to a list of 'D2Point's, dropping their
--- z-coordinates. Evaluates the 'EdgeMatrix' in parallel.
-toPoints :: EdgeMatrix -> [D2Point]
-toPoints m = fmap (getPoint compM)  [0 .. len - 1]
+getPoint :: EdgeMatrix -> Int -> D2Point
+getPoint m n = round <$> Pair x y
   where
-    compM = runST $ computeUnboxedP m
-    Z :. _ :. len = extent m
-
--- |Converts an 'EdgeMatrix' to a list of 'Pair's of 'D2Point's, dropping their
--- z-coordinates. Evaluates the 'EdgeMatrix' in parallel.
-toPointPairs :: EdgeMatrix -> [Pair D2Point]
-toPointPairs m = [ Pair (getPoint compM n) (getPoint compM (n + 1))
-                 | n <- [0,2 .. len - 1] ]
-  where
-    Z :. _ :. len = extent m
-    compM = runST $ computeUnboxedP m
+    x = col `V.unsafeIndex` 0
+    y = col `V.unsafeIndex` 1
+    col = unsafeGetCol (n+1) m
 
 -- |Draws all lines specified by an 'EdgeMatrix' in a 'Color'
 drawLinesColor :: Color -> EdgeMatrix -> Picture -> Picture
-drawLinesColor color =
-  compose . fmap (uncurryPair $ drawColorLine color) . toPointPairs
+drawLinesColor color m = compose [drawColorLine color (getPoint m i) (getPoint m (i+1)) | i <- [0,2.. cols m - 1]]
 
 -- |Draws all lines specified by an 'EdgeMatrix' in a white
 drawLines :: EdgeMatrix -> Picture -> Picture
