@@ -54,7 +54,7 @@ solidPic (Triple r g b) maxPoint | r == g && r == b = runSTUArray $ newArray (to
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
          -> Picture
-blankPic maxPoint = runSTUArray $ newArray (toSize maxPoint) 255
+blankPic maxPoint = runSTUArray $ newArray (toSize maxPoint) 0
 
 -- |Create a picture that generates the RGB values for each 'Point' from three different functions
 mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
@@ -125,12 +125,13 @@ centerPoint = fmap (round . half . fromIntegral) . size
     half = (/ (2 :: Double))
 
 drawColorLine :: Color -> Point -> Point -> Picture -> Picture
-drawColorLine color p1 p2 pic = setColor color (transLine o p1 p2) pic
-  where o = centerPoint pic
+drawColorLine color p1 p2 pic = setColor color (line (reflect p1) (reflect p2)) pic
+  where (Pair _ yMax) = size pic
+        reflect (Pair x y) = Pair x (yMax - y)
 
 transLine :: Point -> Point -> Point -> [Point]
 transLine o p1 p2 = map t $ line p1 p2
   where t = transformOrigin o
 
 drawLine :: Point -> Point -> Picture -> Picture
-drawLine = drawColorLine black
+drawLine = drawColorLine white

@@ -121,6 +121,6 @@ drawLinesColor :: Color -> EdgeMatrix -> Picture -> Picture
 drawLinesColor color =
   compose . fmap (uncurryPair $ drawColorLine color) . toPointPairs
 
--- |Draws all lines specified by an 'EdgeMatrix' in a black
+-- |Draws all lines specified by an 'EdgeMatrix' in a white
 drawLines :: EdgeMatrix -> Picture -> Picture
-drawLines = drawLinesColor black
+drawLines = drawLinesColor white
