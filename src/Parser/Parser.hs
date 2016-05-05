@@ -27,6 +27,7 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | RotateZ D3Coord
              | Apply
              | Display
+             | Clear
              | Save FilePath
   deriving Show
 
@@ -68,7 +69,7 @@ matchString s = skipCommentsAndSpace <* s *> skipCommentsAndSpace
 makeCmdArgParser :: Parser ByteString -> Int -> ([Double] -> Command) -> Parser Command
 makeCmdArgParser s n f = do
   matchString s
-  xs <- count n (skipSpace >> double)
+  xs <- count n (skipSpace >> rational)
   return $ f xs
 
 makeCmdParser :: Parser ByteString -> Command -> Parser Command
@@ -119,6 +120,9 @@ parseApply = makeCmdParser "apply" Apply
 parseDisplay :: Parser Command
 parseDisplay = makeCmdParser "display" Display
 
+parseClear :: Parser Command
+parseClear = makeCmdParser "clear" Clear
+
 parseSave :: Parser Command
 parseSave = do
   matchString "save"
@@ -142,6 +146,7 @@ parseFile = many $
   parseRotateZ   <|>
   parseApply     <|>
   parseDisplay   <|>
+  parseClear     <|>
   parseSave
 
 readScriptH :: Handle -> IO (Either String [Command])

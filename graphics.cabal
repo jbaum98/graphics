@@ -31,8 +31,8 @@ library
 executable graphics-exe
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -O2 -threaded
-                       -- -rtsopts "-with-rtsopts= -A8M -H4M"
+  ghc-options:         -O2 -threaded -rtsopts
+                       -- "-with-rtsopts= -A8M -H4M"
   build-depends:       base
                      , graphics
   other-modules:       GenerateFile

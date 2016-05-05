@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts, ConstraintKinds, BangPatterns #-}
 
 {-|
 Module      : Picture
@@ -15,7 +15,9 @@ module Picture (
     blankPic,
     mathPic,
     size,
-    (!), elems,
+    (!),
+    unsafeAt,
+    elems,
     setPointColor,
     setColor,
     transformOrigin,
@@ -32,6 +34,7 @@ import           Data.Array.Unboxed
 import           Data.Array.MArray
 import           Data.Array.Unsafe
 import           Data.Array.ST
+import           Data.Array.Base (unsafeAt)
 import           Control.Monad.ST
 import           Control.DeepSeq
 
@@ -99,7 +102,7 @@ inBounds point pic = inRange (bounds pic) (toTup point 0)
 
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
 setPointColor :: Color -> Point -> Picture -> Picture
-setPointColor _ point pic
+setPointColor _ point !pic
   | not $ inBounds point pic = pic
 setPointColor color point pic = runST $ do
   mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)

@@ -1,7 +1,7 @@
 module Matrix (
     -- * Edge Matrix
     module Matrix.EdgeMatrix,
-    Matrix,
+    module Matrix.Base,
     -- * Transformation
     module Matrix.Mult,
     module Matrix.Transform

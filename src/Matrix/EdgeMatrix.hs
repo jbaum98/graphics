@@ -37,27 +37,25 @@ type EdgeMatrix = Matrix D3Coord
 empty :: EdgeMatrix
 empty = Matrix 4 0 (-1) $ V.create $ MV.new 400
 
-addPoint :: PrimMonad m => D3Point -> EdgeMatrix -> m EdgeMatrix
-addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) <$> newV
-                                             | otherwise = addPoint p $ runST $ growMat m 400
+addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
+addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) $ V.modify addAction v
+                                             | otherwise = addPoint p $ growMat m 400
   where
-    newV = do
-      v' <- V.unsafeThaw v
-      set v' 1 x >> set v' 2 y >> set v' 3 z >> set v' 4 1
-      V.unsafeFreeze v'
+    addAction v = set v 1 x >> set v 2 y >> set v 3 z >> set v 4 1
     set w n = MV.write w (encode (r,c+1) (n,c+1))
+    {-# INLINE set #-}
 
-growMat :: (PrimMonad m, MV.Unbox a) => Matrix a -> Int -> m (Matrix a)
-growMat m n = do
-  let v = vector m
-  v' <- V.unsafeThaw v
-  v'' <- MV.grow v' n
-  newV <- V.unsafeFreeze v''
-  return $ m { vector = newV }
+growMat :: MV.Unbox a => Matrix a -> Int -> Matrix a
+growMat m n = m { vector = newV (vector m) }
+  where
+    newV v = runST $ do
+      v' <- V.unsafeThaw v
+      v'' <- MV.grow v' n
+      V.unsafeFreeze v''
 
-mergeCols :: (MV.Unbox a, PrimMonad m) => Matrix a -> Matrix a -> m (Matrix a)
-mergeCols a b | rows a  /= rows b = error "The two matrices have a different number of rows"
-              | otherwise = do
+mergeCols :: MV.Unbox a => Matrix a -> Matrix a -> Matrix a
+mergeCols b a | rows a  /= rows b = error "The two matrices have a different number of rows"
+              | otherwise = runST $ do
                   b' <- V.unsafeThaw $ vector b
                   a' <- if space a < lastIndex b + 1
                        then V.unsafeThaw (vector a) >>= \w -> MV.unsafeGrow w (lastIndex b + 1 - space a)
@@ -84,8 +82,8 @@ edge (Triple x1 y1 z1) (Triple x2 y2 z2) = Matrix 4 2 7 $
   V.fromList [x1, y1, z1, 1, x2, y2, z2, 1]
 
 -- |Adds an edge conecting to 'D3Point's to an 'EdgeMatrix'
-addEdge :: PrimMonad m => D3Point -> D3Point -> EdgeMatrix -> m EdgeMatrix
-addEdge p1 p2 = addPoint p1 >=> addPoint p2
+addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
+addEdge p1 p2 = addPoint p1 . addPoint p2
 
 -- |Gets the @n@th point from an 'EdgeMatrix' as a 'D2Point', dropping the
 -- z-coordinate

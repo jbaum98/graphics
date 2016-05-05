@@ -23,30 +23,28 @@ import Control.Monad
 import Control.Monad.ST
 import Control.Monad.Primitive
 
-addParametric :: PrimMonad m => Double -> (Double -> D3Point) -> EdgeMatrix -> m EdgeMatrix
-addParametric step f em = do
+addParametric :: Double -> (Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
+addParametric step f em = runST $ do
   let pInitial = f 0
   (emFinal, _) <- forLoopState step (<= 1) (+ step) (em, pInitial) $ \(em',p) i -> do
     let p' = f i
-    em'' <- addEdge p p' em'
-    return (em'', p')
+    return (addEdge p p' em', p')
   return emFinal
 
-addCircle :: PrimMonad m => D3Point -> D3Coord -> Double -> EdgeMatrix -> m EdgeMatrix
-addCircle (Triple cx cy cz) r step = addParametric step f >=> addEdge (Triple (cx + r) cy cz) (f $ 1 - step)
+addCircle :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
+addCircle (Triple cx cy cz) r step = addParametric step f . addEdge (Triple (cx + r) cy cz) (f $ 1 - step)
   where
     f t = Triple (x t) (y t) cz
     x t = cx + r * cos (2 * pi * t)
     y t = cy + r * sin (2 * pi * t)
 
-addHermite, addBezier :: PrimMonad m
-                      => D3Point
+addHermite, addBezier :: D3Point
                       -> D3Point
                       -> D3Point
                       -> D3Point
                       -> Double
                       -> EdgeMatrix
-                      -> m EdgeMatrix
+                      -> EdgeMatrix
 
 addHermite p0 r0 p1 r1 = addMatCurve hermMat p0 p1 r0 r1
   where hermMat = fromLists [
@@ -64,14 +62,13 @@ addBezier = addMatCurve bezMat
           [  1,  0,  0, 0 ]
           ]
 
-addBox :: PrimMonad m => D3Point -> D3Point -> EdgeMatrix -> m EdgeMatrix
-addBox botLeft (Triple x y z) em = do
+addBox :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
+addBox botLeft (Triple x y z) em = runST $ do
   (emFinal, _) <- numLoopState 0 11 (em, boxCmds) $ \(em', cmd:rest) _ -> do
-    em'' <- cmd em'
+    let em'' = cmd em'
     return (em'', rest)
   return emFinal
   where
-    boxCmds :: PrimMonad m => [EdgeMatrix -> m EdgeMatrix]
     boxCmds =
       [ addEdge botLeft topLeft
       , addEdge topLeft topRight
@@ -91,30 +88,30 @@ addBox botLeft (Triple x y z) em = do
     topRight = botLeft + Triple x y 0
     d = Triple 0 0 z
 
-addTorus :: PrimMonad m => D3Point -> D3Coord -> D3Coord -> Double -> EdgeMatrix -> m EdgeMatrix
-addTorus c r1 r2 step em = do
-  numLoopState 0 steps em $ \em' i -> do
-    circ0 <- addCircle (Triple r2 0 0) r1 step empty
-    rotYMatrix (360.0 / steps * i) `matMult` circ0 >>= (transMatrix c `matMult`) >>= mergeCols em'
+addTorus :: D3Point -> D3Coord -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
+addTorus c r1 r2 step em = runST $ do
+  let circ0 = addCircle (Triple r2 0 0) r1 step empty
+  numLoopState 0 steps em $ \em' i ->
+    return $ transMatrix c `matMult` rotYMatrix (360.0 / steps * i) `matMult` circ0  `mergeCols` em'
   where
     steps = 100
 
-addSphere :: PrimMonad m => D3Point -> D3Coord -> Double -> EdgeMatrix -> m EdgeMatrix
-addSphere c r step em = do
-  numLoopState 0 steps em $ \em' i -> do
-    circ0 <- addCircle (Triple 0 0 0) r step empty
-    rotYMatrix (180.0 / steps * i) `matMult` circ0 >>= (transMatrix c `matMult`) >>= mergeCols em'
+addSphere :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
+addSphere c r step em = runST $ do
+  let circ0 = addCircle (Triple 0 0 0) r step empty
+  numLoopState 0 steps em $ \em' i ->
+    return $ transMatrix c `matMult` rotYMatrix (180.0 / steps * i) `matMult` circ0 `mergeCols` em'
   where
     steps = 30
 
-addMatCurve :: PrimMonad m => Matrix D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> Double -> EdgeMatrix -> m EdgeMatrix
-addMatCurve cMat p1 p2 p3 p4 step em = do
-  !m <- cMat `matMult` pointMat
+addMatCurve :: Matrix D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> Double -> EdgeMatrix -> EdgeMatrix
+addMatCurve cMat p1 p2 p3 p4 step em = runST $ do
   let a = Triple (m ! (1,1)) (m ! (1,2)) (m ! (1,3))
       b = Triple (m ! (2,1)) (m ! (2,2)) (m ! (2,3))
       c = Triple (m ! (3,1)) (m ! (3,2)) (m ! (3,3))
       d = Triple (m ! (4,1)) (m ! (4,2)) (m ! (4,3))
-  flip (addParametric step) em $ \t ->
+      !m = cMat `matMult` pointMat
+  return $ flip (addParametric step) em $ \t ->
     let t' = pure t in
     t' * (t' * (t' * a + b) + c) + d
   where

@@ -25,10 +25,8 @@ import           Matrix.D3Point
 import           Matrix.EdgeMatrix
 import           Picture
 import           Angle
-import Control.Monad.Primitive
 import Control.Monad.ST
 import Control.Loop
-import Debug.Trace
 
 -- |'Matrix's that apply transformations using matrix multiplication and
 -- homogenous coordinates. To apply the transformation, matrix multiply the
@@ -110,21 +108,19 @@ rotZMatrix = rotZMatrixRad . degToRad
       [ 0,          0,         0, 1 ]
       ]
 
-progress :: PrimMonad m => [TransformMatrix] -> EdgeMatrix -> m EdgeMatrix
-progress ts e = do
-  (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ -> do
-    thisE <- t `matMult` e
-    appended <- e' `mergeCols` thisE
-    return (ts', appended)
+progress :: [TransformMatrix] -> EdgeMatrix -> EdgeMatrix
+progress ts e = runST $ do
+  (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ ->
+    return (ts', t `matMult` e `mergeCols` e')
   return eFinal
 
-drawProgress :: PrimMonad m => [TransformMatrix] -> EdgeMatrix -> Picture -> m Picture
-drawProgress ts em p = flip drawLines p <$> progress ts em
+drawProgress :: [TransformMatrix] -> EdgeMatrix -> Picture -> Picture
+drawProgress ts em p = flip drawLines p $ progress ts em
 
-drawProgressColors :: PrimMonad m => [(TransformMatrix, Color)] -> EdgeMatrix -> Picture -> m Picture
-drawProgressColors tcs e p = do
+drawProgressColors :: [(TransformMatrix, Color)] -> EdgeMatrix -> Picture -> Picture
+drawProgressColors tcs e p = runST $ do
   (_,pFinal) <- numLoopState 1 (length tcs) (tcs,p) $ \((t,color):tcs',p') _ -> do
-    newE <- t `matMult` e
-    let !newP = drawLinesColor color newE p'
+    let newE = t `matMult` e
+        !newP = drawLinesColor color newE p'
     return (tcs', newP)
   return pFinal

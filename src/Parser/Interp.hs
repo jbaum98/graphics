@@ -74,10 +74,13 @@ eval (RotateZ degs) = addTrans $ rotZMatrix degs
 
 eval Apply = do
   (em, tm, s) <- get
-  em' <- liftIO (tm `matMult` em)
-  put (em', tm, s)
+  put (tm `matMult` em, tm, s)
 
 eval Display = writePicToProcess "display"
+
+eval Clear = do
+  (_, tm, s) <- get
+  put (empty, tm, s)
 
 eval (Save path) = writePicToProcess $ "convert - " ++ path
 
@@ -94,11 +97,9 @@ writePicToProcess cmd = do
 addTrans :: TransformMatrix -> Interp
 addTrans t = do
   (em, tm, s) <- get
-  tm' <- liftIO (t `matMult` tm)
-  put (em, tm', s)
+  put (em, t `matMult` tm, s)
 
-modEM :: (EdgeMatrix -> IO EdgeMatrix) -> Interp
+modEM :: (EdgeMatrix -> EdgeMatrix) -> Interp
 modEM f = do
   (em, tm, s) <- get
-  em' <- liftIO (f em)
-  put (em', tm , s)
+  put (f em, tm , s)
