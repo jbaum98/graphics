@@ -16,9 +16,10 @@ module Color (
   ) where
 
 import Pair (Triple(..))
+import Data.Word
 
 -- |The type of a singe color value
-type ColorVal = Int
+type ColorVal = Word8
 
 -- |An RGB pixel consists of three numbers
 -- representing the amount of red, green, and blue respectively

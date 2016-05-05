@@ -48,15 +48,13 @@ instance (Ix a, NFData a, NFData b, IArray UArray b) => NFData (UArray a b) wher
 solidPic :: Color
          -> Point -- ^The size of the 'Picture'
          -> Picture
-solidPic color maxPoint = listArray (toSize maxPoint) . cycleColor $ color
-  where
-    cycleColor = cycle . toList
-    toList (Triple r g b) = [r, g, b]
+solidPic (Triple r g b) maxPoint | r == g && r == b = runSTUArray $ newArray (toSize maxPoint) r
+                                 | otherwise = listArray (toSize maxPoint) $ cycle [r,g,b]
 
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
          -> Picture
-blankPic = solidPic white
+blankPic maxPoint = runSTUArray $ newArray (toSize maxPoint) 255
 
 -- |Create a picture that generates the RGB values for each 'Point' from three different functions
 mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
@@ -90,6 +88,7 @@ size pic = Pair xsize ysize
     (_, (xsize, ysize, _)) = bounds pic
 
 toTup :: Pair a -> Int -> (a, a, Int)
+{-# INLINE toTup #-}
 toTup (Pair x y) ci = (y, x, ci)
 
 toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
