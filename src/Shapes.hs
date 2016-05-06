@@ -25,11 +25,17 @@ import Control.Monad.Primitive
 
 addParametric :: Double -> (Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
 addParametric step f em = runST $ do
-  let pInitial = f 0
-  (emFinal, _) <- forLoopState step (<= 1) (+ step) (em, pInitial) $ \(em',p) i -> do
+  (emFinal, _) <- forLoopState step (<= 1) (+ step) (em, f 0) $ \(em',p) i -> do
     let p' = f i
     return (addEdge p p' em', p')
   return emFinal
+
+addParametric2 :: Double -> (Double -> Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
+addParametric2 step f em = runST $
+  forLoopState 0 (<= 1) (+ step) em $ \em' i ->
+    forLoopState 0 (<= 1) (+ step) em' $ \em'' j -> do
+      let p = f i j
+      return $ addEdge p p em''
 
 addCircle :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
 addCircle (Triple cx cy cz) r step = addParametric step f . addEdge (Triple (cx + r) cy cz) (f $ 1 - step)
@@ -62,26 +68,21 @@ addBezier = addMatCurve bezMat
           [  1,  0,  0, 0 ]
           ]
 
+addPoints :: [D3Point] -> EdgeMatrix -> EdgeMatrix
+addPoints = compose . fmap (\p -> addEdge p p)
+
 addBox :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addBox botLeft (Triple x y z) em = runST $ do
-  (emFinal, _) <- numLoopState 0 11 (em, boxCmds) $ \(em', cmd:rest) _ -> do
-    let em'' = cmd em'
-    return (em'', rest)
-  return emFinal
+addBox botLeft (Triple x y z) = addPoints points
   where
-    boxCmds =
-      [ addEdge botLeft topLeft
-      , addEdge topLeft topRight
-      , addEdge topRight botRight
-      , addEdge botRight botLeft
-      , addEdge botLeft $ botLeft + d
-      , addEdge topLeft $ topLeft + d
-      , addEdge botRight $ botRight + d
-      , addEdge topRight $ topRight + d
-      , addEdge (botLeft + d) $ topLeft + d
-      , addEdge (topLeft + d) $ topRight + d
-      , addEdge (topRight + d) $ botRight + d
-      , addEdge (botRight + d) $ botLeft + d
+    points = [
+      botLeft,
+      topLeft,
+      topRight,
+      botRight,
+      botLeft + d,
+      topLeft + d,
+      botRight + d,
+      topRight + d
       ]
     topLeft = botLeft + Triple 0 y 0
     botRight = botLeft + Triple x 0 0
@@ -89,20 +90,23 @@ addBox botLeft (Triple x y z) em = runST $ do
     d = Triple 0 0 z
 
 addTorus :: D3Point -> D3Coord -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
-addTorus c r1 r2 step em = runST $ do
-  let circ0 = addCircle (Triple r2 0 0) r1 step empty
-  numLoopState 0 steps em $ \em' i ->
-    return $ transMatrix c `matMult` rotYMatrix (360.0 / steps * i) `matMult` circ0  `mergeCols` em'
+addTorus c r1 r2 step = addParametric2 step $ \t p -> Triple (x t p) (y t p) (z t p) + c
   where
-    steps = 100
+    x thetaT _ = r1 * cos (thetaT * 2 * pi)
+    y thetaT phiT = cos(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
+    z thetaT phiT = sin(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
 
 addSphere :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
-addSphere c r step em = runST $ do
-  let circ0 = addCircle (Triple 0 0 0) r step empty
-  numLoopState 0 steps em $ \em' i ->
-    return $ transMatrix c `matMult` rotYMatrix (180.0 / steps * i) `matMult` circ0 `mergeCols` em'
+addSphere c r step = addParametric2 step $ \t p -> Triple (x t p) (y t p) (z t p) + c
   where
-    steps = 30
+    x thetaT _ = r * cos (thetaT * 2 * pi)
+    y thetaT phiT = r*sin(thetaT * 2 * pi) * cos(phiT * 2 * pi)
+    z thetaT phiT = r*sin(thetaT * 2 * pi) * sin(phiT * 2 * pi)
+{-
+x = rcos(theta)          + cx
+      y = rsin(theta)cos(phi) - sin(phi)+ cy
+      z = rsin(theta)sin(phi) - cos(phi)+ cz
+-}
 
 addMatCurve :: Matrix D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> Double -> EdgeMatrix -> EdgeMatrix
 addMatCurve cMat p1 p2 p3 p4 step em = runST $ do

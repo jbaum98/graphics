@@ -38,10 +38,10 @@ empty :: EdgeMatrix
 empty = Matrix 4 0 (-1) $ V.create $ MV.new 400
 
 addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
-addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) $ V.modify addAction v
-                                             | otherwise = addPoint p $ growMat m 400
+addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) (runST $ V.unsafeThaw v >>= addAction)
+                                             | otherwise = addPoint p $ growMat m 1000
   where
-    addAction v = set v 1 x >> set v 2 y >> set v 3 z >> set v 4 1
+    addAction w = set w 1 x >> set w 2 y >> set w 3 z >> set w 4 1 >> V.unsafeFreeze w
     set w n = MV.write w (encode (r,c+1) (n,c+1))
     {-# INLINE set #-}
 
