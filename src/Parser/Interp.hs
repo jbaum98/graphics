@@ -13,6 +13,7 @@ import Parser.Parser
 import Control.Monad.State
 import System.Process
 import Shapes
+import Debug.Trace
 
 type ParseState = (EdgeMatrix, TransformMatrix, D2Point)
 type Interp = StateT ParseState IO ()
@@ -87,7 +88,7 @@ eval (Save path) = writePicToProcess $ "convert - " ++ path
 writePicToProcess :: String -> Interp
 writePicToProcess cmd = do
   (em, tm, s) <- get
-  let pic = drawLines em (blankPic s)
+  let pic = drawPolys em (blankPic s)
   void . liftIO $ do
     (Just hin, _, _, ps) <-
       createProcess (shell cmd) { std_in = CreatePipe }

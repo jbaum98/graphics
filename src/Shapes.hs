@@ -72,22 +72,26 @@ addPoints :: [D3Point] -> EdgeMatrix -> EdgeMatrix
 addPoints = compose . fmap (\p -> addEdge p p)
 
 addBox :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addBox botLeft (Triple x y z) = addPoints points
+addBox topLeft (Triple x y z) = compose addPolys
   where
-    points = [
-      botLeft,
-      topLeft,
-      topRight,
-      botRight,
-      botLeft + d,
-      topLeft + d,
-      botRight + d,
-      topRight + d
+    addPolys = [
+       -- Front
+       addPolygon topLeft botLeft topRight
+     , addPolygon botRight topRight botLeft
+       -- Back
+     , addPolygon (topRight + d) (botRight + d) (topLeft + d)
+     , addPolygon (botLeft + d) (topLeft + d) (botRight + d)
+       -- Left
+     , addPolygon (topLeft + d) (botLeft + d) topLeft
+     , addPolygon botLeft topLeft (botLeft + d)
+       -- Right
+     , addPolygon topRight botRight (topRight + d)
+     , addPolygon (botRight + d) (topRight + d) botRight
       ]
-    topLeft = botLeft + Triple 0 y 0
+    botLeft = topLeft - Triple 0 y 0
     botRight = botLeft + Triple x 0 0
-    topRight = botLeft + Triple x y 0
-    d = Triple 0 0 z
+    topRight = topLeft + Triple x 0 0
+    d = Triple 0 0 (-z)
 
 addTorus :: D3Point -> D3Coord -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
 addTorus c r1 r2 step = addParametric2 step $ \t p -> Triple (x t p) (y t p) (z t p) + c
