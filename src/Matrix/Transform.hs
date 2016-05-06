@@ -88,10 +88,10 @@ rotYMatrix :: Double -- ^The angle of rotation in degrees
 rotYMatrix = rotYMatrixRad . degToRad
   where
     rotYMatrixRad theta = fromLists [
-      [ cos theta,  0, sin theta, 0 ],
-      [  0,         1, 0,         0 ],
-      [ -sin theta, 0, cos theta, 0 ],
-      [  0,         0, 0,         1 ]
+      [ cos theta,  0, -sin theta, 0 ],
+      [ 0,          1, 0,          0 ],
+      [ sin theta,  0, cos theta,  0 ],
+      [ 0,          0, 0,          1 ]
       ]
 
 -- |Create a rotation matrix that rotates clockwise about the z-axis when the
