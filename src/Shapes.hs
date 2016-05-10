@@ -95,14 +95,12 @@ addBox topLeft (Triple x y z) = compose addPolys
     d = Triple 0 0 (-z)
 
 addTorus :: D3Point -> D3Coord -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
-addTorus c r1 r2 steps = compose [connect i (i+1) (i + steps + 1) . connect (i + steps + 1) (i + steps) i | i <- [0..steps-2], sliceN <- [0..steps-2], let connect = connectFromSlice sliceN]
+addTorus c r1 r2 steps = crissCross steps connectSlice
   where
     torus = genTorus c r1 r2 steps
-    slice = circSlice torus steps
-    slicePoint sliceN n = V.unsafeIndex (slice sliceN) . (+ (n * 4)) <$> Triple 0 1 2
-    connectFromSlice sliceN i1 i2 i3 = addPoly (slicePoint sliceN i1) (slicePoint sliceN i2) (slicePoint sliceN i3)
+    connectSlice = connectShapeSlice (torus, steps)
 
-genTorus :: D3Point -> D3Coord -> D3Coord -> Int -> EdgeMatrix
+genTorus :: D3Point -> D3Coord -> D3Coord -> Int -> Matrix D3Coord
 genTorus c r1 r2 steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
   where
     f t p = Triple (x t p) (y t p) (z t p) + c
@@ -113,17 +111,22 @@ genTorus c r1 r2 steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
 addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
 addSphere c r steps = connectMiddles . connectCaps
   where
-    connectMiddles = compose [connect i (i+1) (steps+i+1) . connect (steps+i+1) (steps+i) i | i <- [1..steps-3], sliceN <- [0..steps-2], let connect = connectFromSlice sliceN]
-    connectCaps = compose [connect 0 1 (steps + 1) . connect (steps - 2) (steps - 1) (steps + steps - 2) | sliceN <- [0..steps - 2], let connect = connectFromSlice sliceN]
+    connectMiddles = crissCross steps connectSlice
+    connectCaps = compose [connect (0, 1, steps + 1) . connect (steps - 2, steps - 1, steps + steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
     sphere = genSphere c r steps
-    slice = circSlice sphere steps
-    slicePoint sliceN n = V.unsafeIndex (slice sliceN) . (+ (n * 4)) <$> Triple 0 1 2
-    connectFromSlice sliceN i1 i2 i3 = addPoly (slicePoint sliceN i1) (slicePoint sliceN i2) (slicePoint sliceN i3)
+    connectSlice = connectShapeSlice (sphere, steps)
 
-circSlice :: EdgeMatrix -> Int -> Int -> V.Vector D3Coord
-circSlice m steps i = V.slice (steps * i * 4) (4*steps) (vector m)
+crissCross :: Int -> (Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix) -> EdgeMatrix -> EdgeMatrix
+crissCross steps connectSlice = compose [connect (i, i+1, steps+i+1) . connect (steps+i+1, steps+i, i) | i <- [1..steps-3], sliceN <- [0..steps-2], let connect = connectSlice sliceN]
 
-genSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix
+connectShapeSlice :: (Matrix D3Coord, Int) -> Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix
+connectShapeSlice (points,steps) sliceN (i1, i2, i3) = addPoly (point i1) (point i2) (point i3)
+    where
+      point n = V.unsafeIndex (slice sliceN) . (+ (n * 4)) <$> Triple 0 1 2
+      slice = circSlice points
+      circSlice m i = V.slice (steps * i * 4) (4*steps) (vector m)
+
+genSphere :: D3Point -> D3Coord -> Int -> Matrix D3Coord
 genSphere c r steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
   where
     f t p = Triple (x t p) (y t p) (z t p) + c
