@@ -12,7 +12,6 @@ module Matrix.EdgeMatrix (
 --   point,
     edge,
     addPoint,
-    addPolygon,
     addEdge,
     addPoly,
     mergeCols,

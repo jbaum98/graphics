@@ -57,7 +57,7 @@ eval (Box x y z w h d) = modEM $ addBox (Triple x y z) (Triple w h d)
 
 eval (Torus x y r1 r2) = modEM $ addTorus (Triple x y 0) r1 r2 20
 
-eval (Sphere x y r) = modEM $ addSphere (Triple x y 0) r 9
+eval (Sphere x y r) = modEM $ addSphere (Triple x y 0) r 11
 
 eval Identity = do
   (em, _, s) <- get

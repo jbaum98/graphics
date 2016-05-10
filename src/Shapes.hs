@@ -70,24 +70,24 @@ addBezier = addMatCurve bezMat
           ]
 
 addPoints :: [D3Point] -> EdgeMatrix -> EdgeMatrix
-addPoints = compose . fmap (\p -> addEdge p p)
+addPoints = compose . fmap (\p -> addPoly p p p)
 
 addBox :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
 addBox topLeft (Triple x y z) = compose addPolys
   where
     addPolys = [
        -- Front
-       addPolygon topLeft botLeft topRight
-     , addPolygon botRight topRight botLeft
+       addPoly topLeft botLeft topRight
+     , addPoly botRight topRight botLeft
        -- Back
-     , addPolygon (topRight + d) (botRight + d) (topLeft + d)
-     , addPolygon (botLeft + d) (topLeft + d) (botRight + d)
+     , addPoly (topRight + d) (botRight + d) (topLeft + d)
+     , addPoly (botLeft + d) (topLeft + d) (botRight + d)
        -- Left
-     , addPolygon (topLeft + d) (botLeft + d) topLeft
-     , addPolygon botLeft topLeft (botLeft + d)
+     , addPoly (topLeft + d) (botLeft + d) topLeft
+     , addPoly botLeft topLeft (botLeft + d)
        -- Right
-     , addPolygon topRight botRight (topRight + d)
-     , addPolygon (botRight + d) (topRight + d) botRight
+     , addPoly topRight botRight (topRight + d)
+     , addPoly (botRight + d) (topRight + d) botRight
       ]
     botLeft = topLeft - Triple 0 y 0
     botRight = botLeft + Triple x 0 0
@@ -102,14 +102,17 @@ addTorus c r1 r2 steps = addParametric2 steps $ \t p -> Triple (x t p) (y t p) (
     z thetaT phiT = sin(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
 
 addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
-addSphere c r steps em = runST $ do
-  (_,_,em') <- forLoopState 0 (< steps) (+1) (0,steps,em) $ \(i,i',em') _ -> do
-    let addAll = addPoly (point i) (point $ i + 1) (point i') . addPoly (point $  i' - 2) (point $ i' - 1) (point $ i' + steps - 1) . compose [ addPoly (point $ i+j) (point $ i+j+1) (point $ i'+j+1) . addPoly (point $ i'+j+1) (point $ i'+j) (point $ i+j) | j <- [1..steps]]
-    return (i', i' + steps, addAll em')
-  return em'
+addSphere c r steps em = runST $
+  numLoopState 0 (steps - 2) em $ \em' i -> do
+    let slice = sphereSlice sphere steps i
+        point n = V.unsafeIndex slice . (+ (n * 4)) <$> Triple 0 1 2
+        addAll = addPoly (point 0) (point 1) (point $ steps + 1) . addPoly (point $ steps - 2) (point $ steps - 1) (point $ steps + steps - 2) . compose [ addPoly (point j) (point $ j+1) (point $ steps+j+1) . addPoly (point $ steps+j+1) (point $ steps+j) (point $ j) | j <- [1..steps-3]]
+    return $ addAll em'
   where
-    points = genSphere c r steps
-    point i = unsafeIndex points . (,i) <$> Triple 1 2 3
+    sphere = genSphere c r steps
+
+sphereSlice :: EdgeMatrix -> Int -> Int -> V.Vector D3Coord
+sphereSlice m steps i = V.slice (steps * i * 4) (4*steps) (vector m)
 
 genSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix
 genSphere c r steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
