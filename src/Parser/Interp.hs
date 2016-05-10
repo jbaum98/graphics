@@ -55,9 +55,9 @@ eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = modEM $ addBezier p1 p2 p3 p4 0.01
 
 eval (Box x y z w h d) = modEM $ addBox (Triple x y z) (Triple w h d)
 
-eval (Torus x y r1 r2) = modEM $ addTorus (Triple x y 0) r1 r2 0.05
+eval (Torus x y r1 r2) = modEM $ addTorus (Triple x y 0) r1 r2 20
 
-eval (Sphere x y r) = modEM $ addSphere (Triple x y 0) r 0.05
+eval (Sphere x y r) = modEM $ addSphere (Triple x y 0) r 9
 
 eval Identity = do
   (em, _, s) <- get
