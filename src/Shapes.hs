@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, FlexibleContexts #-}
+{-# LANGUAGE BangPatterns, FlexibleContexts, TupleSections #-}
 
 module Shapes (
     addParametric,
@@ -30,12 +30,13 @@ addParametric step f em = runST $ do
     return (addEdge p p' em', p')
   return emFinal
 
-addParametric2 :: Double -> (Double -> Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
-addParametric2 step f em = runST $
-  forLoopState 0 (<= 1) (+ step) em $ \em' i ->
-    forLoopState 0 (<= 1) (+ step) em' $ \em'' j -> do
-      let p = f i j
-      return $ addEdge p p em''
+addParametric2 :: Int -> (Double -> Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
+addParametric2 steps f em = runST $
+  let normalize = (/ fromIntegral (steps-1)) . fromIntegral in
+  numLoopState 0 (steps-1) em $ \em' j ->
+    numLoopState 0 (steps-1) em' $ \em'' i -> do
+      let p = f (normalize i) (normalize j)
+      return $ addPoint p em''
 
 addCircle :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
 addCircle (Triple cx cy cz) r step = addParametric step f . addEdge (Triple (cx + r) cy cz) (f $ 1 - step)
@@ -89,24 +90,30 @@ addBox botLeft (Triple x y z) = addPoints points
     topRight = botLeft + Triple x y 0
     d = Triple 0 0 z
 
-addTorus :: D3Point -> D3Coord -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
-addTorus c r1 r2 step = addParametric2 step $ \t p -> Triple (x t p) (y t p) (z t p) + c
+addTorus :: D3Point -> D3Coord -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
+addTorus c r1 r2 steps = addParametric2 steps $ \t p -> Triple (x t p) (y t p) (z t p) + c
   where
     x thetaT _ = r1 * cos (thetaT * 2 * pi)
     y thetaT phiT = cos(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
     z thetaT phiT = sin(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
 
-addSphere :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
-addSphere c r step = addParametric2 step $ \t p -> Triple (x t p) (y t p) (z t p) + c
+addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
+addSphere c r steps em = runST $ do
+  (_,_,em') <- forLoopState 0 (< steps) (+1) (0,steps,em) $ \(i,i',em') _ -> do
+    let addAll = addPoly (point i) (point $ i + 1) (point i') . addPoly (point $  i' - 2) (point $ i' - 1) (point $ i' + steps - 1) . compose [ addPoly (point $ i+j) (point $ i+j+1) (point $ i'+j+1) . addPoly (point $ i'+j+1) (point $ i'+j) (point $ i+j) | j <- [1..steps]]
+    return (i', i' + steps, addAll em')
+  return em'
   where
-    x thetaT _ = r * cos (thetaT * 2 * pi)
-    y thetaT phiT = r*sin(thetaT * 2 * pi) * cos(phiT * 2 * pi)
-    z thetaT phiT = r*sin(thetaT * 2 * pi) * sin(phiT * 2 * pi)
-{-
-x = rcos(theta)          + cx
-      y = rsin(theta)cos(phi) - sin(phi)+ cy
-      z = rsin(theta)sin(phi) - cos(phi)+ cz
--}
+    points = genSphere c r steps
+    point i = unsafeIndex points . (,i) <$> Triple 1 2 3
+
+genSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix
+genSphere c r steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
+  where
+    f t p = Triple (x t p) (y t p) (z t p) + c
+    x thetaT _ = r * cos (thetaT * pi)
+    y thetaT phiT = r*sin(thetaT * pi) * cos(phiT * 2 * pi)
+    z thetaT phiT = r*sin(thetaT * pi) * sin(phiT * 2 * pi)
 
 addMatCurve :: Matrix D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> Double -> EdgeMatrix -> EdgeMatrix
 addMatCurve cMat p1 p2 p3 p4 step em = runST $ do

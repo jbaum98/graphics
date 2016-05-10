@@ -6,16 +6,20 @@ module Matrix.EdgeMatrix (
     module Matrix.D3Point,
     -- ** Construction
     empty,
+    emptyWith,
     fromPoints,
 --   connectPoints,
 --   point,
     edge,
-    addEdge,
     addPoint,
+    addEdge,
+    addPoly,
     mergeCols,
     -- ** Retrieving 'Point's
    drawLinesColor,
    drawLines,
+   drawPolysColor,
+   drawPolys
     ) where
 
 import           Matrix.Base
@@ -36,6 +40,9 @@ type EdgeMatrix = Matrix D3Coord
 
 empty :: EdgeMatrix
 empty = Matrix 4 0 (-1) $ V.create $ MV.new 400
+
+emptyWith :: Int -> EdgeMatrix
+emptyWith n = Matrix 4 0 (-1) $ V.create $ MV.new n
 
 addPoint :: D3Point -> EdgeMatrix -> EdgeMatrix
 addPoint p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) (runST $ V.unsafeThaw v >>= addAction)
@@ -83,7 +90,10 @@ edge (Triple x1 y1 z1) (Triple x2 y2 z2) = Matrix 4 2 7 $
 
 -- |Adds an edge conecting to 'D3Point's to an 'EdgeMatrix'
 addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addEdge p1 p2 = addPoint p1 . addPoint p2
+addEdge p1 p2 = addPoint p2 . addPoint p1
+
+addPoly :: D3Point -> D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
+addPoly p1 p2 p3 = addPoint p3 . addPoint p2 . addPoint p1
 
 -- |Gets the @n@th point from an 'EdgeMatrix' as a 'D2Point', dropping the
 -- z-coordinate
@@ -102,3 +112,14 @@ drawLinesColor color m = compose [drawColorLine color (getPoint m i) (getPoint m
 -- |Draws all lines specified by an 'EdgeMatrix' in a white
 drawLines :: EdgeMatrix -> Picture -> Picture
 drawLines = drawLinesColor white
+
+drawPolysColor :: Color -> EdgeMatrix -> Picture -> Picture
+drawPolysColor color m = compose [
+  let p1 = getPoint m i
+      p2 = getPoint m (i+1)
+      p3 = getPoint m (i+2)
+  in connect p1 p2 . connect p2 p3 . connect p1 p3 | i <- [0,3.. cols m - 2]]
+  where connect = drawColorLine color
+
+drawPolys :: EdgeMatrix -> Picture -> Picture
+drawPolys = drawPolysColor white
