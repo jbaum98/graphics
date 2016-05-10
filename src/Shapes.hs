@@ -102,14 +102,14 @@ addTorus c r1 r2 steps = addParametric2 steps $ \t p -> Triple (x t p) (y t p) (
     z thetaT phiT = sin(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
 
 addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
-addSphere c r steps em = runST $
-  numLoopState 0 (steps - 2) em $ \em' i -> do
-    let slice = sphereSlice sphere steps i
-        point n = V.unsafeIndex slice . (+ (n * 4)) <$> Triple 0 1 2
-        addAll = addPoly (point 0) (point 1) (point $ steps + 1) . addPoly (point $ steps - 2) (point $ steps - 1) (point $ steps + steps - 2) . compose [ addPoly (point j) (point $ j+1) (point $ steps+j+1) . addPoly (point $ steps+j+1) (point $ steps+j) (point $ j) | j <- [1..steps-3]]
-    return $ addAll em'
+addSphere c r steps = addMiddles . addCaps
   where
+    addMiddles = compose [add i (i+1) (steps+i+1) . add (steps+i+1) (steps+i) i | i <- [1..steps-3], sliceN <- [0..steps-2], let add = addFromSlice sliceN]
+    addCaps = compose [add 0 1 (steps + 1) . add (steps - 2) (steps - 1) (steps + steps - 2) | sliceN <- [0..steps - 2], let add = addFromSlice sliceN]
     sphere = genSphere c r steps
+    slice = sphereSlice sphere steps
+    slicePoint sliceN n = V.unsafeIndex (slice sliceN) . (+ (n * 4)) <$> Triple 0 1 2
+    addFromSlice sliceN i1 i2 i3 = addPoly (slicePoint sliceN i1) (slicePoint sliceN i2) (slicePoint sliceN i3)
 
 sphereSlice :: EdgeMatrix -> Int -> Int -> V.Vector D3Coord
 sphereSlice m steps i = V.slice (steps * i * 4) (4*steps) (vector m)
