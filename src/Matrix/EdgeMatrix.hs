@@ -28,6 +28,7 @@ import Pair
 import D2Point
 import Picture
 import Utils
+import Vectors
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 import Control.Monad
@@ -98,30 +99,41 @@ addPoly p1 p2 p3 = addPoint p3 . addPoint p2 . addPoint p1
 -- |Gets the @n@th point from an 'EdgeMatrix' as a 'D2Point', dropping the
 -- z-coordinate
 
-getPoint :: EdgeMatrix -> Int -> D2Point
-getPoint m n = round <$> Pair x y
+getD2Point :: EdgeMatrix -> Int -> D2Point
+getD2Point m n = round <$> Pair x y
   where
     x = col `V.unsafeIndex` 0
     y = col `V.unsafeIndex` 1
     col = unsafeGetCol (n+1) m
 
+getD3Point :: EdgeMatrix -> Int -> D3Point
+getD3Point m n = Triple x y z
+  where
+    x = col `V.unsafeIndex` 0
+    y = col `V.unsafeIndex` 1
+    z = col `V.unsafeIndex` 2
+    col = unsafeGetCol (n+1) m
+
 -- |Draws all lines specified by an 'EdgeMatrix' in a 'Color'
 drawLinesColor :: Color -> EdgeMatrix -> Picture -> Picture
-drawLinesColor color m = compose [drawColorLine color (getPoint m i) (getPoint m (i+1)) | i <- [0,2.. cols m - 1]]
+drawLinesColor color m = compose [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
 
 -- |Draws all lines specified by an 'EdgeMatrix' in a white
 drawLines :: EdgeMatrix -> Picture -> Picture
 drawLines = drawLinesColor white
 
 drawPolysColor :: Color -> EdgeMatrix -> Picture -> Picture
-drawPolysColor color m = compose [
-  let p1 = getPoint m i
-      p2 = getPoint m $ i + 1
-      p3 = getPoint m $ i + 2
-  in drawColorLine color p1 p2 .
-     drawColorLine color p2 p3 .
-     drawColorLine color p3 p1
-  | i <- [0,3.. cols m - 2]]
+drawPolysColor color m = compose [draw p1 p2 . draw p2 p3 . draw p3 p1
+  | i <- [0,3.. cols m - 2],
+  let p1 = getD3Point m i
+      p2 = getD3Point m $ i + 1
+      p3 = getD3Point m $ i + 2
+      n = p2 - p1 `cross` p3 - p1
+  , n `dot` v < 0
+  ]
+  where
+    draw (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> (Pair x y)) (round <$> (Pair x' y'))
+    v = Triple 0 0 (-1)
 
 drawPolys :: EdgeMatrix -> Picture -> Picture
 drawPolys = drawPolysColor white

@@ -88,6 +88,12 @@ addBox topLeft (Triple x y z) = compose addPolys
        -- Right
      , addPoly topRight botRight (topRight + d)
      , addPoly (botRight + d) (topRight + d) botRight
+       -- Top
+     , addPoly (topLeft + d) topLeft (topRight + d)
+     , addPoly topRight (topRight + d) topLeft
+       -- Bottom
+     , addPoly botLeft (botLeft + d) botRight
+     , addPoly (botRight + d) botRight (botLeft + d)
       ]
     botLeft = topLeft - Triple 0 y 0
     botRight = botLeft + Triple x 0 0
@@ -104,9 +110,9 @@ genTorus :: D3Point -> D3Coord -> D3Coord -> Int -> Matrix D3Coord
 genTorus c r1 r2 steps = addParametric2 steps f $ emptyWith (4 * steps * steps)
   where
     f t p = Triple (x t p) (y t p) (z t p) + c
-    x thetaT _ = r1 * cos (thetaT * 2 * pi)
-    y thetaT phiT = cos(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
-    z thetaT phiT = sin(phiT * 2 * pi) * (r1 * sin(thetaT * 2 * pi) + r2)
+    x thetaT phiT = cos(phiT * 2 * pi) * (r1 * cos(thetaT * 2 * pi) + r2)
+    y thetaT _ = r1 * sin (thetaT * 2 * pi)
+    z thetaT phiT = sin(phiT * 2 * pi) * (r1 * cos(thetaT * 2 * pi) + r2)
 
 addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
 addSphere c r steps = connectMiddles . connectCaps
@@ -117,7 +123,7 @@ addSphere c r steps = connectMiddles . connectCaps
     connectSlice = connectShapeSlice (sphere, steps)
 
 crissCross :: Int -> (Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix) -> EdgeMatrix -> EdgeMatrix
-crissCross steps connectSlice = compose [connect (i, i+1, steps+i+1) . connect (steps+i+1, steps+i, i) | i <- [1..steps-3], sliceN <- [0..steps-2], let connect = connectSlice sliceN]
+crissCross steps connectSlice = compose [connect (i,i+1, steps+i) . connect (i+1, steps+i+1, steps+i) | i <- [0..steps-2], sliceN <- [0..steps-2], let connect = connectSlice sliceN]
 
 connectShapeSlice :: (Matrix D3Coord, Int) -> Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix
 connectShapeSlice (points,steps) sliceN (i1, i2, i3) = addPoly (point i1) (point i2) (point i3)
