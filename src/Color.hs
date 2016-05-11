@@ -53,11 +53,11 @@ black, white, red, orange, yellow, green, blue, indigo, violet, pink, turqouise 
 black = Triple 0 0 0
 white = Triple maxColor maxColor maxColor
 red = Triple maxColor 0 0
-orange = rel255 <$> Triple 255 144 0
+orange = rel255 <$> (Triple 255 144 0 :: Triple Double)
 yellow = Triple maxColor maxColor 0
 green = Triple 0 maxColor 0
 blue = Triple 0 0 maxColor
-indigo = rel255 <$> Triple 75 0 130
-violet = rel255 <$> Triple 159 0 255
-pink = rel255 <$> Triple 255 192 203
-turqouise = rel255 <$> Triple 64 224 208
+indigo = rel255 <$> (Triple 75 0 130 :: Triple Double)
+violet = rel255 <$> (Triple 159 0 255 :: Triple Double)
+pink = rel255 <$> (Triple 255 192 203 :: Triple Double)
+turqouise = rel255 <$> (Triple 64 224 208 :: Triple Double)

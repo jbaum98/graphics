@@ -33,19 +33,24 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
 
 uncurryList1 :: (a -> b) -> [a] -> b
 uncurryList1 f (x:_) = f x
+uncurryList1 _ [] = error "Empty list passed to uncurryList1"
 
 uncurryList3 :: (a -> a -> a -> b) -> [a] -> b
 uncurryList3 f (x1:x2:x3:_) = f x1 x2 x3
+uncurryList3 _ xs = error $ "List of length " ++ show (length xs) ++ "passed to uncurryList3"
 
 uncurryList4 :: (a -> a -> a -> a -> b) -> [a] -> b
 uncurryList4 f (x1:x2:x3:x4:_) = f x1 x2 x3 x4
+uncurryList4 _ xs = error $ "List of length " ++ show (length xs) ++ "passed to uncurryList4"
 
 uncurryList6 :: (a -> a -> a -> a -> a -> a -> b) -> [a] -> b
 uncurryList6 f (x1:x2:x3:x4:x5:x6:_) = f x1 x2 x3 x4 x5 x6
+uncurryList6 _ xs = error $ "List of length " ++ show (length xs) ++ "passed to uncurryList6"
 
 uncurryList8 :: (a -> a -> a -> a -> a -> a -> a -> a -> b) -> [a] -> b
 uncurryList8 f (x1:x2:x3:x4:x5:x6:x7:x8:_) =
   f x1 x2 x3 x4 x5 x6 x7 x8
+uncurryList8 _ xs = error $ "List of length " ++ show (length xs) ++ "passed to uncurryList8"
 
 restOfLine :: Parser ByteString
 restOfLine = takeWhile (not . isEndOfLine)

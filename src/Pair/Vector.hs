@@ -1,15 +1,14 @@
-module Vectors (
+module Pair.Vector (
   dot,
   cross,
   norm
   ) where
 
-import Pair
-import Debug.Trace
+import Pair.Pair
 
 infixl 5 `dot`
 dot :: (Num a, Show a) => Triple a -> Triple a -> a
-dot a@(Triple a1 a2 a3) b@(Triple b1 b2 b3) = let e = a1 * b1 + a2 * b2 + a3 * b3 in trace (show a) $ trace (show b) $ trace (show e) $ e
+dot (Triple a1 a2 a3) (Triple b1 b2 b3) = a1 * b1 + a2 * b2 + a3 * b3
 
 infixl 5 `cross`
 cross :: Num a => Triple a -> Triple a -> Triple a

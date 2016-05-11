@@ -22,20 +22,18 @@ module Matrix.EdgeMatrix (
    drawPolys
     ) where
 
-import           Matrix.Base
-import           Matrix.D3Point
+import Control.Monad.ST
+
+import Control.Loop (numLoop)
+import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Unboxed.Mutable as MV
+
+import Matrix.Base
+import Matrix.D3Point
 import Pair
 import D2Point
 import Picture
 import Utils
-import Vectors
-import qualified Data.Vector.Unboxed as V
-import qualified Data.Vector.Unboxed.Mutable as MV
-import Control.Monad
-import Control.Monad.ST
-import Control.Monad.Primitive
-import Control.Loop (numLoop)
-import Debug.Trace
 
 type EdgeMatrix = Matrix D3Coord
 
@@ -84,6 +82,7 @@ fromPoints points = Matrix 4 (length points) 0 $ V.generate (length points * 4) 
         cIndex 1 (Triple _ y _) = y
         cIndex 2 (Triple _ _ z) = z
         cIndex 3 _ = 1
+        cIndex _ _ = 0
 
 edge :: D3Point -> D3Point -> EdgeMatrix
 edge (Triple x1 y1 z1) (Triple x2 y2 z2) = Matrix 4 2 7 $
@@ -132,7 +131,7 @@ drawPolysColor color m = compose [draw p1 p2 . draw p2 p3 . draw p3 p1
   , n `dot` v < 0
   ]
   where
-    draw (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> (Pair x y)) (round <$> (Pair x' y'))
+    draw (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
     v = Triple 0 0 (-1)
 
 drawPolys :: EdgeMatrix -> Picture -> Picture

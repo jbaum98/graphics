@@ -10,18 +10,13 @@ module Shapes (
     addSphere
   ) where
 
-import Matrix.Base
-import Matrix.EdgeMatrix
-import Matrix.Transform
-import Matrix.Mult
-import Utils
-import Debug.Trace (trace)
-import Control.Loop
-import qualified Data.Vector.Unboxed as V
-import qualified Data.Vector.Unboxed.Mutable as MV
-import Control.Monad
 import Control.Monad.ST
-import Control.Monad.Primitive
+
+import qualified Data.Vector.Unboxed as V
+import Control.Loop
+
+import Matrix
+import Utils
 
 addParametric :: Double -> (Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
 addParametric step f em = runST $ do
@@ -29,21 +24,22 @@ addParametric step f em = runST $ do
     let p' = f i
     return (addEdge p p' em', p')
   return emFinal
+  -- compose [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
 
 addParametric2 :: Int -> (Double -> Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
-addParametric2 steps f em = runST $
-  let normalize = (/ fromIntegral (steps-1)) . fromIntegral in
-  numLoopState 0 (steps-1) em $ \em' j ->
-    numLoopState 0 (steps-1) em' $ \em'' i -> do
-      let p = f (normalize i) (normalize j)
-      return $ addPoint p em''
+addParametric2 steps f = compose [ addPoint $ f i j
+                                 | i <- [0,step..1], j <- [0,step..1]]
+  where step = recip $ fromIntegral steps - 1
 
 addCircle :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
-addCircle (Triple cx cy cz) r step = addParametric step f . addEdge (Triple (cx + r) cy cz) (f $ 1 - step)
+addCircle (Triple cx cy cz) r step = addParametric step f .
+                                     addEdge firstPoint lastPoint
   where
     f t = Triple (x t) (y t) cz
     x t = cx + r * cos (2 * pi * t)
     y t = cy + r * sin (2 * pi * t)
+    firstPoint = Triple (cx + r) cy cz
+    lastPoint = f $ 1 - step
 
 addHermite, addBezier :: D3Point
                       -> D3Point
@@ -69,13 +65,8 @@ addBezier = addMatCurve bezMat
           [  1,  0,  0, 0 ]
           ]
 
-addPoints :: [D3Point] -> EdgeMatrix -> EdgeMatrix
-addPoints = compose . fmap (\p -> addPoly p p p)
-
 addBox :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addBox topLeft (Triple x y z) = compose addPolys
-  where
-    addPolys = [
+addBox topLeft (Triple x y z) = compose [
        -- Front
        addPoly topLeft botLeft topRight
      , addPoly botRight topRight botLeft
@@ -94,7 +85,8 @@ addBox topLeft (Triple x y z) = compose addPolys
        -- Bottom
      , addPoly botLeft (botLeft + d) botRight
      , addPoly (botRight + d) botRight (botLeft + d)
-      ]
+     ]
+  where
     botLeft = topLeft - Triple 0 y 0
     botRight = botLeft + Triple x 0 0
     topRight = topLeft + Triple x 0 0
@@ -158,11 +150,3 @@ addMatCurve cMat p1 p2 p3 p4 step em = runST $ do
       explode p4
       ]
     explode (Triple x y z) = [x, y, z]
-
-pointToMatF :: Int -> D3Point -> D3Coord
-{-# INLINE pointToMatF #-}
-pointToMatF 0 (Triple x _ _) = x
-pointToMatF 1 (Triple _ y _) = y
-pointToMatF 2 (Triple _ _ z) = z
-pointToMatF 3 Triple {}      = 1
-pointToMatF _ Triple {}      = 0

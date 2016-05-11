@@ -52,6 +52,7 @@ line' oct p1@(Pair x1 y1) p2@(Pair x2 y2) = iter di [p1]
                          Second  -> a + a + b
                          Seventh -> a + a - b
                          Eighth  -> a + a - b
+                         _       -> error "Impossibility when drawing line"
         iter = iterMaker oct p2 a b
 
 iterMaker :: (Num a, Ord a) => Octant -> Point -> a -> a -> (a -> [Point] -> [Point])
@@ -59,37 +60,45 @@ iterMaker oct p2 a b = iter
   where iter oldD soFar@(lastP:_)
           | stillGoing lastP = iter newD (nextP:soFar)
           | otherwise = soFar
-          where (newD, nextP) =
-                  if oldD `ord` 0
-                  then (oldD + dOffset + extraD, upper lastP)
-                  else (oldD + dOffset,          lower lastP)
+          where
+            (newD, nextP) =
+              if oldD `ord` 0
+              then (oldD + dOffset + extraD, upper lastP)
+              else (oldD + dOffset,          lower lastP)
+        iter _ [] = error "Impossibility when drawing line"
 
-        stillGoing lastP = case oct of First   -> getX lastP < getX p2
-                                       Second  -> getY lastP < getY p2
-                                       Seventh -> getY lastP > getY p2
-                                       Eighth  -> getX lastP < getX p2
+        stillGoing p = case oct of First   -> getX p < getX p2
+                                   Second  -> getY p < getY p2
+                                   Seventh -> getY p > getY p2
+                                   Eighth  -> getX p < getX p2
+                                   _       -> error "Impossibility when drawing line"
 
         ord = case oct of First   -> (>)
                           Second  -> (<)
                           Seventh -> (>)
                           Eighth  -> (<)
+                          _       -> error "Impossibility when drawing line"
 
         dOffset = case oct of First   -> a + a
                               Second  -> b + b
                               Seventh -> -b - b
                               Eighth  -> a + a
+                              _       -> error "Impossibility when drawing line"
 
         extraD = case oct of First   -> b + b
                              Second  -> a + a
                              Seventh -> a + a
                              Eighth  -> -b - b
+                             _       -> error "Impossibility when drawing line"
 
         upper (Pair x y) = case oct of First   -> Pair (x+1) (y+1)
                                        Second  -> Pair (x+1) (y+1)
                                        Seventh -> Pair (x+1) (y-1)
                                        Eighth  -> Pair (x+1) (y-1)
+                                       _       -> error "Impossibility when drawing line"
 
         lower (Pair x y) = case oct of First   -> Pair (x+1)  y
                                        Second  -> Pair  x    (y+1)
                                        Seventh -> Pair  x    (y-1)
                                        Eighth  -> Pair (x+1)  y
+                                       _       -> error "Impossibility when drawing line"

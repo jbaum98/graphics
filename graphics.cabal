@@ -16,7 +16,18 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Parser
-  build-depends:       base >= 4.7 && < 5, containers, bytestring, deepseq, array, primitive, repa, attoparsec, mtl, process, vector, loop, ghc-prim
+  build-depends:       base >= 4.7 && < 5
+                     , containers >= 0.5 && < 1
+                     , bytestring >= 0.10 && < 1
+                     , deepseq >= 1.4 && < 2
+                     , array >= 0.5 && < 1
+                     , primitive >= 0.6 && < 1
+                     , attoparsec >= 0.13 && < 1
+                     , mtl >= 2.2 && < 3
+                     , process >= 1.2 && < 2
+                     , vector >= 0.11 && < 1
+                     , loop >= 0.3 && < 1
+                     , ghc-prim >= 0.4 && < 1
   other-modules:       Matrix.Base
                        Matrix.Mult
                        Matrix.Transform
@@ -26,7 +37,8 @@ library
                        Parser.Interp
                        Angle
                        Shapes
-                       Vectors
+                       Pair.Pair
+                       Pair.Vector
   default-language:    Haskell2010
 
 executable graphics-exe

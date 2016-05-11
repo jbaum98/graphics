@@ -13,7 +13,6 @@ import Parser.Parser
 import Control.Monad.State
 import System.Process
 import Shapes
-import Debug.Trace
 
 type ParseState = (EdgeMatrix, TransformMatrix, D2Point)
 type Interp = StateT ParseState IO ()

@@ -10,7 +10,7 @@ module Picture (
     module Color,
     module D2Point,
     module Line,
-    Picture,
+    Picture(..),
     solidPic,
     blankPic,
     mathPic,
@@ -26,44 +26,46 @@ module Picture (
     drawLine, transLine,
     ) where
 
-import           Color
-import           D2Point
-import           Line
-import           Utils (compose)
+import           Control.Monad.ST
 import           Data.Array.Unboxed
 import           Data.Array.MArray
 import           Data.Array.Unsafe
 import           Data.Array.ST
-import           Data.Array.Base (unsafeAt)
-import           Control.Monad.ST
+import qualified Data.Array.Base as AB (unsafeAt)
+
 import           Control.DeepSeq
+
+import           Color
+import           D2Point
+import           Line
+import           Utils (compose)
 
 type Coord = D2Coord
 type Point = D2Point
 
 -- |A 'Picture' is a grid of pixels
-type Picture = UArray (Coord, Coord, Int) ColorVal
+newtype Picture = Picture { runPicture :: UArray (Coord, Coord, Int) ColorVal }
 
-instance (Ix a, NFData a, NFData b, IArray UArray b) => NFData (UArray a b) where
-  rnf x = rnf (bounds x, elems x)
+instance NFData Picture where
+  rnf (Picture x) = rnf (bounds x, elems x)
 
 -- |Create a solid 'Picture' of a single 'Color
 solidPic :: Color
          -> Point -- ^The size of the 'Picture'
          -> Picture
-solidPic (Triple r g b) maxPoint | r == g && r == b = runSTUArray $ newArray (toSize maxPoint) r
-                                 | otherwise = listArray (toSize maxPoint) $ cycle [r,g,b]
+solidPic (Triple r g b) maxPoint | r == g && r == b = Picture $ runSTUArray $ newArray (toSize maxPoint) r
+                                 | otherwise = Picture $ listArray (toSize maxPoint) $ cycle [r,g,b]
 
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
          -> Picture
-blankPic maxPoint = runSTUArray $ newArray (toSize maxPoint) 0
+blankPic maxPoint = Picture $  runSTUArray $ newArray (toSize maxPoint) 0
 
 -- |Create a picture that generates the RGB values for each 'Point' from three different functions
 mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
         -> Point                   -- ^The size of the 'Picture'
         -> Picture
-mathPic funcs maxPoint = listArray (toSize maxPoint) (allPoints maxPoint)
+mathPic funcs maxPoint = Picture $ listArray (toSize maxPoint) (allPoints maxPoint)
   where
     allPoints :: Point -> [ColorVal]
     allPoints (Pair xr yr) = [ colorFunc x y ci
@@ -88,7 +90,7 @@ size :: Picture
 -- index is out of bounds.
 size pic = Pair xsize ysize
   where
-    (_, (xsize, ysize, _)) = bounds pic
+    (_, (xsize, ysize, _)) = bounds $ runPicture pic
 
 toTup :: Pair a -> Int -> (a, a, Int)
 {-# INLINE toTup #-}
@@ -98,16 +100,16 @@ toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
 toSize point = ((1, 1, 0), toTup point 2)
 
 inBounds :: Point -> Picture -> Bool
-inBounds point pic = inRange (bounds pic) (toTup point 0)
+inBounds point pic = inRange (bounds $ runPicture pic) (toTup point 0)
 
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
 setPointColor :: Color -> Point -> Picture -> Picture
 setPointColor _ point !pic
   | not $ inBounds point pic = pic
-setPointColor color point pic = runST $ do
+setPointColor color point (Picture pic) = runST $ do
   mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
   mapM_ (mutColorVal mutPic) [0..2]
-  unsafeFreeze mutPic
+  Picture <$> unsafeFreeze mutPic
   where mutColorVal mp n = writeArray mp (toTup point n) (color `tIndex` n)
 
 -- |Set every 'Point' in a list to a single 'Color'
@@ -138,3 +140,11 @@ transLine o p1 p2 = map t $ line p1 p2
 
 drawLine :: Point -> Point -> Picture -> Picture
 drawLine = drawColorLine white
+
+unsafeAt :: Picture -> (Coord,Coord,Int) -> ColorVal
+unsafeAt pic = AB.unsafeAt (runPicture pic) . enc
+  where
+      enc = index ((1,1,0),(xres,yres,2))
+      {-# INLINE enc #-}
+      (Pair xres yres) = size pic
+{-# INLINE unsafeAt #-}
