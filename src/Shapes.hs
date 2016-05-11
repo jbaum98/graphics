@@ -28,7 +28,7 @@ addParametric step f em = runST $ do
 
 addParametric2 :: Int -> (Double -> Double -> D3Point) -> EdgeMatrix -> EdgeMatrix
 addParametric2 steps f = compose [ addPoint $ f i j
-                                 | i <- [0,step..1], j <- [0,step..1]]
+                                 | j <- [0,step..1], i <- [0,step..1]]
   where step = recip $ fromIntegral steps - 1
 
 addCircle :: D3Point -> D3Coord -> Double -> EdgeMatrix -> EdgeMatrix
@@ -110,12 +110,19 @@ addSphere :: D3Point -> D3Coord -> Int -> EdgeMatrix -> EdgeMatrix
 addSphere c r steps = connectMiddles . connectCaps
   where
     connectMiddles = crissCross steps connectSlice
-    connectCaps = compose [connect (0, 1, steps + 1) . connect (steps - 2, steps - 1, steps + steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
+    connectCaps = compose [connect (0, steps+1, 1) . connect (steps + steps - 2, steps - 1, steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
     sphere = genSphere c r steps
     connectSlice = connectShapeSlice (sphere, steps)
 
 crissCross :: Int -> (Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix) -> EdgeMatrix -> EdgeMatrix
-crissCross steps connectSlice = compose [connect (i,i+1, steps+i) . connect (i+1, steps+i+1, steps+i) | i <- [0..steps-2], sliceN <- [0..steps-2], let connect = connectSlice sliceN]
+crissCross steps connectSlice = compose [
+  connect (i, i', i+1) .
+  connect (i'+1, i+1, i')
+  | i      <- [0..steps-2],
+    sliceN <- [0..steps-2],
+    let connect = connectSlice sliceN
+        i'      = i + steps
+  ]
 
 connectShapeSlice :: (Matrix D3Coord, Int) -> Int -> (Int, Int, Int) -> EdgeMatrix -> EdgeMatrix
 connectShapeSlice (points,steps) sliceN (i1, i2, i3) = addPoly (point i1) (point i2) (point i3)
