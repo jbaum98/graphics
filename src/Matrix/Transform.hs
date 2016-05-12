@@ -22,7 +22,7 @@ module Matrix.Transform (
 import           Matrix.Base
 import           Matrix.Mult
 import           Matrix.D3Point
-import           Matrix.EdgeMatrix
+import           Matrix.Drawable
 import           Picture
 import           Angle
 import Control.Monad.ST
@@ -108,19 +108,19 @@ rotZMatrix = rotZMatrixRad . degToRad
       [ 0,          0,         0, 1 ]
       ]
 
-progress :: [TransformMatrix] -> EdgeMatrix -> EdgeMatrix
+progress :: [TransformMatrix] -> Matrix D3Coord -> Matrix D3Coord
 progress ts e = runST $ do
   (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ ->
     return (ts', t `matMult` e `mergeCols` e')
   return eFinal
 
-drawProgress :: [TransformMatrix] -> EdgeMatrix -> Picture -> Picture
-drawProgress ts em p = flip drawLines p $ progress ts em
+drawProgress :: Drawable d => [TransformMatrix] -> d -> Picture -> Picture
+drawProgress ts em p = flip draw p $ liftDraw (progress ts) em
 
-drawProgressColors :: [(TransformMatrix, Color)] -> EdgeMatrix -> Picture -> Picture
+drawProgressColors :: Drawable d => [(TransformMatrix, Color)] -> d -> Picture -> Picture
 drawProgressColors tcs e p = runST $ do
   (_,pFinal) <- numLoopState 1 (length tcs) (tcs,p) $ \((t,color):tcs',p') _ -> do
-    let newE = t `matMult` e
-        !newP = drawLinesColor color newE p'
+    let newE = t `matMultD` e
+        !newP = drawColor color newE p'
     return (tcs', newP)
   return pFinal

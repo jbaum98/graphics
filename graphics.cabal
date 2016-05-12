@@ -30,7 +30,10 @@ library
   other-modules:       Matrix.Base
                        Matrix.Mult
                        Matrix.Transform
+                       Matrix.Drawable
                        Matrix.EdgeMatrix
+                       Matrix.PointMatrix
+                       Matrix.PolyMatrix
                        Matrix.D3Point
                        Parser.Parser
                        Parser.Interp

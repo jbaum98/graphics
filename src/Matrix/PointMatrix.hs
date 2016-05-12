@@ -1,0 +1,26 @@
+module Matrix.PointMatrix (
+  PointMatrix,
+  point,
+  addPoint
+  ) where
+
+import qualified Data.Vector.Unboxed as V
+
+import Matrix.Base
+import Matrix.D3Point
+import Matrix.Drawable
+import Picture
+import Utils
+
+newtype PointMatrix = PointMatrix { runPM :: Matrix D3Coord }
+
+instance Drawable PointMatrix where
+  drawColor color (PointMatrix m) = compose $ fmap (setPointColor color. getD2Point m) [0..cols m - 1]
+  run = runPM
+  wrap = PointMatrix
+
+point :: D3Point -> PointMatrix
+point (Triple x y z) = PointMatrix $ Matrix 4 1 3 $ V.fromList [x, y, z, 1]
+
+addPoint :: D3Point -> PointMatrix -> PointMatrix
+addPoint p = PointMatrix . addP p . runPM

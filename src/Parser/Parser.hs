@@ -19,15 +19,14 @@ data Command = Line D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Box D3Coord D3Coord D3Coord D3Coord D3Coord D3Coord
              | Torus D3Coord D3Coord D3Coord D3Coord
              | Sphere D3Coord D3Coord D3Coord
-             | Identity
              | Scale D3Coord D3Coord D3Coord
              | Translate D3Coord D3Coord D3Coord
              | RotateX D3Coord
              | RotateY D3Coord
              | RotateZ D3Coord
-             | Apply
+             | Push
+             | Pop
              | Display
-             | Clear
              | Save FilePath
   deriving Show
 
@@ -101,9 +100,6 @@ parseTorus = makeCmdArgParser "torus" 4 $ uncurryList4 Torus
 parseSphere :: Parser Command
 parseSphere = makeCmdArgParser "sphere" 3 $ uncurryList3 Sphere
 
-parseIdentity :: Parser Command
-parseIdentity = makeCmdParser "ident" Identity
-
 parseScale :: Parser Command
 parseScale = makeCmdArgParser "scale" 3 $ uncurryList3 Scale
 
@@ -119,14 +115,14 @@ parseRotateY = makeCmdArgParser "yrotate" 1 $ uncurryList1 RotateY
 parseRotateZ :: Parser Command
 parseRotateZ = makeCmdArgParser "zrotate" 1 $ uncurryList1 RotateZ
 
-parseApply :: Parser Command
-parseApply = makeCmdParser "apply" Apply
+parsePush :: Parser Command
+parsePush = makeCmdParser "push" Push
+
+parsePop :: Parser Command
+parsePop = makeCmdParser "pop" Pop
 
 parseDisplay :: Parser Command
 parseDisplay = makeCmdParser "display" Display
-
-parseClear :: Parser Command
-parseClear = makeCmdParser "clear" Clear
 
 parseSave :: Parser Command
 parseSave = do
@@ -143,15 +139,14 @@ parseFile = many $
   parseBox       <|>
   parseTorus     <|>
   parseSphere    <|>
-  parseIdentity  <|>
   parseScale     <|>
   parseTranslate <|>
   parseRotateX   <|>
   parseRotateY   <|>
   parseRotateZ   <|>
-  parseApply     <|>
+  parsePush      <|>
+  parsePop       <|>
   parseDisplay   <|>
-  parseClear     <|>
   parseSave
 
 readScriptH :: Handle -> IO (Either String [Command])

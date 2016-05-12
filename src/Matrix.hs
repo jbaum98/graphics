@@ -1,13 +1,12 @@
 module Matrix (
-    -- * Edge Matrix
-    module Matrix.EdgeMatrix,
-    module Matrix.Base,
-    -- * Transformation
-    module Matrix.Mult,
-    module Matrix.Transform
+  module X
     ) where
 
-import           Matrix.EdgeMatrix
-import           Matrix.Transform
-import           Matrix.Mult
-import           Matrix.Base
+import           Matrix.Transform as X
+import           Matrix.Mult as X
+import           Matrix.Base as X
+import           Matrix.D3Point as X
+import           Matrix.PointMatrix as X
+import           Matrix.EdgeMatrix as X
+import           Matrix.PolyMatrix as X
+import           Matrix.Drawable as X
