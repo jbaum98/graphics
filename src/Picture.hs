@@ -20,10 +20,8 @@ module Picture (
     elems,
     setPointColor,
     setColor,
-    transformOrigin,
-    centerPoint,
     drawColorLine,
-    drawLine, transLine,
+    drawLine,
     ) where
 
 import           Control.Monad.ST
@@ -105,38 +103,25 @@ inBounds point pic = inRange (bounds $ runPicture pic) (toTup point 0)
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
 setPointColor :: Color -> Point -> Picture -> Picture
 setPointColor _ point !pic
-  | not $ inBounds point pic = pic
-setPointColor color point (Picture pic) = runST $ do
-  mutPic <- unsafeThaw pic :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
+  | not $ inBounds point' pic = pic
+  where point' = reflect pic point
+setPointColor color point pic@(Picture arr) = runST $ do
+  mutPic <- unsafeThaw arr :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
   mapM_ (mutColorVal mutPic) [0..2]
   Picture <$> unsafeFreeze mutPic
-  where mutColorVal mp n = writeArray mp (toTup point n) (color `tIndex` n)
+  where mutColorVal mp n = writeArray mp (toTup point' n) (color `tIndex` n)
+        point' = reflect pic point
+
+reflect :: Picture -> D2Point -> D2Point
+reflect pic (Pair x y) = Pair x (yMax - y - 1)
+  where Pair _ yMax = size pic
 
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Point] -> Picture -> Picture
 setColor color points = compose (fmap (setPointColor color) points)
 
--- |transform a 'Point' so that a given 'Point'is the origin instead of the top-left corner
-transformOrigin :: Point -- ^The new origin
-                -> Point -- ^The 'Point' to be transformed
-                -> Point
-transformOrigin o = translate o . reflect
-  where
-    reflect = (<*>) $ Pair id negate
-
-centerPoint :: Picture -> Point
-centerPoint = fmap (round . half . fromIntegral) . size
-  where
-    half = (/ (2 :: Double))
-
 drawColorLine :: Color -> Point -> Point -> Picture -> Picture
-drawColorLine color p1 p2 pic = setColor color (line (reflect p1) (reflect p2)) pic
-  where (Pair _ yMax) = size pic
-        reflect (Pair x y) = Pair x (yMax - y)
-
-transLine :: Point -> Point -> Point -> [Point]
-transLine o p1 p2 = map t $ line p1 p2
-  where t = transformOrigin o
+drawColorLine color p1 p2 = setColor color (line p1 p2)
 
 drawLine :: Point -> Point -> Picture -> Picture
 drawLine = drawColorLine white
