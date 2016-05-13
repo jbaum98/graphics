@@ -156,5 +156,5 @@ connectShapeSlice :: (PointMatrix, Int) -> Int -> (Int, Int, Int) -> PolyMatrix 
 connectShapeSlice (points,steps) sliceN (i1, i2, i3) = addPoly (getPoint i1) (getPoint i2) (getPoint i3)
     where
       getPoint n = V.unsafeIndex (slice sliceN) . (+ (n * 4)) <$> Triple 0 1 2
-      slice = circSlice $ run points
+      slice = circSlice $ unwrap points
       circSlice m i = V.slice (steps * i * 4) (4*steps) (vector m)

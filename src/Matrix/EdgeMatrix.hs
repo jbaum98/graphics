@@ -16,7 +16,7 @@ newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
 instance ShapeMatrix EdgeMatrix where
   drawColor color (EdgeMatrix m) = compose [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
-  run = runEM
+  unwrap = runEM
   wrap = EdgeMatrix
 
 edge :: D3Point -> D3Point -> EdgeMatrix
@@ -24,4 +24,4 @@ edge (Triple x1 y1 z1) (Triple x2 y2 z2) = EdgeMatrix $ Matrix 4 2 7 $
   V.fromList [x1, y1, z1, 1, x2, y2, z2, 1]
 
 addEdge :: D3Point -> D3Point -> EdgeMatrix -> EdgeMatrix
-addEdge p1 p2 = EdgeMatrix . addP p2 . addP p1 . runEM
+addEdge p1 p2 = wrap . addP p2 . addP p1 . unwrap

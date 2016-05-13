@@ -2,7 +2,7 @@ module Matrix.ShapeMatrix (
   ShapeMatrix,
   drawColor,
   draw,
-  run,
+  unwrap,
   wrap,
   liftDraw,
   matMultD
@@ -19,11 +19,11 @@ class ShapeMatrix d where
   draw :: d -> Picture -> Picture
   draw = drawColor white
 
-  run :: d -> Matrix D3Coord
+  unwrap :: d -> Matrix D3Coord
   wrap :: Matrix D3Coord -> d
 
   liftDraw :: (Matrix D3Coord -> Matrix D3Coord) -> d -> d
-  liftDraw f = wrap . f .run
+  liftDraw f = wrap . f . unwrap
 
   matMultD :: Matrix D3Coord -> d -> d
   matMultD = liftDraw . matMult

@@ -21,14 +21,14 @@ instance ShapeMatrix PolyMatrix where
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1
                                      p3 = getD3Point m $ i + 2
-                                     n = p2 - p1 `cross` p3 - p1
-                                     , n `dot` v < 0
+                                     n = p2 - p1 `cross` p3 - p1,
+                                 n `dot` v < 0
                                ]
     where
       connect (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
       v = Triple 0 0 (-1)
 
-  run = runPM
+  unwrap = runPM
   wrap = PolyMatrix
 
 poly :: D3Point -> D3Point -> D3Point -> PolyMatrix
@@ -37,4 +37,4 @@ poly (Triple x1 y1 z1) (Triple x2 y2 z2) (Triple x3 y3 z3) =
   V.fromList [x1, y1, z1, 1, x2, y2, z2, 1, x3, y3, z3, 1]
 
 addPoly :: D3Point -> D3Point -> D3Point -> PolyMatrix -> PolyMatrix
-addPoly p1 p2 p3 = PolyMatrix .  addP p3 . addP p2 . addP p1 . runPM
+addPoly p1 p2 p3 = wrap .  addP p3 . addP p2 . addP p1 . unwrap
