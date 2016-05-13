@@ -1,6 +1,8 @@
 {
 module Language.MDL.Parser (parse, Expr(..)) where
 
+import Data.DList
+
 import Language.MDL.Tokens
 import Language.MDL.Expr
 }
@@ -46,9 +48,9 @@ import Language.MDL.Expr
     CO { TokenCO }
 %%
 
-commands :: { [Expr] }
-         : {- empty -}         { [] }
-         | commands command    { $2 : $1 }
+commands :: { DList Expr }
+         : {- empty -}         { empty }
+         | commands command    { $1 `snoc` $2 }
 
 command :: { Expr }
         : COMMENT { Comment }

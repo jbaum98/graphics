@@ -6,6 +6,7 @@ module Language.MDL (
 
 import Language.MDL.Parser
 import Language.MDL.Lexer
+import Data.DList
 
-parseStr :: String -> [Expr]
-parseStr = parse . lexMDL
+parseStr :: String -> DList Expr
+parseStr = runParserM . parse . lexMDL
