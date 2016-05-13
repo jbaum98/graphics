@@ -7,5 +7,5 @@ module Language.MDL (
 import Language.MDL.Parser
 import Language.MDL.Lexer
 
-parseStr :: String -> [Syntax]
+parseStr :: String -> [Expr]
 parseStr = parse . lexMDL

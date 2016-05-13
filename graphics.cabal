@@ -38,7 +38,7 @@ library
                        Language.MDL.Parser
                        Language.MDL.Lexer
                        Language.MDL.Tokens
-                       Language.MDL.Syntax
+                       Language.MDL.Expr
                        Parser.Parser
                        Parser.Interp
                        Angle

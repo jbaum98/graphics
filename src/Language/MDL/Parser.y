@@ -1,8 +1,8 @@
 {
-module Language.MDL.Parser (parse, Syntax(..)) where
+module Language.MDL.Parser (parse, Expr(..)) where
 
 import Language.MDL.Tokens
-import Language.MDL.Syntax
+import Language.MDL.Expr
 }
 
 %name parse
@@ -46,11 +46,11 @@ import Language.MDL.Syntax
     CO { TokenCO }
 %%
 
-commands :: { [Syntax] }
+commands :: { [Expr] }
          : {- empty -}         { [] }
          | commands command    { $2 : $1 }
 
-command :: { Syntax }
+command :: { Expr }
         : COMMENT { Comment }
         | LIGHT STRING DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE { Light $2 (Triple $3 $4 $5) (Triple $6 $7 $8) }
         | MOVE DOUBLE DOUBLE DOUBLE STRING                       { Move (Triple $2 $3 $4) (Just $5) }
