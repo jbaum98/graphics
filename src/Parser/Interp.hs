@@ -1,18 +1,18 @@
-{-# LANGUAGE TupleSections #-}
-
 module Parser.Interp (
   execute,
   runEval,
   eval
   ) where
 
+import System.Process
+import Control.Monad.State
+
 import Picture
 import Pbm
 import Matrix
-import Parser.Parser
-import Control.Monad.State
-import System.Process
 import Shapes
+import Forking
+import Parser.Parser
 
 type PicFunc = Picture -> Picture
 data ParseState = ParseState { pf :: PicFunc, tms :: [TransformMatrix], s :: D2Point }
@@ -90,10 +90,10 @@ writePicToProcess cmd = do
   f <- gets pf
   s' <- gets s
   let pic = f $ blankPic s'
-  void . liftIO $ do
+  void . liftIO . forkChild $ do
     (Just hin, _, _, ps) <-
       createProcess (shell cmd) { std_in = CreatePipe }
-    writePbm pic hin >> waitForProcess ps
+    void $ writePbm pic hin >> waitForProcess ps
 
 modifyTrans :: ([TransformMatrix] -> [TransformMatrix]) -> Interp
 modifyTrans f = modify $ \st -> st { tms = f $ tms st }
