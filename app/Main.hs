@@ -1,8 +1,9 @@
 module Main where
 
-import Pair
 import System.Environment
-import GenerateFile
+
+import D2Point
+import Parser
 
 main :: IO ()
 main = do args <- getArgs
@@ -10,4 +11,11 @@ main = do args <- getArgs
 
 respond :: [String] -> IO ()
 respond [] = putStrLn "You didn't supply any args\nUsage: ./main <script file>"
-respond (path:_) = generateFile path (Pair 500 500)
+respond (path:_) = execScript path (Pair 500 500)
+
+execScript :: FilePath -> D2Point -> IO ()
+execScript path maxPoint = do
+  parse <- readScript path
+  case parse of
+    Left err -> putStrLn $ "Error on parsing: " ++ err
+    Right cmds -> execute maxPoint cmds
