@@ -9,4 +9,4 @@ import           Matrix.D3Point as X
 import           Matrix.PointMatrix as X
 import           Matrix.EdgeMatrix as X
 import           Matrix.PolyMatrix as X
-import           Matrix.Drawable as X
+import           Matrix.ShapeMatrix as X

@@ -8,14 +8,14 @@ import qualified Data.Vector.Unboxed as V
 
 import Matrix.Base
 import Matrix.D3Point
-import Matrix.Drawable
+import Matrix.ShapeMatrix
 import Utils
 import Pair
 import Picture
 
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
-instance Drawable PolyMatrix where
+instance ShapeMatrix PolyMatrix where
   drawColor color (PolyMatrix m) = compose [connect p1 p2 . connect p2 p3 . connect p3 p1
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i

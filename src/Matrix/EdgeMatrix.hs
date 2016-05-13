@@ -8,13 +8,13 @@ import qualified Data.Vector.Unboxed as V
 
 import Matrix.Base
 import Matrix.D3Point
-import Matrix.Drawable
+import Matrix.ShapeMatrix
 import Picture
 import Utils
 
 newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
-instance Drawable EdgeMatrix where
+instance ShapeMatrix EdgeMatrix where
   drawColor color (EdgeMatrix m) = compose [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
   run = runEM
   wrap = EdgeMatrix

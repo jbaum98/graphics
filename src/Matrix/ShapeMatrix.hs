@@ -1,5 +1,5 @@
-module Matrix.Drawable (
-  Drawable,
+module Matrix.ShapeMatrix (
+  ShapeMatrix,
   drawColor,
   draw,
   run,
@@ -13,7 +13,7 @@ import Matrix.Base
 import Matrix.D3Point
 import Matrix.Mult
 
-class Drawable d where
+class ShapeMatrix d where
   drawColor :: Color -> d -> Picture -> Picture
 
   draw :: d -> Picture -> Picture

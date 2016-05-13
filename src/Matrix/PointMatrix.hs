@@ -8,13 +8,13 @@ import qualified Data.Vector.Unboxed as V
 
 import Matrix.Base
 import Matrix.D3Point
-import Matrix.Drawable
+import Matrix.ShapeMatrix
 import Picture
 import Utils
 
 newtype PointMatrix = PointMatrix { runPM :: Matrix D3Coord }
 
-instance Drawable PointMatrix where
+instance ShapeMatrix PointMatrix where
   drawColor color (PointMatrix m) = compose $ fmap (setPointColor color. getD2Point m) [0..cols m - 1]
   run = runPM
   wrap = PointMatrix

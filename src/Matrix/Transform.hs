@@ -22,7 +22,7 @@ module Matrix.Transform (
 import           Matrix.Base
 import           Matrix.Mult
 import           Matrix.D3Point
-import           Matrix.Drawable
+import           Matrix.ShapeMatrix
 import           Picture
 import           Angle
 import Control.Monad.ST
@@ -114,10 +114,10 @@ progress ts e = runST $ do
     return (ts', t `matMult` e `mergeCols` e')
   return eFinal
 
-drawProgress :: Drawable d => [TransformMatrix] -> d -> Picture -> Picture
+drawProgress :: ShapeMatrix d => [TransformMatrix] -> d -> Picture -> Picture
 drawProgress ts em p = flip draw p $ liftDraw (progress ts) em
 
-drawProgressColors :: Drawable d => [(TransformMatrix, Color)] -> d -> Picture -> Picture
+drawProgressColors :: ShapeMatrix d => [(TransformMatrix, Color)] -> d -> Picture -> Picture
 drawProgressColors tcs e p = runST $ do
   (_,pFinal) <- numLoopState 1 (length tcs) (tcs,p) $ \((t,color):tcs',p') _ -> do
     let newE = t `matMultD` e

@@ -103,5 +103,5 @@ addTrans newTM = modifyTrans modF
   where modF (oldTM:rest) = (oldTM `matMult` newTM) : rest
         modF [] = [newTM] -- shouldn't happen
 
-drawShape :: Drawable m => m  -> Interp
+drawShape :: ShapeMatrix m => m  -> Interp
 drawShape em = modify $ \st -> st { pf = draw (tm st `matMultD` em) . pf st }
