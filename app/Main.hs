@@ -5,6 +5,7 @@ import System.Environment
 import D2Point
 import Parser
 import Forking
+import Language.MDL
 
 main :: IO ()
 main = do
@@ -18,7 +19,6 @@ respond (path:_) = execScript path (Pair 500 500)
 
 execScript :: FilePath -> D2Point -> IO ()
 execScript path maxPoint = do
-  parse <- readScript path
-  case parse of
-    Left err -> putStrLn $ "Error on parsing: " ++ err
-    Right cmds -> execute maxPoint cmds
+  s <- readFile path
+  let ast = parseStr s
+  mapM_ print ast
