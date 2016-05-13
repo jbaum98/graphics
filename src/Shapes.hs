@@ -10,22 +10,17 @@ module Shapes (
     sphere
   ) where
 
-import Control.Monad.ST
-
 import qualified Data.Vector.Unboxed as V
-import Control.Loop
 
 import Matrix
 import Utils
+import Pair
 
-parametric :: Double -> (Double -> D3Point) -> EdgeMatrix
-parametric step f = runST $ do
-  (emFinal, _) <- forLoopState step (<= 1) (+ step) (em, f 0) $ \(em',p) i -> do
-    let p' = f i
-    return (addEdge p p' em', p')
-  return emFinal
-  where em = wrap $ emptyWith (round $ 4 / step)
-  -- compose [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
+parametric :: Int -> (Double -> D3Point) -> EdgeMatrix
+parametric steps f = addPoints $ wrap $ emptyWith (round $ 4 / step)
+  where
+    addPoints = compose [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
+    step = recip $ fromIntegral steps - 1
 
 parametric2 :: Int -> (Double -> Double -> D3Point) -> PointMatrix
 parametric2 steps f = addPoints $ wrap $ emptyWith (4 * steps * steps)
@@ -34,21 +29,22 @@ parametric2 steps f = addPoints $ wrap $ emptyWith (4 * steps * steps)
                         | j <- [0,step..1], i <- [0,step..1]]
     step = recip $ fromIntegral steps - 1
 
-circle :: D3Point -> D3Coord -> Double -> EdgeMatrix
-circle (Triple cx cy cz) r step = addEdge firstPoint lastPoint $ parametric step f
+circle :: Int -> D3Point -> D3Coord -> EdgeMatrix
+circle steps (Triple cx cy cz) r = addEdge firstPoint lastPoint $ parametric steps f
   where
     f t = Triple (x t) (y t) cz
     x t = cx + r * cos (2 * pi * t)
     y t = cy + r * sin (2 * pi * t)
     firstPoint = Triple (cx + r) cy cz
-    lastPoint = f $ 1 - step
+    lastPoint = f $ 1.0 - step
+    step = recip $ fromIntegral steps - 1
 
-hermite, bezier :: D3Point
-                  -> D3Point
-                  -> D3Point
-                  -> D3Point
-                  -> Double
-                  -> EdgeMatrix
+hermite, bezier :: Int
+                -> D3Point
+                -> D3Point
+                -> D3Point
+                -> D3Point
+                -> EdgeMatrix
 
 hermite p0 r0 p1 r1 = matCurve hermMat p0 p1 r0 r1
   where hermMat = fromLists [
@@ -66,8 +62,8 @@ bezier = matCurve bezMat
           [  1,  0,  0, 0 ]
           ]
 
-matCurve :: Matrix D3Coord -> D3Point -> D3Point -> D3Point -> D3Point -> Double -> EdgeMatrix
-matCurve cMat p1 p2 p3 p4 step = parametric step $ \t ->
+matCurve :: Matrix D3Coord -> Int -> D3Point -> D3Point -> D3Point -> D3Point -> EdgeMatrix
+matCurve cMat steps p1 p2 p3 p4  = parametric steps $ \t ->
   let t' = pure t
   in t' * (t' * (t' * a + b) + c) + d
   where

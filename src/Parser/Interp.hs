@@ -38,10 +38,10 @@ eval (Line x0 y0 z0 x1 y1 z1) = drawShape $ edge p0 p1
     p0 = Triple x0 y0 z0
     p1 = Triple x1 y1 z1
 
-eval (Circle cx cy r) = drawShape $ circle center r 0.01
+eval (Circle cx cy r) = drawShape $ circle 100 center r
   where center = Triple cx cy 0
 
-eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = drawShape $ hermite p0 r0 p1 r1 0.01
+eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = drawShape $ hermite 100 p0 r0 p1 r1
   where
    p0   = Triple x0 y0 0
    p1   = Triple x2 y2 0
@@ -50,7 +50,7 @@ eval (Hermite x0 y0 x1 y1 x2 y2 x3 y3) = drawShape $ hermite p0 r0 p1 r1 0.01
    r0   = ctl0 - p0
    r1   = ctl1 - p1
 
-eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = drawShape $ bezier p1 p2 p3 p4 0.01
+eval (Bezier x1 y1 x2 y2 x3 y3 x4 y4) = drawShape $ bezier 100 p1 p2 p3 p4
   where
     p1  = Triple x1 y1 0
     p2  = Triple x2 y2 0
