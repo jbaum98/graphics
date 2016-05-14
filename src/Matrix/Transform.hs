@@ -111,7 +111,7 @@ rotZMatrix = rotZMatrixRad . degToRad
       ]
 
 transform :: TransformMatrix -> D3Point -> D3Point
-transform tm = flip getD3Point 1 . unwrap . matMultD tm . point
+transform tm = flip getD3Point 0 . unwrap . matMultD tm . point
 
 progress :: [TransformMatrix] -> Matrix D3Coord -> Matrix D3Coord
 progress ts e = runST $ do

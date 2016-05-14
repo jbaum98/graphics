@@ -45,6 +45,9 @@ getSym s = do
 getSymWithDefault :: String -> Val -> Interp Val
 getSymWithDefault s d = fromMaybe d <$> getSym s
 
+roundoff :: D3Point -> D2Point
+roundoff (Triple x y _) = round <$> Pair x y
+
 eval :: Expr -> Interp ()
 
 eval Comment = return ()
@@ -52,16 +55,14 @@ eval Comment = return ()
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
   tm2 <- getTM cs2
-  let drawIt = drawLine (trans tm1 p1) (trans tm2 p2)
-      trans tm = roundoff . transform tm
-      roundoff (Triple x y _) = round <$> Pair x y
-  modifyPicFunc (drawIt . )
+  let trans tm = roundoff . transform tm
+  addF $ drawLine (trans tm1 p1) (trans tm2 p2)
 
-eval (Box _ topLeft dims cs) = drawInCS topLeft cs $ \tl -> box tl dims
+eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
 
-eval (Sphere _ center r cs) = drawInCS center cs $ \c -> sphere c r 100
+eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 10
 
-eval (Torus _ center r1 r2 cs) = drawInCS center cs $ \c -> torus c r1 r2 100
+eval (Torus _ center r1 r2 cs) = drawInCS cs $ torus center r1 r2 10
 
 eval (Scale scalars Nothing) = multTop $ scaleMatrix scalars
 eval (Scale scalars (Just knob)) = do
@@ -94,11 +95,8 @@ eval Display = writePicToProcess "display"
 
 eval (Save path) = writePicToProcess $ "convert - " ++ path
 
-drawInCS :: ShapeMatrix m => D3Point -> Maybe String -> (D3Point -> m) -> Interp ()
-drawInCS p cs f = do
-  tm <- getTM cs
-  let p' = transform tm p
-  drawShape $ f p'
+drawInCS :: ShapeMatrix m => Maybe String -> m -> Interp ()
+drawInCS cs m = getTM cs >>= drawShape . flip matMultD m
 
 getTM :: Maybe String -> Interp TransformMatrix
 getTM (Just cs) = do
@@ -126,12 +124,13 @@ failNoKnob :: String -> Interp a
 failNoKnob knob = fail $ "Knob `" ++ knob ++ "` is not initialized"
 
 drawShape :: ShapeMatrix m => m -> Interp ()
-drawShape em = modify f
-  where f st = st { picFunc = draw shape . picFunc st }
-          where shape = topTransformMat st `matMultD` em
+drawShape = addF . draw
 
 modifyPicFunc :: ((Picture -> Picture) -> (Picture -> Picture)) -> Interp ()
 modifyPicFunc f = modify $ \st -> st { picFunc = f $ picFunc st }
+
+addF :: (Picture -> Picture) -> Interp ()
+addF = modifyPicFunc . (.)
 
 modifyTransStack :: ([TransformMatrix] -> [TransformMatrix]) -> Interp ()
 modifyTransStack f = modify $ \st -> st { transStack = f $ transStack st }
@@ -143,7 +142,7 @@ modifyTopTrans f = modifyTransStack $ \tstack ->
     []        -> [f idMatrix]
 
 multTop :: TransformMatrix -> Interp ()
-multTop = modifyTopTrans . matMult
+multTop = modifyTopTrans . flip matMult
 
 writePicToProcess :: String -> Interp ()
 writePicToProcess cmd = do
