@@ -4,7 +4,7 @@ module Pair.Vector (
   norm
   ) where
 
-import Pair.Pair
+import Pair.Triple
 
 infixl 5 `dot`
 dot :: (Num a, Show a) => Triple a -> Triple a -> a

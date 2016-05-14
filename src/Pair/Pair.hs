@@ -1,16 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-{-|
-Module      : Pair
-Description : Types to represent a fixed number objects of the same type
-
-Includes the 'Pair' and 'Triple'. While lists allow you to map a
-function over all of its elements, they can be of any length.
-Similarly, tuples are of fixed length and can be uncurried but make no guarantees
-about types, so mapping over all elements is impossible.
-These types provide fixed-length homogenous containers.
--}
-module Pair.Pair (Pair(..), Triple(..), uncurryPair, uncurryTriple) where
+module Pair.Pair (Pair(..), uncurryPair) where
 
 import Control.Applicative
 import GHC.Generics
@@ -33,6 +23,9 @@ instance Applicative Pair where
 instance Foldable Pair where
   foldMap m (Pair a1 a2) = m a1 `mappend` m a2
 
+instance Traversable Pair where
+  traverse f (Pair a1 a2) = Pair <$> f a1 <*> f a2
+
 instance Num a => Num (Pair a) where
   (+) = liftA2 (+)
   (*) = liftA2 (*)
@@ -46,41 +39,7 @@ instance Fractional a => Fractional (Pair a) where
   recip = liftA recip
   fromRational = pure . fromRational
 
--- |Represents three objects of the same type
-data Triple a = Triple !a !a !a
-              deriving (Show, Eq, Generic)
-
-instance NFData a => NFData (Triple a)
-
-instance Functor Triple where
-  fmap f (Triple a b c) = Triple (f a) (f b) (f c)
-
-instance Applicative Triple where
-  pure f = Triple f f f
-  Triple f1 f2 f3 <*> Triple a b c = Triple (f1 a) (f2 b) (f3 c)
-
-instance Foldable Triple where
-  foldMap m (Triple a1 a2 a3) = m a1 `mappend` m a2 `mappend` m a3
-
-instance Num a => Num (Triple a) where
-  (+) = liftA2 (+)
-  (*) = liftA2 (*)
-  abs = liftA abs
-  negate = liftA negate
-  signum = liftA signum
-  fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (Triple a) where
-  (/) = liftA2 (/)
-  recip = liftA recip
-  fromRational = pure . fromRational
-
 -- |Converts a function taking two arguments of the same type
 -- to a function taking single 'Pair'
 uncurryPair :: (a -> a -> b) -> Pair a -> b
 uncurryPair f (Pair a1 a2) = f a1 a2
-
--- |Converts a function taking three arguments of the same type
--- to a function taking single 'Triple'
-uncurryTriple :: (a -> a -> a -> b) -> Triple a -> b
-uncurryTriple f (Triple a1 a2 a3) = f a1 a2 a3
