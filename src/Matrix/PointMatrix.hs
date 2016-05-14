@@ -19,6 +19,10 @@ instance ShapeMatrix PointMatrix where
   unwrap = runPM
   wrap = PointMatrix
 
+instance Monoid PointMatrix where
+  mempty = wrap empty
+  mappend = liftDraw2 mergeCols
+
 point :: D3Point -> PointMatrix
 point (Triple x y z) = PointMatrix $ Matrix 4 1 3 $ V.fromList [x, y, z, 1]
 

@@ -3,7 +3,6 @@ module Main where
 import System.Environment
 
 import D2Point
-import Parser
 import Forking
 import Language.MDL
 
@@ -21,4 +20,4 @@ execScript :: FilePath -> D2Point -> IO ()
 execScript path maxPoint = do
   s <- readFile path
   let ast = parseStr s
-  mapM_ print ast
+  execute ast

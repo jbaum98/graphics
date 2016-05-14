@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Parser, Forking, Language.MDL
+  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Forking, Language.MDL
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 1
                      , bytestring >= 0.10 && < 1
@@ -40,8 +40,10 @@ library
                        Language.MDL.Lexer
                        Language.MDL.Tokens
                        Language.MDL.Expr
-                       Parser.Parser
-                       Parser.Interp
+                       Language.MDL.SymTab
+                       Language.MDL.Interp
+                       -- Parser.Parser
+                       -- Parser.Interp
                        Angle
                        Shapes
                        Pair.Pair

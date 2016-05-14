@@ -31,6 +31,10 @@ instance ShapeMatrix PolyMatrix where
   unwrap = runPM
   wrap = PolyMatrix
 
+instance Monoid PolyMatrix where
+  mempty = wrap empty
+  mappend = liftDraw2 mergeCols
+
 poly :: D3Point -> D3Point -> D3Point -> PolyMatrix
 poly (Triple x1 y1 z1) (Triple x2 y2 z2) (Triple x3 y3 z3) =
   PolyMatrix $ Matrix 4 3 11 $

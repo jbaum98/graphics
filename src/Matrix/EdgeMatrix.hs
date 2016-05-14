@@ -19,6 +19,10 @@ instance ShapeMatrix EdgeMatrix where
   unwrap = runEM
   wrap = EdgeMatrix
 
+instance Monoid EdgeMatrix where
+  mempty = wrap empty
+  mappend = liftDraw2 mergeCols
+
 edge :: D3Point -> D3Point -> EdgeMatrix
 edge (Triple x1 y1 z1) (Triple x2 y2 z2) = EdgeMatrix $ Matrix 4 2 7 $
   V.fromList [x1, y1, z1, 1, x2, y2, z2, 1]

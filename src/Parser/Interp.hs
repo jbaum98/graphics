@@ -22,11 +22,11 @@ tm = head . tms
 
 type Interp = StateT ParseState IO ()
 
-execute :: D2Point -> [Command] -> IO ()
-execute sizeP = runEval sizeP . mapM_ eval
+execute :: [Command] -> IO ()
+execute = runEval . mapM_ eval
 
-runEval :: D2Point -> Interp -> IO ()
-runEval = flip evalStateT . initState
+runEval :: Interp -> IO ()
+runEval = flip evalStateT initState
 
 initState :: D2Point -> ParseState
 initState = ParseState id []

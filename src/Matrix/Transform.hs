@@ -14,6 +14,7 @@ module Matrix.Transform (
     rotXMatrix,
     rotYMatrix,
     rotZMatrix,
+    transform,
     progress,
     drawProgress,
     drawProgressColors
@@ -23,6 +24,7 @@ import           Matrix.Base
 import           Matrix.Mult
 import           Matrix.D3Point
 import           Matrix.ShapeMatrix
+import           Matrix.PointMatrix (point)
 import           Picture
 import           Angle
 import Control.Monad.ST
@@ -107,6 +109,9 @@ rotZMatrix = rotZMatrixRad . degToRad
       [ 0,          0,         1, 0 ],
       [ 0,          0,         0, 1 ]
       ]
+
+transform :: TransformMatrix -> D3Point -> D3Point
+transform tm = flip getD3Point 1 . unwrap . matMultD tm . point
 
 progress :: [TransformMatrix] -> Matrix D3Coord -> Matrix D3Coord
 progress ts e = runST $ do
