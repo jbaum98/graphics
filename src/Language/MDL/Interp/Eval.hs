@@ -16,8 +16,9 @@ import Shapes
 eval :: Expr -> Interp ()
 
 eval Comment = return ()
-eval (Basename _) = return ()
-eval (Frames _) = return ()
+eval Basename {} = return ()
+eval Frames {} = return ()
+eval Vary {} = return ()
 
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
