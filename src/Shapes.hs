@@ -109,7 +109,7 @@ box topLeft (Triple x y z) = addPolys $ wrap $ emptyWith 47
     d = Triple 0 0 (-z)
 
 torus :: D3Point -> D3Coord -> D3Coord -> Int -> PolyMatrix
-torus c r1 r2 steps = crissCross steps connectSlice $ wrap $ emptyWith (6 * steps * steps)
+torus c r1 r2 steps = crissCross steps connectSlice True $ wrap $ emptyWith (6 * steps * steps)
   where
     torusPoints = genTorus c r1 r2 steps
     connectSlice = connectShapeSlice (torusPoints, steps)
@@ -125,7 +125,7 @@ genTorus c r1 r2 steps = parametric2 steps f
 sphere :: D3Point -> D3Coord -> Int -> PolyMatrix
 sphere c r steps = connectMiddles . connectCaps $ wrap $ emptyWith (6 * (steps - 2) * steps)
   where
-    connectMiddles = crissCross steps connectSlice
+    connectMiddles = crissCross steps connectSlice False
     connectCaps = compose [connect (0, steps+1, 1) . connect (steps + steps - 2, steps - 1, steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
     spherePoints = genSphere c r steps
     connectSlice = connectShapeSlice (spherePoints, steps)
@@ -138,15 +138,16 @@ genSphere c r steps = parametric2 steps f
     y thetaT phiT = r*sin(thetaT * pi) * cos(phiT * 2 * pi)
     z thetaT phiT = r*sin(thetaT * pi) * sin(phiT * 2 * pi)
 
-crissCross :: Int -> (Int -> (Int, Int, Int) -> PolyMatrix -> PolyMatrix) -> PolyMatrix -> PolyMatrix
-crissCross steps connectSlice = compose [
+crissCross :: Int -> (Int -> (Int, Int, Int) -> PolyMatrix -> PolyMatrix) -> Bool -> PolyMatrix -> PolyMatrix
+crissCross steps connectSlice startFromTop = compose [
   connect (i, i', i+1) .
   connect (i'+1, i+1, i')
-  | i      <- [0..steps-2],
+  | i      <- [start..steps-2],
     sliceN <- [0..steps-2],
     let connect = connectSlice sliceN
         i'      = i + steps
   ]
+  where start = if startFromTop then 0 else 1
 
 connectShapeSlice :: (PointMatrix, Int) -> Int -> (Int, Int, Int) -> PolyMatrix -> PolyMatrix
 connectShapeSlice (points,steps) sliceN (i1, i2, i3) = addPoly (getPoint i1) (getPoint i2) (getPoint i3)
