@@ -22,6 +22,6 @@ execScript :: FilePath -> D2Point -> Bool -> IO ()
 execScript path maxPoint verbose = do
   s <- readFile path
   let ast = parseStr s
-  execute ast
   when verbose $
     mapM_ print ast
+  execute ast
