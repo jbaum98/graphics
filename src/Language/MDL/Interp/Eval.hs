@@ -8,7 +8,6 @@ import D2Point
 import Forking
 import Language.MDL.Expr
 import Language.MDL.Interp.Interp
-import Language.MDL.SymTab
 import Matrix
 import Pbm
 import Picture
@@ -17,6 +16,8 @@ import Shapes
 eval :: Expr -> Interp ()
 
 eval Comment = return ()
+eval (Basename _) = return ()
+eval (Frames _) = return ()
 
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
