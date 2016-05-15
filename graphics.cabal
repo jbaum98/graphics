@@ -42,6 +42,9 @@ library
                        Language.MDL.Expr
                        Language.MDL.SymTab
                        Language.MDL.Interp
+                       Language.MDL.Interp.Interp
+                       Language.MDL.Interp.Eval
+                       Language.MDL.Interp.InterpState
                        -- Parser.Parser
                        -- Parser.Interp
                        Angle
