@@ -11,7 +11,6 @@ main :: IO ()
 main = do
   args <- getArgs
   respond args
-  waitForChildren
 
 respond :: [String] -> IO ()
 respond [] = putStrLn "You didn't supply any args\nUsage: ./main <script file>"

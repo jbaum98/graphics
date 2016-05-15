@@ -76,7 +76,7 @@ writePicToProcess cmd = do
   f <- gets picFunc
   s' <- gets maxP
   let pic = f $ blankPic $ fromMaybe (Pair 500 500) s'
-  void . liftIO $ do
+  void . liftIO . forkChild $ do
     (Just hin, _, _, ps) <-
       createProcess (shell cmd) { std_in = CreatePipe }
     void $ writePbm pic hin >> waitForProcess ps

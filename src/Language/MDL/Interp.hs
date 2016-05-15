@@ -17,13 +17,15 @@ import Language.MDL.Expr
 import Language.MDL.Interp.Eval
 import Language.MDL.Interp.Interp
 import Language.MDL.SymTab hiding (filter, foldl)
+import Forking
 
 execute :: Foldable f => f Expr -> IO ()
 execute expr = withSystemTempDirectory "graphics" $ flip execute' expr
 
 execute' :: Foldable f => FilePath -> f Expr -> IO ()
 execute' tmpdir exprs = do
-  mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
+  mapM_ (\(st, i) -> forkChild $ evalInterp (interp >> saveFrame i) st) (zip states [1..])
+  waitForChildren
   callCommand $ "convert -delay 10 " ++ combos "simple" ++ " " ++ "simple" <.> "gif"
   where
     interp = mapM_ eval exprs
