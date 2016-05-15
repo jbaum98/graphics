@@ -92,6 +92,7 @@ size :: Picture
 size pic = Pair xsize ysize
   where
     (_, (xsize, ysize, _)) = bounds $ runPicture pic
+{-# INLINE size #-}
 
 toTup :: Pair a -> Int -> (a, a, Int)
 {-# INLINE toTup #-}
