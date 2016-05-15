@@ -6,3 +6,4 @@
 - [ ] Remove Comment from Expr
 - [ ] Colors and sizes
 - [ ] Instead of Picture -> Picture, try generalizing the [D2Point] approach for easaier testing
+- [ ] Use rewrite rules to make solidPic black and white faster

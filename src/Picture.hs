@@ -51,18 +51,21 @@ instance NFData Picture where
 solidPic :: Color
          -> Point -- ^The size of the 'Picture'
          -> Picture
+{-# INLINE solidPic #-}
 solidPic (Triple r g b) maxPoint | r == g && r == b = Picture $ runSTUArray $ newArray (toSize maxPoint) r
                                  | otherwise = Picture $ listArray (toSize maxPoint) $ cycle [r,g,b]
 
 -- |Create a completely white 'Picture'
 blankPic :: Point -- ^The size of the 'Picture'
          -> Picture
-blankPic maxPoint = Picture $  runSTUArray $ newArray (toSize maxPoint) 0
+{-# INLINE blankPic #-}
+blankPic maxPoint = Picture $ runSTUArray $ newArray (toSize maxPoint) 0
 
 -- |Create a picture that generates the RGB values for each 'Point' from three different functions
 mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
         -> Point                   -- ^The size of the 'Picture'
         -> Picture
+{-# INLINE mathPic #-}
 mathPic funcs maxPoint = Picture $ listArray (toSize maxPoint) (allPoints maxPoint)
   where
     allPoints :: Point -> [ColorVal]
