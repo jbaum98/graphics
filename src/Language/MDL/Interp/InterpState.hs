@@ -13,8 +13,6 @@ data InterpState = InterpState
   , transStack     :: ![TransformMatrix]
   , maxP           :: !(Maybe D2Point)
   , symtab         :: !SymTab
-  , nframes        :: !Int
-  , basename       :: !(Maybe FilePath)
   }
 
 topTransMat :: InterpState -> TransformMatrix
@@ -27,6 +25,4 @@ initState    = InterpState
   { picFunc    = id
   , transStack = []
   , maxP       = Nothing
-  , symtab     = empty
-  , nframes    = 1
-  , basename   = Nothing }
+  , symtab     = empty }

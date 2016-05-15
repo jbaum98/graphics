@@ -20,26 +20,35 @@ import Language.MDL.SymTab hiding (filter, foldl)
 import Forking
 
 execute :: Foldable f => f Expr -> IO ()
-execute expr = withSystemTempDirectory "graphics" $ flip execute' expr
+execute exprs = if any animCmds exprs
+                 then withSystemTempDirectory "graphics" $
+                   executeAnimation bname nFrames exprs
+                 else executeSinglePic exprs
+  where
+    Just bname   = getBasename exprs
+    Just nFrames = getNumFrames exprs
+    animCmds Frames {}   = True
+    animCmds Vary {}     = True
+    animCmds Basename {} = True
+    animCmds _           = False
 
-execute' :: Foldable f => FilePath -> f Expr -> IO ()
-execute' tmpdir exprs = do
+executeSinglePic :: Foldable f => f Expr -> IO ()
+executeSinglePic exprs = evalInterp interp initState >> waitForChildren
+  where interp = mapM_ eval $ exprs
+
+executeAnimation :: Foldable f => String -> Int -> f Expr -> FilePath -> IO ()
+executeAnimation bname nFrames exprs tmpdir = do
   mapM_ (\(st, i) -> forkChild $ evalInterp (interp >> saveFrame i) st) (zip states [1..])
   waitForChildren
-  callCommand $ "convert -delay 10 " ++ combos "simple" ++ " " ++ "simple" <.> "gif"
+  callCommand $ "convert -delay 10 " ++ combos bname ++ " " ++ bname <.> "gif"
   where
     interp = mapM_ eval exprs
-    states = (\st -> baseState { symtab = st}) <$> genVarySymTabs nFrames exprs
-    baseState = initState { nframes = nFrames, basename = mBname }
-    nFrames = fromMaybe 1 $ getNumFrames exprs
-    mBname   = getBasename exprs
-    saveFrame i = case mBname of
-                    Just bname -> eval $ Save $ tmpdir </> mkName bname i
-                    Nothing    -> return ()
+    states = (\st -> initState { symtab = st }) <$> genVarySymTabs nFrames exprs
+    saveFrame i = eval $ Save $ tmpdir </> mkName bname i
     combos s = unwords [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
 mkName :: FilePath -> Int -> FilePath
-mkName = printf "%s%03d.gif"
+mkName fp i = fp <> show i <.> "gif"
 
 genVarySymTabs :: Foldable f => Int -> f Expr -> [SymTab]
 genVarySymTabs nFrames exprs = genSymTab exprs <$> [0..nFrames - 1]
