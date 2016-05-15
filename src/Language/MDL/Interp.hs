@@ -6,6 +6,11 @@ import Data.Foldable
 import Data.Maybe
 import Data.Monoid
 import Text.Printf
+import System.IO.Temp
+import System.Process
+import System.FilePath
+import Control.Concurrent
+import Control.Monad
 import Prelude hiding (filter)
 
 import Language.MDL.Expr
@@ -14,7 +19,12 @@ import Language.MDL.Interp.Interp
 import Language.MDL.SymTab hiding (filter, foldl)
 
 execute :: Foldable f => f Expr -> IO ()
-execute exprs = mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
+execute expr = withSystemTempDirectory "graphics" $ flip execute' expr
+
+execute' :: Foldable f => FilePath -> f Expr -> IO ()
+execute' tmpdir exprs = do
+  mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
+  callCommand $ "convert -delay 10 " ++ combos "simple" ++ " " ++ "simple" <.> "gif"
   where
     interp = mapM_ eval exprs
     states = (\st -> baseState { symtab = st}) <$> genVarySymTabs nFrames exprs
@@ -22,8 +32,9 @@ execute exprs = mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip s
     nFrames = fromMaybe 1 $ getNumFrames exprs
     mBname   = getBasename exprs
     saveFrame i = case mBname of
-                    Just bname -> eval $ Save $ mkName bname i
+                    Just bname -> eval $ Save $ tmpdir </> mkName bname i
                     Nothing    -> return ()
+    combos s = unwords [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
 mkName :: FilePath -> Int -> FilePath
 mkName = printf "%s%03d.gif"
