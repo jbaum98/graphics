@@ -5,6 +5,7 @@ module Language.MDL.Interp (
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
+import Text.Printf
 import Prelude hiding (filter)
 
 import Language.MDL.Expr
@@ -13,16 +14,22 @@ import Language.MDL.Interp.Interp
 import Language.MDL.SymTab hiding (filter, foldl)
 
 execute :: Foldable f => f Expr -> IO ()
-execute exprs = mapM_ (evalInterp interp) states
+execute exprs = mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
   where
     interp = mapM_ eval exprs
     states = (\st -> baseState { symtab = st}) <$> genVarySymTabs nFrames exprs
-    baseState = initState { nframes = nFrames, basename = bname }
+    baseState = initState { nframes = nFrames, basename = mBname }
     nFrames = fromMaybe 1 $ getNumFrames exprs
-    bname   = getBasename exprs
+    mBname   = getBasename exprs
+    saveFrame i = case mBname of
+                    Just bname -> eval $ Save $ mkName bname i
+                    Nothing    -> return ()
+
+mkName :: FilePath -> Int -> FilePath
+mkName = printf "%s%03d.gif"
 
 genVarySymTabs :: Foldable f => Int -> f Expr -> [SymTab]
-genVarySymTabs nFrames exprs = genSymTab exprs <$> [1..nFrames]
+genVarySymTabs nFrames exprs = genSymTab exprs <$> [0..nFrames - 1]
 
 genSymTab :: Foldable f => f Expr -> Int -> SymTab
 genSymTab exprs i = foldl (flip $ addVaryVal i) empty exprs

@@ -19,6 +19,7 @@ module Language.MDL.Interp.Interp (
   modTransStack,
   modTopTrans,
   multTop,
+  modSymTab,
   drawInCS
   ) where
 
@@ -99,6 +100,10 @@ modTopTrans f = modTransStack $ \tstack ->
 
 multTop :: TransformMatrix -> Interp ()
 multTop = modTopTrans . flip matMult
+
+
+modSymTab :: (SymTab -> SymTab) -> Interp ()
+modSymTab f = modify $ \st -> st { symtab = f $ symtab st }
 
 -- |
 -- == Drawing shapes
