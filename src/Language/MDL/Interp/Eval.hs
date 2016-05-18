@@ -2,7 +2,7 @@ module Language.MDL.Interp.Eval where
 
 import Control.Monad
 import Data.Maybe
-import System.Process
+import System.Cmd.Utils
 
 import D2Point
 import Forking
@@ -57,9 +57,9 @@ eval Pop = modTransStack popF
   where popF (_:rest) = rest
         popF [] = []
 
-eval Display = writePicToProcess "display"
+eval Display = writePicToProcess "display" []
 
-eval (Save path) = writePicToProcess $ "convert - " ++ unpack path
+eval (Save path) = writePicToProcess "convert" ["-", unpack path]
 
 -- |
 -- = Misc Helpers
@@ -72,15 +72,13 @@ scaledRot :: ByteString -> (Double -> TransformMatrix) -> Double -> Interp ()
 scaledRot knob rotMat degs =
   getKnob knob >>= multTop . rotMat . (*degs)
 
-writePicToProcess :: String -> Interp ()
-writePicToProcess cmd = do
-  f <- gets picFunc
+writePicToProcess :: String -> [String] -> Interp ()
+writePicToProcess cmd args = do
+  f  <- gets picFunc
   s' <- gets maxP
   let pic = f $ blankPic $ fromMaybe (Pair 500 500) s'
-  void . liftIO $ do
-    (Just hin, _, _, ps) <-
-      createProcess (shell cmd) { std_in = CreatePipe }
-    void $ writePbm pic hin >> waitForProcess ps
+  void . liftIO $
+    pOpen WriteToPipe cmd args $ writePbm pic
 
 roundoff :: D3Point -> D2Point
 roundoff (Triple x y _) = round <$> Pair x y

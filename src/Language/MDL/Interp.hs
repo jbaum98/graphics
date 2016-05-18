@@ -11,6 +11,7 @@ import Text.Printf
 import System.IO.Temp
 import System.Process
 import System.FilePath
+import System.Directory
 import Control.Concurrent
 import Control.Monad
 import Prelude hiding (filter)
@@ -24,7 +25,7 @@ import Forking
 execute :: Foldable f => f Expr -> IO ()
 execute exprs = if any animCmds exprs
                  then withSystemTempDirectory "graphics" $
-                   executeAnimation bname nFrames exprs
+                      executeAnimation bname nFrames exprs
                  else executeSinglePic exprs
   where
     Just bname   = getBasename exprs
@@ -36,11 +37,7 @@ execute exprs = if any animCmds exprs
 
 executeSinglePic :: Foldable f => f Expr -> IO ()
 executeSinglePic exprs = evalInterp interp initState
-  where interp = mapM_ (\e -> (>> printTime e) $ eval e) exprs
-        printTime e = liftIO $ do
-          time <- getCurrentTime
-          print e
-          print time
+  where interp = mapM_ eval exprs
 
 executeAnimation :: Foldable f => ByteString -> Int -> f Expr -> FilePath -> IO ()
 executeAnimation bname nFrames exprs tmpdir = do
@@ -53,7 +50,7 @@ executeAnimation bname nFrames exprs tmpdir = do
     combos s = unwords [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
 mkName :: FilePath -> Int -> FilePath
-mkName fp i = fp <> show i <.> "gif"
+mkName fp i = fp <> show i <.> "png"
 
 genVarySymTabs :: Foldable f => Int -> f Expr -> [SymTab]
 genVarySymTabs nFrames exprs = genSymTab exprs <$> [0..nFrames - 1]
