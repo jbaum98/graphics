@@ -30,6 +30,8 @@ library
                      , dlist >= 0.7 && < 1
                      , temporary >= 1.2 && < 2
                      , filepath >= 1.4 && < 2
+                     , bytestring-read >= 0.3.1 && < 2
+                     , time
   other-modules:       Matrix.Base
                        Matrix.Mult
                        Matrix.Transform
@@ -63,6 +65,8 @@ executable graphics-exe
   ghc-options:         -O2 -threaded -rtsopts "-with-rtsopts= -N"
   build-depends:       base
                      , graphics
+                     , bytestring >= 0.10
+                     , time
   default-language:    Haskell2010
 
 test-suite graphics-test

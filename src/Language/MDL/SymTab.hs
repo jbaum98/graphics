@@ -4,10 +4,11 @@ module Language.MDL.SymTab (
   ) where
 
 import Data.Map
+import Data.ByteString.Lazy.Char8
 
 import Matrix
 
-type SymTab = Map String Val
+type SymTab = Map ByteString Val
 
 data Val = DoubleVal Double
          | MatrixVal (Matrix Double)

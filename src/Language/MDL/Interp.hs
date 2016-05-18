@@ -5,6 +5,8 @@ module Language.MDL.Interp (
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
+import Data.Time.Clock
+import Data.ByteString.Lazy.Char8 hiding (any, zip, unwords, foldl, empty)
 import Text.Printf
 import System.IO.Temp
 import System.Process
@@ -33,18 +35,21 @@ execute exprs = if any animCmds exprs
     animCmds _           = False
 
 executeSinglePic :: Foldable f => f Expr -> IO ()
-executeSinglePic exprs = evalInterp interp initState >> waitForChildren
-  where interp = mapM_ eval $ exprs
+executeSinglePic exprs = evalInterp interp initState
+  where interp = mapM_ (\e -> (>> printTime e) $ eval e) exprs
+        printTime e = liftIO $ do
+          time <- getCurrentTime
+          print e
+          print time
 
-executeAnimation :: Foldable f => String -> Int -> f Expr -> FilePath -> IO ()
+executeAnimation :: Foldable f => ByteString -> Int -> f Expr -> FilePath -> IO ()
 executeAnimation bname nFrames exprs tmpdir = do
-  mapM_ (\(st, i) -> forkChild $ evalInterp (interp >> saveFrame i) st) (zip states [1..])
-  waitForChildren
-  callCommand $ "convert -delay 10 " ++ combos bname ++ " " ++ bname <.> "gif"
+  mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
+  callCommand $ "convert -delay 10 " ++ combos (unpack bname) ++ " " ++ unpack bname <.> "gif"
   where
     interp = mapM_ eval exprs
     states = (\st -> initState { symtab = st }) <$> genVarySymTabs nFrames exprs
-    saveFrame i = eval $ Save $ tmpdir </> mkName bname i
+    saveFrame i = eval $ Save $ pack $ tmpdir </> mkName (unpack bname) i
     combos s = unwords [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
 mkName :: FilePath -> Int -> FilePath
@@ -76,7 +81,7 @@ getNumFrames = fmap (round . getFrames) . findLast isFrames
     -- should never happen
     getFrames _          = error "getFrames called on some non-Frame Expr"
 
-getBasename :: Foldable f => f Expr -> Maybe FilePath
+getBasename :: Foldable f => f Expr -> Maybe ByteString
 getBasename = fmap getName . findLast isBasename
   where
     isBasename Basename {} = True

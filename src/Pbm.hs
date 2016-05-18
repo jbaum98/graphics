@@ -22,7 +22,7 @@ writePbmFile path pic = withFile path WriteMode $ writePbm pic
 writePbm :: Picture -> Handle -> IO ()
 writePbm pic h = do
   hSetBinaryMode h True
-  hSetBuffering h $ BlockBuffering (Just 4096)
+  hSetBuffering h $ BlockBuffering Nothing
   let w = hPutBuilder h
       {-# INLINE w #-}
       Pair xres yres =  size pic

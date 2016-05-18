@@ -1,10 +1,12 @@
 {
 module Language.MDL.Lexer (lexMDL) where
 
+import qualified Data.ByteString.Lazy.Char8 as B
+import Data.ByteString.Read
 import Language.MDL.Tokens
 }
 
-%wrapper "posn"
+%wrapper "posn-bytestring"
 
 
 @id = [a-zA-Z][a-zA-Z0-9_]*
@@ -64,11 +66,12 @@ tokens :-
 
 {
 
-lexMDL :: String -> [Token]
+lexMDL :: ByteString.ByteString -> [Token]
 lexMDL = alexScanTokens
 
-readDouble :: String -> Double
-readDouble s | head s == '-' = read $ '-' : '0' : tail s
-             | otherwise     = read $ '0' : s
+readDouble :: ByteString.ByteString -> Double
+readDouble s | B.head s == '-' = read' $ '-' `B.cons` '0' `B.cons` B.tail s
+             | otherwise     = read' $ '0' `B.cons` s
+  where read' s = case signed fractional s of Just (x,_) -> x
 
 }

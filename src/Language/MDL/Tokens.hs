@@ -1,5 +1,7 @@
 module Language.MDL.Tokens (Token(..)) where
 
+import Data.ByteString.Lazy (ByteString)
+
 data Token = TokenDouble !Double
            | TokenComment
            | TokenLight
@@ -27,11 +29,11 @@ data Token = TokenDouble !Double
            | TokenSave
            | TokenGenerateRayfiles
            | TokenShading
-           | TokenShadingType String
+           | TokenShadingType ByteString
            | TokenSetKnobs
            | TokenFocal
            | TokenDisplay
            | TokenWeb
            | TokenCO
-           | TokenString String
+           | TokenString ByteString
            deriving (Eq, Show)

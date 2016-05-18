@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Language.MDL.Expr (
   Expr(..),
   Axis(..),
@@ -7,31 +9,33 @@ module Language.MDL.Expr (
   Triple(..),
   ) where
 
+import Data.ByteString.Lazy
+
 import Pair
 
-data Expr = Light String (Triple Double) (Triple Double)
-          | Move (Triple Double) (Maybe String)
-          | Constants String (Triple (Triple Double)) (Maybe (Triple Double))
-          | SaveCoords String
+data Expr = Light ByteString (Triple Double) (Triple Double)
+          | Move (Triple Double) (Maybe ByteString)
+          | Constants ByteString (Triple (Triple Double)) (Maybe (Triple Double))
+          | SaveCoords ByteString
           | Camera (Triple Double) (Triple Double)
-          | Texture String (Triple Double) (Triple Double) (Triple Double) (Triple Double)
-          | Sphere (Maybe String) (Triple Double) Double (Maybe String)
-          | Torus (Maybe String) (Triple Double) Double Double (Maybe String)
-          | Box (Maybe String) (Triple Double) (Triple Double) (Maybe String)
-          | Line (Maybe String) (Triple Double) (Maybe String) (Triple Double) (Maybe String)
-          | Mesh (Maybe String) FilePath (Maybe String)
-          | Set String Double
-          | Scale (Triple Double) (Maybe String)
-          | Rotate Axis Double (Maybe String)
-          | Basename String
-          | SaveKnobs String
-          | Tween Double Double String String
+          | Texture ByteString (Triple Double) (Triple Double) (Triple Double) (Triple Double)
+          | Sphere (Maybe ByteString) (Triple Double) Double (Maybe ByteString)
+          | Torus (Maybe ByteString) (Triple Double) Double Double (Maybe ByteString)
+          | Box (Maybe ByteString) (Triple Double) (Triple Double) (Maybe ByteString)
+          | Line (Maybe ByteString) (Triple Double) (Maybe ByteString) (Triple Double) (Maybe ByteString)
+          | Mesh (Maybe ByteString) ByteString (Maybe ByteString)
+          | Set ByteString Double
+          | Scale (Triple Double) (Maybe ByteString)
+          | Rotate Axis Double (Maybe ByteString)
+          | Basename ByteString
+          | SaveKnobs ByteString
+          | Tween Double Double ByteString ByteString
           | Frames Double
-          | Vary String Double Double Double Double
+          | Vary ByteString Double Double Double Double
           | Push
           | Pop
           | GenerateRayfiles
-          | Save FilePath
+          | Save ByteString
           | Shading ShadingType
           | SetKnobs Double
           | Focal Double
@@ -43,7 +47,7 @@ data Expr = Light String (Triple Double) (Triple Double)
 
 data Axis = X | Y | Z deriving (Eq, Show)
 
-strToAxis :: String -> Axis
+strToAxis :: ByteString -> Axis
 strToAxis "x" = X
 strToAxis "X" = X
 strToAxis "y" = Y
@@ -59,7 +63,7 @@ data ShadingType = Phong
                  | Wireframe
                  deriving (Eq, Show)
 
-strToShadingType :: String -> ShadingType
+strToShadingType :: ByteString -> ShadingType
 strToShadingType "wireframe" = Wireframe
 strToShadingType "flat"      = Flat
 strToShadingType "goroud"    = Goroud

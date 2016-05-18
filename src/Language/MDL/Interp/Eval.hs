@@ -13,6 +13,7 @@ import Matrix
 import Pbm
 import Picture
 import Shapes
+import Data.ByteString.Lazy.Char8
 
 eval :: Expr -> Interp ()
 
@@ -58,16 +59,16 @@ eval Pop = modTransStack popF
 
 eval Display = writePicToProcess "display"
 
-eval (Save path) = writePicToProcess $ "convert - " ++ path
+eval (Save path) = writePicToProcess $ "convert - " ++ unpack path
 
 -- |
 -- = Misc Helpers
 
-scaledMat :: String -> (D3Point -> TransformMatrix) -> D3Point -> Interp ()
+scaledMat :: ByteString -> (D3Point -> TransformMatrix) -> D3Point -> Interp ()
 scaledMat knob rotMat p =
   getKnob knob >>= multTop . rotMat . (*p) . pure
 
-scaledRot :: String -> (Double -> TransformMatrix) -> Double -> Interp ()
+scaledRot :: ByteString -> (Double -> TransformMatrix) -> Double -> Interp ()
 scaledRot knob rotMat degs =
   getKnob knob >>= multTop . rotMat . (*degs)
 
@@ -76,7 +77,7 @@ writePicToProcess cmd = do
   f <- gets picFunc
   s' <- gets maxP
   let pic = f $ blankPic $ fromMaybe (Pair 500 500) s'
-  void . liftIO . forkChild $ do
+  void . liftIO $ do
     (Just hin, _, _, ps) <-
       createProcess (shell cmd) { std_in = CreatePipe }
     void $ writePbm pic hin >> waitForProcess ps

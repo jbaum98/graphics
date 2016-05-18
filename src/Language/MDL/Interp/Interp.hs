@@ -23,9 +23,10 @@ module Language.MDL.Interp.Interp (
   drawInCS
   ) where
 
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Data.Maybe
 import Prelude hiding (lookup)
+import Data.ByteString.Lazy.Char8
 
 import Language.MDL.Interp.InterpState
 import Language.MDL.SymTab hiding (fold)
@@ -52,16 +53,16 @@ execInterp = execStateT
 failKnobType :: String -> Interp a
 failKnobType t = fail $ "Provided knob is not of type `" ++ t ++ "`"
 
-failNoKnob :: String -> Interp a
-failNoKnob knob = fail $ "Knob `" ++ knob ++ "` is not initialized"
+failNoKnob :: ByteString -> Interp a
+failNoKnob knob = fail $ "Knob `" ++ unpack knob ++ "` is not initialized"
 
 -- |
 -- == Accessing InterpState
 
-getSym :: String -> Interp (Maybe Val)
+getSym :: ByteString -> Interp (Maybe Val)
 getSym s = lookup s <$> gets symtab
 
-getTM :: Maybe String -> Interp TransformMatrix
+getTM :: Maybe ByteString -> Interp TransformMatrix
 getTM (Just cs) = do
   mknob <- getSym cs
   case mknob of
@@ -71,7 +72,7 @@ getTM (Just cs) = do
     Nothing  -> failNoKnob cs
 getTM Nothing = gets topTransMat
 
-getKnob :: String -> Interp Double
+getKnob :: ByteString -> Interp Double
 getKnob knob = do
   mknob <- getSym knob
   case mknob of
@@ -111,5 +112,5 @@ modSymTab f = modify $ \st -> st { symtab = f $ symtab st }
 drawShape :: ShapeMatrix m => m -> Interp ()
 drawShape = addF . draw
 
-drawInCS :: ShapeMatrix m => Maybe String -> m -> Interp ()
+drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
 drawInCS cs m = getTM cs >>= drawShape . flip matMultD m

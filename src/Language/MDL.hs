@@ -10,5 +10,7 @@ import Language.MDL.Lexer
 import Language.MDL.Interp
 import Data.DList
 
-parseStr :: String -> DList Expr
+import qualified Data.ByteString.Lazy as ByteString
+
+parseStr :: ByteString.ByteString -> DList Expr
 parseStr = parse . lexMDL
