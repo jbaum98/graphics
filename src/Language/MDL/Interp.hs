@@ -7,8 +7,8 @@ import Data.Maybe
 import Data.Monoid
 import Data.ByteString.Lazy.Char8 hiding (any, zip, unwords, foldl, empty)
 import System.IO.Temp
-import System.Process
 import System.FilePath
+import System.Posix.Process
 import Control.Monad
 import Prelude hiding (filter)
 
@@ -37,12 +37,14 @@ executeSinglePic exprs = evalInterp interp initState
 executeAnimation :: Foldable f => ByteString -> Int -> f Expr -> FilePath -> IO ()
 executeAnimation bname nFrames exprs tmpdir = do
   mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
-  callCommand $ "convert -delay 10 " ++ combos (unpack bname) ++ " " ++ unpack bname <.> "gif"
+  void $ forkProcess $
+    let args = "-delay" : "10" : combos (unpack bname) ++ [unpack bname <.> "gif"]
+    in executeFile "convert" True args Nothing
   where
     interp = mapM_ eval exprs
     states = (\st -> initState { symtab = st }) <$> genVarySymTabs nFrames exprs
     saveFrame i = eval $ Save $ pack $ tmpdir </> mkName (unpack bname) i
-    combos s = unwords [mkName (tmpdir </> s) i | i <- [1..nFrames]]
+    combos s = [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
 mkName :: FilePath -> Int -> FilePath
 mkName fp i = fp <> show i <.> "png"

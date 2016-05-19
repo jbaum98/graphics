@@ -4,10 +4,8 @@ module Main where
 
 import System.Environment
 
-import D2Point
 import Language.MDL
 import Control.Monad
-import Picture
 
 import qualified Data.ByteString.Lazy as B
 
@@ -18,11 +16,11 @@ main = do
 
 respond :: [String] -> IO ()
 respond [] = putStrLn "You didn't supply any args\nUsage: ./main <script file>"
-respond (path:rest) | "-v" `elem` rest = execScript path (Pair 500 500) True
-respond (path:_) = execScript path (Pair 500 500) False
+respond (path:rest) | "-v" `elem` rest = execScript path True
+respond (path:_) = execScript path False
 
-execScript :: FilePath -> D2Point -> Bool -> IO ()
-execScript path maxPoint verbose = do
+execScript :: FilePath -> Bool -> IO ()
+execScript path verbose = do
  s <- B.readFile path
  let !ast = parseStr s
  when verbose $ mapM_ print ast

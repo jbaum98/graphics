@@ -72,6 +72,6 @@ lexMDL = alexScanTokens
 readDouble :: ByteString.ByteString -> Double
 readDouble s | B.head s == '-' = read' $ '-' `B.cons` '0' `B.cons` B.tail s
              | otherwise     = read' $ '0' `B.cons` s
-  where read' s = case signed fractional s of Just (x,_) -> x
+  where read' y = case signed fractional y of Just (x,_) -> x
 
 }

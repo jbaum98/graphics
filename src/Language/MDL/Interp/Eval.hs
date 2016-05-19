@@ -21,11 +21,6 @@ import Data.ByteString.Lazy.Char8
 
 eval :: Expr -> Interp ()
 
-eval Comment = return ()
-eval Basename {} = return ()
-eval Frames {} = return ()
-eval Vary {} = return ()
-
 eval (Set knob val) = modSymTab $ insert knob (DoubleVal val)
 
 eval (Line _ p1 cs1 p2 cs2) = do
@@ -64,6 +59,9 @@ eval Pop = modTransStack popF
 eval Display = writePicToProcess "display" []
 
 eval (Save path) = writePicToProcess "convert" ["-", unpack path]
+
+eval _ = return ()
+
 
 -- |
 -- = Misc Helpers

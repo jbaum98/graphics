@@ -15,23 +15,19 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Forking, Language.MDL
+  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Language.MDL
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 1
                      , bytestring >= 0.10 && < 1
+                     , bytestring-read >= 0.3.1 && < 2
                      , deepseq >= 1.4 && < 2
                      , array >= 0.5 && < 1
-                     , primitive >= 0.6 && < 1
-                     , attoparsec >= 0.13 && < 1
                      , mtl >= 2.2 && < 3
-                     , process >= 1.2 && < 2
                      , vector >= 0.11 && < 1
                      , loop >= 0.3 && < 1
                      , dlist >= 0.7 && < 1
                      , temporary >= 1.2 && < 2
                      , filepath >= 1.4 && < 2
-                     , bytestring-read >= 0.3.1 && < 2
-                     , directory
                      , unix >= 2.7 && < 3
   other-modules:       Matrix.Base
                        Matrix.Mult
@@ -50,8 +46,6 @@ library
                        Language.MDL.Interp.Interp
                        Language.MDL.Interp.Eval
                        Language.MDL.Interp.InterpState
-                       -- Parser.Parser
-                       -- Parser.Interp
                        Angle
                        Shapes
                        Pair.Pair
@@ -75,14 +69,14 @@ test-suite graphics-test
   main-is:             Spec.hs
   build-depends:       base
                      , graphics
-  ghc-options:         -O2 -threaded -rtsopts "-with-rtsopts= -A8M -H4M"
+  ghc-options:         -O2 -threaded -rtsopts
   default-language:    Haskell2010
 
 benchmark graphics-benchmark
   type:                exitcode-stdio-1.0
   hs-source-dirs:      app, bench
   main-is:             Bench.hs
-  ghc-options:         -O2 -threaded -rtsopts "-with-rtsopts= -A8M -H4M"
+  ghc-options:         -O2 -threaded -rtsopts
   build-depends:       base
                      , graphics
                      , criterion
