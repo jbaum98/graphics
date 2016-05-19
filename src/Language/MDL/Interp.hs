@@ -5,14 +5,10 @@ module Language.MDL.Interp (
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
-import Data.Time.Clock
 import Data.ByteString.Lazy.Char8 hiding (any, zip, unwords, foldl, empty)
-import Text.Printf
 import System.IO.Temp
 import System.Process
 import System.FilePath
-import System.Directory
-import Control.Concurrent
 import Control.Monad
 import Prelude hiding (filter)
 
@@ -20,7 +16,6 @@ import Language.MDL.Expr
 import Language.MDL.Interp.Eval
 import Language.MDL.Interp.Interp
 import Language.MDL.SymTab hiding (filter, foldl)
-import Forking
 
 execute :: Foldable f => f Expr -> IO ()
 execute exprs = if any animCmds exprs

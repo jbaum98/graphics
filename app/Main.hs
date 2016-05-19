@@ -1,15 +1,13 @@
-{-# LANGUAGE BangPatterns, ScopedTypeVariables #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Main where
 
-import System.IO
 import System.Environment
 
 import D2Point
 import Language.MDL
 import Control.Monad
 import Picture
-import Pbm
 
 import qualified Data.ByteString.Lazy as B
 
