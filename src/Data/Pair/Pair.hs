@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Pair.Pair (Pair(..), uncurryPair) where
+module Data.Pair.Pair (Pair(..), uncurryPair) where
 
 import Control.Applicative
 import GHC.Generics

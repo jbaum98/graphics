@@ -5,7 +5,7 @@ Description : Defines a basic Matrix type
 Defines a basic Matrix type using REPA arrays.
 -}
 
-module Matrix.Base (
+module Data.Matrix.Base (
     Matrix(..),
     size,
     space,
@@ -32,15 +32,13 @@ module Matrix.Base (
     ) where
 
 import Control.Monad.ST
-import Prelude hiding (map)
-
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
+
 import Control.Loop (numLoop)
 
-import Pair
-import Matrix.D3Point
-import D2Point
+import Data.D2Point
+import Data.D3Point
 
 data Matrix a = Matrix {
   rows :: {-# UNPACK #-} !Int,

@@ -6,17 +6,20 @@ Description : NetPBM format
 
 Write a 'Picture' to a file in the NetPBM format.
 -}
-module Pbm (writePbmFile, writePbm) where
+module Data.Picture.Output.Pbm (writePbm, savePbm) where
 
-import Picture
-import Data.ByteString.Builder (hPutBuilder)
-import Data.ByteString.Builder.Prim
-import Data.Monoid
 import System.IO
 
+import Data.ByteString.Builder (hPutBuilder)
+import Data.ByteString.Builder.Prim
+
+import Data.Color
+import Data.Pair
+import Data.Picture.Picture
+
 -- |Write a 'Picture' to a 'FilePath' in the NetPBM format
-writePbmFile :: FilePath -> Picture -> IO ()
-writePbmFile path pic = withFile path WriteMode $ writePbm pic
+savePbm :: FilePath -> Picture -> IO ()
+savePbm path = withFile path WriteMode . writePbm
 
 -- |Write a 'Picture' to a 'Handle' in the NetPBM format
 writePbm :: Picture -> Handle -> IO ()

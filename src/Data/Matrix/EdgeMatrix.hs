@@ -1,21 +1,21 @@
-module Matrix.EdgeMatrix (
+module Data.Matrix.EdgeMatrix (
     EdgeMatrix,
     edge,
-    addEdge,
+    addEdge
     ) where
 
+import Data.Monoid
 import qualified Data.Vector.Unboxed as V
 
-import Matrix.Base
-import Matrix.D3Point
-import Matrix.ShapeMatrix
-import Picture
-import Utils
+import Data.D3Point
+import Data.Matrix.Base
+import Data.Matrix.ShapeMatrix
+import Data.Picture.Drawing.Line
 
 newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
 instance ShapeMatrix EdgeMatrix where
-  drawColor color (EdgeMatrix m) = compose [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
+  drawColor color (EdgeMatrix m) = appEndo $ foldMap Endo [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
   unwrap = runEM
   wrap = EdgeMatrix
 

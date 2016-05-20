@@ -6,7 +6,7 @@ Description : Defines transformation 'Matrix's
 
 -}
 
-module Matrix.Transform (
+module Data.Matrix.Transform (
     TransformMatrix,
     idMatrix,
     transMatrix,
@@ -20,15 +20,17 @@ module Matrix.Transform (
     drawProgressColors
     ) where
 
-import           Matrix.Base
-import           Matrix.Mult
-import           Matrix.D3Point
-import           Matrix.ShapeMatrix
-import           Matrix.PointMatrix (point)
-import           Picture
-import           Angle
 import Control.Monad.ST
+
 import Control.Loop
+
+import Data.Color
+import Data.D3Point
+import Data.Matrix.Base
+import Data.Matrix.Mult
+import Data.Matrix.PointMatrix (point)
+import Data.Matrix.ShapeMatrix
+import Data.Picture.Picture
 
 -- |'Matrix's that apply transformations using matrix multiplication and
 -- homogenous coordinates. To apply the transformation, matrix multiply the
@@ -129,3 +131,6 @@ drawProgressColors tcs e p = runST $ do
         !newP = drawColor color newE p'
     return (tcs', newP)
   return pFinal
+
+degToRad :: (Num a, RealFrac a, Floating a) => a -> a
+degToRad = (/ 180) . (* pi)

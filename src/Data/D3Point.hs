@@ -1,9 +1,9 @@
-module Matrix.D3Point (
+module Data.D3Point (
   D3Coord, D3Point,
   Triple(..)
   ) where
 
-import Pair
+import Data.Pair
 
 -- |Represents a single coordinate of a point in 3D space
 type D3Coord = Double

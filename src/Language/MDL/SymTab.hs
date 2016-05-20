@@ -6,7 +6,7 @@ module Language.MDL.SymTab (
 import Data.Map
 import Data.ByteString.Lazy.Char8
 
-import Matrix
+import Data.Matrix
 
 type SymTab = Map ByteString Val
 

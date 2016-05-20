@@ -6,13 +6,14 @@ Description : Provides fucntions for matrix multiplication.
 
 Provides fucntions for matrix multiplication.
 -}
-module Matrix.Mult (matMult) where
+module Data.Matrix.Mult (matMult) where
 
-import Matrix.Base
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
+
 import Control.Loop
 
+import Data.Matrix.Base
 -- help from https://hackage.haskell.org/package/matrix-0.3.4.4/docs/src/Data-Matrix.html
 
 -- |Multiplies two 'Matrix's using matrix multiplication

@@ -4,9 +4,10 @@ module Language.MDL.Interp.InterpState (
   initState
   ) where
 
+import Data.D2Point
+import Data.Matrix hiding (empty)
+import Data.Picture
 import Language.MDL.SymTab
-import Matrix hiding (empty)
-import Picture
 
 data InterpState = InterpState
   { picFunc        :: !(Picture -> Picture)

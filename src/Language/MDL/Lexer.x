@@ -70,8 +70,8 @@ lexMDL :: ByteString.ByteString -> [Token]
 lexMDL = alexScanTokens
 
 readDouble :: ByteString.ByteString -> Double
-readDouble s | B.head s == '-' = read' $ '-' `B.cons` '0' `B.cons` B.tail s
-             | otherwise     = read' $ '0' `B.cons` s
+readDouble str | B.head str == '-' = read' $ '-' `B.cons` '0' `B.cons` B.tail str
+               | otherwise     = read' $ '0' `B.cons` str
   where read' y = case signed fractional y of Just (x,_) -> x
 
 }

@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns, FlexibleContexts, TupleSections #-}
 
-module Shapes (
+module Data.Picture.Drawing.Shapes (
     parametric,
     circle,
     hermite,
@@ -10,22 +10,24 @@ module Shapes (
     sphere
   ) where
 
+import Data.Monoid
+
 import qualified Data.Vector.Unboxed as V
 
-import Matrix
-import Utils
-import Pair
+import Data.Matrix
+import Data.Pair
+import Data.D3Point
 
 parametric :: Int -> (Double -> D3Point) -> EdgeMatrix
 parametric steps f = addPoints $ wrap $ emptyWith (round $ 4 / step)
   where
-    addPoints = compose [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
+    addPoints = appEndo $ foldMap Endo [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
     step = recip $ fromIntegral steps - 1
 
 parametric2 :: Int -> (Double -> Double -> D3Point) -> PointMatrix
 parametric2 steps f = addPoints $ wrap $ emptyWith (4 * steps * steps)
   where
-    addPoints = compose [ addPoint $ f i j
+    addPoints = appEndo $ foldMap Endo [ addPoint $ f i j
                         | j <- [0,step..1], i <- [0,step..1]]
     step = recip $ fromIntegral steps - 1
 
@@ -83,7 +85,7 @@ matCurve cMat steps p1 p2 p3 p4  = parametric steps $ \t ->
 box :: D3Point -> D3Point -> PolyMatrix
 box topLeft (Triple x y z) = addPolys $ wrap $ emptyWith 47
   where
-    addPolys = compose [
+    addPolys = appEndo $ foldMap Endo [
        -- Front
        addPoly topLeft botLeft topRight
      , addPoly botRight topRight botLeft
@@ -126,7 +128,7 @@ sphere :: D3Point -> D3Coord -> Int -> PolyMatrix
 sphere c r steps = connectMiddles . connectCaps $ wrap $ emptyWith (6 * (steps - 2) * steps)
   where
     connectMiddles = crissCross steps connectSlice False
-    connectCaps = compose [connect (0, steps+1, 1) . connect (steps + steps - 2, steps - 1, steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
+    connectCaps = appEndo $ foldMap Endo [connect (0, steps+1, 1) . connect (steps + steps - 2, steps - 1, steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
     spherePoints = genSphere c r steps
     connectSlice = connectShapeSlice (spherePoints, steps)
 
@@ -139,7 +141,7 @@ genSphere c r steps = parametric2 steps f
     z thetaT phiT = r*sin(thetaT * pi) * sin(phiT * 2 * pi)
 
 crissCross :: Int -> (Int -> (Int, Int, Int) -> PolyMatrix -> PolyMatrix) -> Bool -> PolyMatrix -> PolyMatrix
-crissCross steps connectSlice startFromTop = compose [
+crissCross steps connectSlice startFromTop = appEndo $ foldMap Endo [
   connect (i, i', i+1) .
   connect (i'+1, i+1, i')
   | i      <- [start..steps-2],

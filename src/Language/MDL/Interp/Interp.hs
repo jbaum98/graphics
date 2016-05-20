@@ -23,15 +23,16 @@ module Language.MDL.Interp.Interp (
   drawInCS
   ) where
 
-import Control.Monad.State.Strict
 import Data.Maybe
 import Prelude hiding (lookup)
+
+import Control.Monad.State.Strict
 import Data.ByteString.Lazy.Char8
 
+import Data.Matrix hiding (empty)
+import Data.Picture
 import Language.MDL.Interp.InterpState
 import Language.MDL.SymTab hiding (fold)
-import Matrix hiding (empty)
-import Picture
 
 -- |
 -- = Interp Monad

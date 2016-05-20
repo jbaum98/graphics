@@ -1,4 +1,4 @@
-module Matrix.ShapeMatrix (
+module Data.Matrix.ShapeMatrix (
   ShapeMatrix,
   drawColor,
   draw,
@@ -9,10 +9,11 @@ module Matrix.ShapeMatrix (
   matMultD
   ) where
 
-import Picture
-import Matrix.Base
-import Matrix.D3Point
-import Matrix.Mult
+import Data.Color
+import Data.D3Point
+import Data.Matrix.Base
+import Data.Matrix.Mult
+import Data.Picture.Picture
 
 class ShapeMatrix d where
   drawColor :: Color -> d -> Picture -> Picture

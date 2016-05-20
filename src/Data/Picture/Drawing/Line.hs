@@ -4,12 +4,17 @@ Description : Draw lines between two 'Point's
 
 Provides an implementation of Bresenham's Line Algorithm.
 -}
-module Line (
+module Data.Picture.Drawing.Line (
   D2Point, Pair(..),
-  line
+  line,
+  drawColorLine,
+  drawLine
   ) where
 
-import D2Point
+import Data.Color
+import Data.D2Point
+import Data.Picture.Picture
+import Data.Picture.Drawing.Points
 
 type Point = D2Point
 
@@ -102,3 +107,9 @@ iterMaker oct p2 a b = iter
                                        Seventh -> Pair  x    (y-1)
                                        Eighth  -> Pair (x+1)  y
                                        _       -> error "Impossibility when drawing line"
+
+drawColorLine :: Color -> Point -> Point -> Picture -> Picture
+drawColorLine color p1 p2 = setColor color (line p1 p2)
+
+drawLine :: Point -> Point -> Picture -> Picture
+drawLine = drawColorLine white

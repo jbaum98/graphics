@@ -8,10 +8,10 @@ Similarly, tuples are of fixed length and can be uncurried but make no guarantee
 about types, so mapping over all elements is impossible.
 These types provide fixed-length homogenous containers.
 -}
-module Pair (
+module Data.Pair (
   module X
 ) where
 
-import Pair.Pair as X
-import Pair.Triple as X
-import Pair.Vector as X
+import Data.Pair.Pair as X
+import Data.Pair.Triple as X
+import Data.Pair.Vector as X

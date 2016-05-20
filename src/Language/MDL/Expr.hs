@@ -11,7 +11,7 @@ module Language.MDL.Expr (
 
 import Data.ByteString.Lazy
 
-import Pair
+import Data.Pair
 
 data Expr = Light ByteString (Triple Double) (Triple Double)
           | Move (Triple Double) (Maybe ByteString)

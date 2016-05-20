@@ -1,10 +1,10 @@
-module Pair.Vector (
+module Data.Pair.Vector (
   dot,
   cross,
   norm
   ) where
 
-import Pair.Triple
+import Data.Pair.Triple
 
 infixl 5 `dot`
 dot :: (Num a, Show a) => Triple a -> Triple a -> a

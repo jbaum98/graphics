@@ -2,22 +2,17 @@
 
 module Language.MDL.Interp.Eval where
 
-import Control.Monad
 import Data.Maybe
-import System.IO
-import System.Posix.IO
-import System.Posix.Process
-import qualified Control.Exception(try, IOException)
 
-import D2Point
+import Data.ByteString.Lazy.Char8
+
+import Data.D2Point
+import Data.D3Point
+import Data.Matrix
+import Data.Picture
 import Language.MDL.Expr
 import Language.MDL.Interp.Interp
 import Language.MDL.SymTab
-import Matrix
-import Pbm
-import Picture
-import Shapes
-import Data.ByteString.Lazy.Char8
 
 eval :: Expr -> Interp ()
 
@@ -56,15 +51,21 @@ eval Pop = modTransStack popF
   where popF (_:rest) = rest
         popF [] = []
 
-eval Display = writePicToProcess "display" []
+eval Display = passPicTo displayPic
 
-eval (Save path) = writePicToProcess "convert" ["-", unpack path]
+eval (Save path) = passPicTo $ savePic $ unpack path
 
 eval _ = return ()
 
 
 -- |
 -- = Misc Helpers
+
+passPicTo :: (Picture -> IO ()) -> Interp ()
+passPicTo f = do
+  pf <- gets picFunc
+  mp <- gets maxP
+  liftIO $ f . pf $ blankPic $ fromMaybe (Pair 500 500) mp
 
 scaledMat :: ByteString -> (D3Point -> TransformMatrix) -> D3Point -> Interp ()
 scaledMat knob rotMat p =
@@ -73,39 +74,6 @@ scaledMat knob rotMat p =
 scaledRot :: ByteString -> (Double -> TransformMatrix) -> Double -> Interp ()
 scaledRot knob rotMat degs =
   getKnob knob >>= multTop . rotMat . (*degs)
-
-writePicToProcess :: String -> [String] -> Interp ()
-writePicToProcess cmd args = do
-  f  <- gets picFunc
-  s' <- gets maxP
-  let pic = f $ blankPic $ fromMaybe (Pair 500 500) s'
-  liftIO $ pOpen cmd args $ writePbm pic
-
-pOpen :: FilePath -> [String] -> (Handle -> IO a) -> IO a
-pOpen fp args func = do
-  pipepair <- createPipe
-  pid <- do
-    p <- Control.Exception.try (forkProcess $ childstuff pipepair)
-    case p of
-      Right x -> return x
-      Left (e :: Control.Exception.IOException) -> fail ("Error in fork: " ++ show e)
-  retval <- callfunc pipepair
-  let rv = seq retval retval
-  void $ getProcessStatus True False pid
-  return rv
-  where
-    callfunc pipepair = do
-      closeFd (fst pipepair)
-      h <- fdToHandle (snd pipepair)
-      x <- func h
-      hClose h
-      return $! x
-
-    childstuff pipepair = do
-              void $ dupTo (fst pipepair) stdInput
-              closeFd $ fst pipepair
-              closeFd $ snd pipepair
-              executeFile fp True args Nothing
 
 roundoff :: D3Point -> D2Point
 roundoff (Triple x y _) = round <$> Pair x y

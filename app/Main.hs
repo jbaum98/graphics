@@ -2,12 +2,12 @@
 
 module Main where
 
+import Control.Monad
 import System.Environment
 
-import Language.MDL
-import Control.Monad
-
 import qualified Data.ByteString.Lazy as B
+
+import Language.MDL
 
 main :: IO ()
 main = do

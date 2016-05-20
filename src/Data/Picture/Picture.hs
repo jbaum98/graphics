@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ConstraintKinds, BangPatterns #-}
+{-# LANGUAGE FlexibleContexts, ConstraintKinds #-}
 
 {-|
 Module      : Picture
@@ -6,10 +6,7 @@ Description : Create and manipulate 'Picture's
 
 Provides various methods to create and manipulate 'Picture's.
 -}
-module Picture (
-    module Color,
-    module D2Point,
-    module Line,
+module Data.Picture.Picture (
     Picture(..),
     solidPic,
     blankPic,
@@ -18,25 +15,18 @@ module Picture (
     (!),
     unsafeAt,
     elems,
-    setPointColor,
-    setColor,
-    drawColorLine,
-    drawLine,
+    toTup
     ) where
 
-import           Control.Monad.ST
-import           Data.Array.Unboxed
-import           Data.Array.MArray
-import           Data.Array.Unsafe
-import           Data.Array.ST
+import  Data.Array.MArray
+import  Data.Array.ST
+import  Data.Array.Unboxed
 import qualified Data.Array.Base as AB (unsafeAt)
 
-import           Control.DeepSeq
+import Control.DeepSeq
 
-import           Color
-import           D2Point
-import           Line
-import           Utils (compose)
+import Data.Color
+import Data.D2Point
 
 type Coord = D2Coord
 type Point = D2Point
@@ -100,35 +90,6 @@ toTup (Pair x y) ci = (y, x, ci)
 
 toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
 toSize point = ((1, 1, 0), toTup point 2)
-
-inBounds :: Point -> Picture -> Bool
-inBounds point pic = inRange (bounds $ runPicture pic) (toTup point 0)
-
--- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
-setPointColor :: Color -> Point -> Picture -> Picture
-setPointColor _ point !pic
-  | not $ inBounds point' pic = pic
-  where point' = reflect pic point
-setPointColor color point pic@(Picture arr) = runST $ do
-  mutPic <- unsafeThaw arr :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
-  mapM_ (mutColorVal mutPic) [0..2]
-  Picture <$> unsafeFreeze mutPic
-  where mutColorVal mp n = writeArray mp (toTup point' n) (color `tIndex` n)
-        point' = reflect pic point
-
-reflect :: Picture -> D2Point -> D2Point
-reflect pic (Pair x y) = Pair x (yMax - y - 1)
-  where Pair _ yMax = size pic
-
--- |Set every 'Point' in a list to a single 'Color'
-setColor :: Color -> [Point] -> Picture -> Picture
-setColor color points = compose (fmap (setPointColor color) points)
-
-drawColorLine :: Color -> Point -> Point -> Picture -> Picture
-drawColorLine color p1 p2 = setColor color (line p1 p2)
-
-drawLine :: Point -> Point -> Picture -> Picture
-drawLine = drawColorLine white
 
 unsafeAt :: Picture -> (Coord,Coord,Int) -> ColorVal
 unsafeAt pic = AB.unsafeAt (runPicture pic) . enc

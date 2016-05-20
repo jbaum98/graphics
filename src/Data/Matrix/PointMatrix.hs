@@ -1,4 +1,4 @@
-module Matrix.PointMatrix (
+module Data.Matrix.PointMatrix (
   PointMatrix,
   point,
   addPoint
@@ -6,16 +6,15 @@ module Matrix.PointMatrix (
 
 import qualified Data.Vector.Unboxed as V
 
-import Matrix.Base
-import Matrix.D3Point
-import Matrix.ShapeMatrix
-import Picture
-import Utils
+import Data.D3Point
+import Data.Matrix.Base
+import Data.Matrix.ShapeMatrix
+import Data.Picture.Drawing.Points
 
 newtype PointMatrix = PointMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PointMatrix where
-  drawColor color (PointMatrix m) = compose $ fmap (setPointColor color. getD2Point m) [0..cols m - 1]
+  drawColor color (PointMatrix m) = setColor color [getD2Point m i | i <- [0..cols m - 1]]
   unwrap = runPM
   wrap = PointMatrix
 

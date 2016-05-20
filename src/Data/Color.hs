@@ -4,7 +4,7 @@ Description : RGB pixel type
 
 The 'Color' type represents an RGB pixel.
 -}
-module Color (
+module Data.Color (
   ColorVal, Color,
   Triple(..),
   maxColor,
@@ -15,7 +15,7 @@ module Color (
   indigo, violet, pink, turqouise
   ) where
 
-import Pair (Triple(..))
+import Data.Pair (Triple(..))
 import Data.Word
 
 -- |The type of a singe color value

@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Line, Pbm, Picture, Color, D2Point, Pair, Utils, Matrix, Language.MDL
+  exposed-modules:     Language.MDL
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 1
                      , bytestring >= 0.10 && < 1
@@ -29,28 +29,38 @@ library
                      , temporary >= 1.2 && < 2
                      , filepath >= 1.4 && < 2
                      , unix >= 2.7 && < 3
-  other-modules:       Matrix.Base
-                       Matrix.Mult
-                       Matrix.Transform
-                       Matrix.ShapeMatrix
-                       Matrix.EdgeMatrix
-                       Matrix.PointMatrix
-                       Matrix.PolyMatrix
-                       Matrix.D3Point
-                       Language.MDL.Parser
-                       Language.MDL.Lexer
-                       Language.MDL.Tokens
+  other-modules:       Data.Color
+                       Data.D2Point
+                       Data.D3Point
+                       Data.Matrix
+                       Data.Matrix.Base
+                       Data.Matrix.EdgeMatrix
+                       Data.Matrix.Mult
+                       Data.Matrix.PointMatrix
+                       Data.Matrix.PolyMatrix
+                       Data.Matrix.ShapeMatrix
+                       Data.Matrix.Transform
+                       Data.Pair
+                       Data.Pair.Pair
+                       Data.Pair.Triple
+                       Data.Pair.Vector
+                       Data.Picture
+                       Data.Picture.Drawing
+                       Data.Picture.Drawing.Line
+                       Data.Picture.Drawing.Points
+                       Data.Picture.Drawing.Shapes
+                       Data.Picture.Output
+                       Data.Picture.Output.Pbm
+                       Data.Picture.Picture
                        Language.MDL.Expr
-                       Language.MDL.SymTab
                        Language.MDL.Interp
-                       Language.MDL.Interp.Interp
                        Language.MDL.Interp.Eval
+                       Language.MDL.Interp.Interp
                        Language.MDL.Interp.InterpState
-                       Angle
-                       Shapes
-                       Pair.Pair
-                       Pair.Triple
-                       Pair.Vector
+                       Language.MDL.Lexer
+                       Language.MDL.Parser
+                       Language.MDL.SymTab
+                       Language.MDL.Tokens
   default-language:    Haskell2010
   build-tools: alex, happy
 

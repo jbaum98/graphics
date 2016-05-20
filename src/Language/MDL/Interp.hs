@@ -2,20 +2,17 @@ module Language.MDL.Interp (
   execute
   ) where
 
-import Data.Foldable
-import Data.Maybe
-import Data.Monoid
-import Data.ByteString.Lazy.Char8 hiding (any, zip, unwords, foldl, empty)
-import System.IO.Temp
-import System.FilePath
-import System.Posix.Process
 import Control.Monad
-import Prelude hiding (filter)
+import Data.ByteString.Lazy.Char8 hiding (any, zip, foldl, empty)
+import Data.Monoid
+import System.FilePath
+import System.IO.Temp
+import System.Posix.Process
 
 import Language.MDL.Expr
 import Language.MDL.Interp.Eval
 import Language.MDL.Interp.Interp
-import Language.MDL.SymTab hiding (filter, foldl)
+import Language.MDL.SymTab hiding (foldl)
 
 execute :: Foldable f => f Expr -> IO ()
 execute exprs = if any animCmds exprs
@@ -36,10 +33,12 @@ executeSinglePic exprs = evalInterp interp initState
 
 executeAnimation :: Foldable f => ByteString -> Int -> f Expr -> FilePath -> IO ()
 executeAnimation bname nFrames exprs tmpdir = do
-  mapM_ (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
-  void $ forkProcess $
+  res <- mapM (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
+  return $ seq res ()
+  pid <- forkProcess $
     let args = "-delay" : "10" : combos (unpack bname) ++ [unpack bname <.> "gif"]
     in executeFile "convert" True args Nothing
+  void $ getProcessStatus True False pid
   where
     interp = mapM_ eval exprs
     states = (\st -> initState { symtab = st }) <$> genVarySymTabs nFrames exprs

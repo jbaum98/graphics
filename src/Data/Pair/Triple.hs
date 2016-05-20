@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Pair.Triple (Triple(..), uncurryTriple) where
+module Data.Pair.Triple (Triple(..), uncurryTriple) where
 
 import Control.Applicative
 import GHC.Generics

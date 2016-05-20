@@ -1,22 +1,22 @@
-module Matrix.PolyMatrix (
+module Data.Matrix.PolyMatrix (
   PolyMatrix,
   poly,
   addPoly
   ) where
 
+import Data.Monoid
 import qualified Data.Vector.Unboxed as V
 
-import Matrix.Base
-import Matrix.D3Point
-import Matrix.ShapeMatrix
-import Utils
-import Pair
-import Picture
+import Data.D3Point
+import Data.Matrix.Base
+import Data.Matrix.ShapeMatrix
+import Data.Pair
+import Data.Picture.Drawing.Line
 
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PolyMatrix where
-  drawColor color (PolyMatrix m) = compose [connect p1 p2 . connect p2 p3 . connect p3 p1
+  drawColor color (PolyMatrix m) = appEndo $ foldMap Endo [connect p1 p2 . connect p2 p3 . connect p3 p1
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1

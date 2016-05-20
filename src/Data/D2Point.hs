@@ -4,7 +4,7 @@ Description : D2Point in the xy-plane type
 
 The 'D2Point' type represents an point in the xy-plane.
 -}
-module D2Point (
+module Data.D2Point (
   D2Coord, D2Point,
   Pair(..),
   translate,
@@ -12,7 +12,7 @@ module D2Point (
   getX, getY
   ) where
 
-import Pair (Pair(..))
+import Data.Pair
 
 -- |The type of a single coordinate
 type D2Coord = Int
