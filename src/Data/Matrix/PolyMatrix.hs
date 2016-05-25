@@ -1,4 +1,4 @@
-{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE ParallelListComp, BangPatterns #-}
 
 module Data.Matrix.PolyMatrix (
   PolyMatrix,
@@ -42,8 +42,8 @@ instance ShapeMatrix PolyMatrix where
                                | color <- cycle [red, orange, yellow, green, blue, indigo, violet, pink, turqouise ]
                                ]
     where
-      connect3 color p1 p2 p3 = connect color p1 p2 . connect color p2 p3 . connect color p3 p1
-      connect color (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
+      connect3 !color !p1 !p2 !p3 = connect color p1 p2 . connect color p2 p3 . connect color p3 p1
+      connect !color (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (Pair (round x) (round y)) (Pair (round x') (round y'))
       v = Triple 0 0 (-1)
 
   unwrap = runPM

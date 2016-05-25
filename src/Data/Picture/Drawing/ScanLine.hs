@@ -6,8 +6,6 @@ module Data.Picture.Drawing.ScanLine (
 
 import Control.Monad
 import Control.Monad.ST
-import Data.Array.ST
-import Data.Array.Unsafe
 
 import Control.Loop
 
@@ -19,18 +17,16 @@ import Data.Picture.Drawing.Points (reflect)
 import Data.Picture.Picture
 
 scanLine :: Color -> Triple Double -> Triple Double -> Triple Double -> Picture -> Picture
-scanLine color p1 p2 p3 pic = runST $ do
-  mutArr <- unsafeThaw (runPicture pic)
-  writeScanLine color b m t mutArr
-  Picture <$> unsafeFreeze mutArr
+scanLine color p1 p2 p3 pic = mutPic pic $ \mpic -> writeScanLine color b m t mpic >> return mpic
   where
     Triple t m b = sortPoints p1' p2' p3'
     p1' = standardize p1
     p2' = standardize p2
     p3' = standardize p3
-    standardize = reflect pic . dropZ
+    standardize = reflect yMax . dropZ
+    Pair _ yMax = getSize pic
 
-writeScanLine :: Color -> Pair Double -> Pair Double -> Pair Double -> STUArray s (Int,Int,Int) ColorVal -> ST s ()
+writeScanLine :: Color -> Pair Double -> Pair Double -> Pair Double -> MPicture s -> ST s ()
 writeScanLine color bot@(Pair xb yb) mid@(Pair xm ym) top@(getY -> yt) mArr = do
   Pair l _ <- forLoopState yb (< ym) (+1) (pure xb) $ \(Pair xl xr) y -> do
     writeLine (round <$> Pair xl y) (round <$> Pair xr y) color mArr

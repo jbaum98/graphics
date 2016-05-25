@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts, BangPatterns #-}
+{-# LANGUAGE FlexibleContexts, BangPatterns, MagicHash, UnboxedTuples #-}
 
 module Data.Picture.Drawing.Points (
+  unsafeRawWritePoint,
+  rawWritePoint,
   writePoint,
   setPointColor,
   setColor,
@@ -8,55 +10,54 @@ module Data.Picture.Drawing.Points (
   ) where
 
 import Control.Monad
-import Control.Monad.ST
-import Data.Array.MArray
-import Data.Array.ST
-import Data.Array.Unboxed
-import Data.Array.Unsafe
-import Data.Monoid
+
+import Data.Primitive.ByteArray
+import Control.Monad.Primitive
 
 import Data.Color
-import Data.D2Point
+import Data.Pair
 import Data.Picture.Picture
 
-type Coord = D2Coord
-type Point = D2Point
+writePoint, rawWritePoint, unsafeRawWritePoint :: PrimMonad m => Color -> Pair Int -> MPicture (PrimState m) -> m ()
+unsafeRawWritePoint (Triple !r !g !b) !point (MPicture !rs !gs !bs !s) = do
+  let !i = encode s point
+  writeByteArray rs i r
+  writeByteArray gs i g
+  writeByteArray bs i b
+{-# INLINE unsafeRawWritePoint #-}
 
-writePoint :: Color -> Point -> STUArray s (Coord,Coord,Int) ColorVal -> ST s ()
-writePoint (Triple r g b) point arr = do
-  inB <- inArBounds point arr
-  when inB $ do
-    mutColorVal 0 r
-    mutColorVal 1 g
-    mutColorVal 2 b
-  where mutColorVal n = writeArray arr (toTup point n)
+rawWritePoint !color !point !pic = do
+  s <- getSizeM pic
+  when (point `inRange` s) $
+    unsafeRawWritePoint color point pic
+{-# INLINE rawWritePoint #-}
 
-inArBounds :: Point -> STUArray s (Coord,Coord,Int) ColorVal -> ST s Bool
-inArBounds point ar = do
-  b <- getBounds ar
-  return $ inRange b $ toTup point 0
-{-# INLINE inArBounds #-}
+writePoint !color !point !pic = do
+  Pair _ yMax <- getSizeM pic
+  let point' = reflect yMax point
+  rawWritePoint color point' pic
+{-# INLINE writePoint #-}
 
--- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
-setPointColor :: Color -> Point -> Picture -> Picture
-setPointColor _ point !pic
-  | not $ inBounds point' pic = pic
-  where point' = reflect pic point
-setPointColor color point pic@(Picture arr) = runST $ do
-  mutArr <- unsafeThaw arr :: ST s (STUArray s (Coord, Coord, Int) ColorVal)
-  writePoint color point' mutArr
-  Picture <$> unsafeFreeze mutArr
-  where point' = reflect pic point
+setPointColor :: Color -> Pair Int -> Picture -> Picture
+setPointColor _ point pic | point `inRange` getSize pic = pic
+setPointColor !color !point !pic = mutPic pic $ \p -> do
+  unsafeRawWritePoint color point' p
+  return p
+  where
+    point' = reflect yMax point
+    Pair _ yMax = getSize pic
+{-# INLINE setPointColor #-}
 
-inBounds :: Point -> Picture -> Bool
-inBounds point pic = inRange (bounds $ runPicture pic) (toTup point 0)
-
-reflect :: Num a => Picture -> Pair a -> Pair a
-reflect pic (Pair x y) = Pair x (fromIntegral yMax - y - 1)
-  where Pair _ yMax = size pic
-{-# SPECIALIZE reflect :: Picture -> Pair Int -> Pair Int #-}
-{-# SPECIALIZE reflect :: Picture -> Pair Double -> Pair Double #-}
+reflect :: Num a => Int -> Pair a -> Pair a
+reflect !yMax (Pair !x !y) = Pair x (fromIntegral yMax - y - 1)
+{-# SPECIALIZE reflect :: Int -> Pair Int -> Pair Int #-}
+{-# SPECIALIZE reflect :: Int -> Pair Double -> Pair Double #-}
+{-# INLINABLE reflect #-}
 
 -- |Set every 'Point' in a list to a single 'Color'
-setColor :: Color -> [Point] -> Picture -> Picture
-setColor color = appEndo . foldMap (Endo . setPointColor color)
+setColor :: Color -> [Pair Int] -> Picture -> Picture
+setColor !color !points !pic = mutPic pic $ \mp -> do
+  forM_ points $ \point -> rawWritePoint color (reflect yMax point) mp
+  return mp
+  where
+    Pair _ yMax = getSize pic

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE MagicHash, UnboxedTuples, LambdaCase, RankNTypes, BangPatterns #-}
 
 {-|
 Module      : Picture
@@ -7,94 +7,96 @@ Description : Create and manipulate 'Picture's
 Provides various methods to create and manipulate 'Picture's.
 -}
 module Data.Picture.Picture (
-    Picture(..),
-    solidPic,
-    blankPic,
-    mathPic,
-    size,
-    (!),
-    unsafeAt,
-    elems,
-    toTup
+    Picture(..), MPicture(..),
+    unsafeFreezePic, unsafeThawPic,
+    getSize, getSizeM,
+    encode, decode, inRange,
+    mutPic,
+    indexM,
+    (!)
     ) where
 
-import  Data.Array.MArray
-import  Data.Array.ST
-import  Data.Array.Unboxed
-import qualified Data.Array.Base as AB (unsafeAt)
-
-import Control.DeepSeq
+import Control.Monad.Primitive
+import Data.Primitive.ByteArray
+import Control.Monad.ST
 
 import Data.Color
-import Data.D2Point
+import Data.Pair
 
-type Coord = D2Coord
-type Point = D2Point
+data Picture = Picture {-# UNPACK #-} !ByteArray {-# UNPACK #-} !ByteArray {-# UNPACK #-} !ByteArray !(Pair Int)
+data MPicture s = MPicture {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(Pair Int)
 
--- |A 'Picture' is a grid of pixels
-newtype Picture = Picture { runPicture :: UArray (Coord, Coord, Int) ColorVal }
+getSize :: Picture -> Pair Int
+getSize (Picture _ _ _ s) = s
+{-# INLINE getSize #-}
 
-instance NFData Picture where
-  rnf (Picture x) = rnf (bounds x, elems x)
+getSizeM :: PrimMonad m => MPicture (PrimState m) -> m (Pair Int)
+getSizeM mPic = do
+  let (MPicture _ _ _ s) = mPic
+  return s
+{-# INLINE getSizeM #-}
 
--- |Create a solid 'Picture' of a single 'Color
-solidPic :: Color
-         -> Point -- ^The size of the 'Picture'
-         -> Picture
-{-# INLINE solidPic #-}
-solidPic (Triple r g b) maxPoint | r == g && r == b = Picture $ runSTUArray $ newArray (toSize maxPoint) r
-                                 | otherwise = Picture $ listArray (toSize maxPoint) $ cycle [r,g,b]
+mutPic :: Picture -> (MPicture s -> ST s (MPicture s)) -> Picture
+mutPic pic f = unsafeInlineST $ do
+  mPic <- unsafeThawPic pic
+  newPic <- f mPic
+  unsafeFreezePic newPic
 
--- |Create a completely white 'Picture'
-blankPic :: Point -- ^The size of the 'Picture'
-         -> Picture
-{-# INLINE blankPic #-}
-blankPic maxPoint = Picture $ runSTUArray $ newArray (toSize maxPoint) 0
+unsafeFreezePic :: PrimMonad m => MPicture (PrimState m) -> m Picture
+unsafeFreezePic (MPicture rs gs bs s) = do
+  rs' <- unsafeFreezeByteArray rs
+  gs' <- unsafeFreezeByteArray gs
+  bs' <- unsafeFreezeByteArray bs
+  return $ Picture rs' gs' bs' s
+{-# INLINE unsafeFreezePic #-}
 
--- |Create a picture that generates the RGB values for each 'Point' from three different functions
-mathPic :: Triple (Coord -> Coord -> ColorVal) -- ^The three functions to produce the RGB values
-        -> Point                   -- ^The size of the 'Picture'
-        -> Picture
-{-# INLINE mathPic #-}
-mathPic funcs maxPoint = Picture $ listArray (toSize maxPoint) (allPoints maxPoint)
+unsafeThawPic :: PrimMonad m => Picture -> m (MPicture (PrimState m))
+unsafeThawPic (Picture rs gs bs s) = do
+  rs' <- unsafeThawByteArray rs
+  gs' <- unsafeThawByteArray gs
+  bs' <- unsafeThawByteArray bs
+  return $  MPicture rs' gs' bs' s
+{-# INLINE unsafeThawPic #-}
+
+encode :: Pair Int -> Pair Int -> Int
+{-# INLINE encode #-}
+encode (Pair rs _) (Pair i j) = (i-1)*rs + (j-1)
+
+decode :: Pair Int -> Int -> Pair Int
+{-# INLINE decode #-}
+decode (Pair rs _) k = Pair r q
+ where
+  (q,r) = quotRem k rs
+
+inRange :: Pair Int -> Pair Int -> Bool
+{-# INLINE inRange #-}
+Pair r c `inRange` Pair rs cs = r <= rs &&
+                                c <= cs &&
+                                r > 0  &&
+                                c > 0
+
+unsafeIndexM, indexM :: PrimMonad m => MPicture (PrimState m) -> Pair Int -> m Color
+
+(MPicture rs gs bs maxP) `unsafeIndexM` point = do
+  let i = encode maxP point
+  r <- readByteArray rs i
+  g <- readByteArray gs i
+  b <- readByteArray bs i
+  return $ Triple r g b
+{-# INLINE unsafeIndexM #-}
+
+pic@(MPicture _ _ _ s) `indexM` p | p `inRange` s = pic `unsafeIndexM` p
+                                  | otherwise     = error "Index out of bounds accessing Picture"
+
+unsafeIndex, (!) :: Picture -> Pair Int -> Color
+
+(Picture rs bs gs s) `unsafeIndex` p = Triple r g b
   where
-    allPoints :: Point -> [ColorVal]
-    allPoints (Pair xr yr) = [ colorFunc x y ci
-                             | x <- [0 .. xr - 1]
-                             , y <- [0 .. yr - 1]
-                             , ci <- [0 .. 2] ]
-    colorFunc :: Coord -> Coord -> Int -> ColorVal
-    colorFunc x y ci = colorValFunc x y `mod` maxColor
-      where
-        colorValFunc = funcs `tIndex` ci
+    i = encode s p
+    r = indexByteArray rs i
+    g = indexByteArray gs i
+    b = indexByteArray bs i
+{-# INLINE unsafeIndex #-}
 
-tIndex :: Triple a -> Int -> a
-(Triple x _ _) `tIndex` 0 = x
-(Triple _ x _) `tIndex` 1 = x
-(Triple _ _ x) `tIndex` 2 = x
-_ `tIndex` _ = error "Tried to access an index greater than 2 of a Triple"
-
--- |Compute the size of a 'Picture'
-size :: Picture
-     -> Point -- ^A point representing the size of x and y dimensions as its
--- x and y coordinates. The point itself is out of bounds, similar to how the length of a list as an
--- index is out of bounds.
-size pic = Pair xsize ysize
-  where
-    (_, (xsize, ysize, _)) = bounds $ runPicture pic
-{-# INLINE size #-}
-
-toTup :: Pair a -> Int -> (a, a, Int)
-{-# INLINE toTup #-}
-toTup (Pair x y) ci = (y, x, ci)
-
-toSize :: Pair Coord -> ((Coord, Coord, Coord), (Coord, Coord, Coord))
-toSize point = ((1, 1, 0), toTup point 2)
-
-unsafeAt :: Picture -> (Coord,Coord,Int) -> ColorVal
-unsafeAt pic = AB.unsafeAt (runPicture pic) . enc
-  where
-      enc = index ((1,1,0),(xres,yres,2))
-      {-# INLINE enc #-}
-      (Pair xres yres) = size pic
-{-# INLINE unsafeAt #-}
+(!) pic p | p `inRange` getSize pic = pic `unsafeIndex` p
+          | otherwise               = error "Index out of bounds accessing Picture"

@@ -29,6 +29,8 @@ library
                      , temporary >= 1.2 && < 2
                      , filepath >= 1.4 && < 2
                      , unix >= 2.7 && < 3
+                     , ghc-prim >= 0.4 && < 1
+                     , primitive >= 0.6 && < 1
   other-modules:       Data.Color
                        Data.D2Point
                        Data.D3Point
@@ -50,6 +52,7 @@ library
                        Data.Picture.Drawing.Points
                        Data.Picture.Drawing.ScanLine
                        Data.Picture.Drawing.Shapes
+                       Data.Picture.Gen
                        Data.Picture.Output
                        Data.Picture.Output.Pbm
                        Data.Picture.Picture
