@@ -21,8 +21,9 @@ eval (Set knob val) = modSymTab $ insert knob (DoubleVal val)
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
   tm2 <- getTM cs2
-  let trans tm = roundoff . transform tm
-  addF $ drawLine (trans tm1 p1) (trans tm2 p2)
+  let Triple x1 y1 _ = transform tm1 p1
+      Triple x2 y2 _ = transform tm2 p2
+  addF $ drawLine (round x1) (round y1) (round x2) (round y2)
 
 eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
 
@@ -65,7 +66,7 @@ passPicTo :: (Picture -> IO ()) -> Interp ()
 passPicTo f = do
   pf <- gets picFunc
   mp <- gets maxP
-  liftIO $ f . pf $ blankPic $ fromMaybe (Pair 500 500) mp
+  liftIO $ f $ pf $ blankPic $ fromMaybe (Pair 500 500) mp
 
 scaledMat :: ByteString -> (D3Point -> TransformMatrix) -> D3Point -> Interp ()
 scaledMat knob rotMat p =

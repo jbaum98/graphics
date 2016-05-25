@@ -2,7 +2,7 @@
 
 {-|
 Module      : Line
-Description : Draw lines between two 'Point's
+Description : Draw lines between two 'Int -> Int's
 
 Provides an implementation of Bresenham's Line Algorithm.
 -}
@@ -19,28 +19,26 @@ import Control.Monad.ST
 import Control.Loop
 
 import Data.Color
-import Data.D2Point
+import Data.Pair
 import Data.Picture.Picture
 import Data.Picture.Drawing.Points
-
-type Point = D2Point
 
 data Octant = First | Second | Third   | Fourth |
               Fifth | Sixth  | Seventh | Eighth
 
-line :: Point -> Point -> Color -> Picture -> Picture
-line !p1 !p2 !color !pic = mutPic pic $ \mpic -> writeLine p1' p2' color mpic >> return mpic
+line :: Int -> Int -> Int -> Int -> Color -> Picture -> Picture
+line !x1 !y1 !x2 !y2 !color !pic = mutPic pic $ \mpic -> writeLine x1' y1' x2' y2' color mpic >> return mpic
   where
-    p1' = reflect yMax p1
-    p2' = reflect yMax p2
+    Pair !x1' !y1' = reflect yMax $ Pair x1 y1
+    Pair !x2' !y2' = reflect yMax $ Pair x2 y2
     Pair _ yMax = getSize pic
 
--- |Draw a line between two 'Point's
-writeLine :: Point -- ^Starting point
-          -> Point -- ^Ending point
+-- |Draw a line between two 'Int -> Int's
+writeLine :: Int -> Int -- ^Starting point
+          -> Int -> Int -- ^Ending point
           -> Color
           -> MPicture s -> ST s ()
-writeLine !p1@(Pair x1 y1) !p2@(Pair x2 y2) !color = writeLine' oct p1 p2 color
+writeLine !x1 !y1 !x2 !y2 color = writeLine' oct x1 y1 x2 y2 color
   where oct = if x2 > x1
               then if y2 > y1 -- Right Half
                    then if dx > dy -- Q1
@@ -59,46 +57,46 @@ writeLine !p1@(Pair x1 y1) !p2@(Pair x2 y2) !color = writeLine' oct p1 p2 color
         dx = x2 - x1
         dy = y2 - y1
 
-writeLine' :: Octant -> Point -> Point -> Color -> MPicture s -> ST s ()
-writeLine' Third  !p1 !p2 !color !pic = writeLine' Seventh p2 p1 color pic
-writeLine' Fourth !p1 !p2 !color !pic = writeLine' Eighth  p2 p1 color pic
-writeLine' Fifth  !p1 !p2 !color !pic = writeLine' First   p2 p1 color pic
-writeLine' Sixth  !p1 !p2 !color !pic = writeLine' Second  p2 p1 color pic
+writeLine' :: Octant -> Int -> Int -> Int -> Int -> Color -> MPicture s -> ST s ()
+writeLine' Third  !x1 !y1 !x2 !y2 color pic = writeLine' Seventh x2 y2 x1 y1 color pic
+writeLine' Fourth !x1 !y1 !x2 !y2 color pic = writeLine' Eighth  x2 y2 x1 y1 color pic
+writeLine' Fifth  !x1 !y1 !x2 !y2 color pic = writeLine' First   x2 y2 x1 y1 color pic
+writeLine' Sixth  !x1 !y1 !x2 !y2 color pic = writeLine' Second  x2 y2 x1 y1 color pic
 
-writeLine' First (Pair !x1 !y1) (Pair !x2 !y2) color pic = do
+writeLine' First !x1 !y1 !x2 !y2 color pic = do
   void $ forLoopState x1 (<= x2) (+1) (y1,di) $ \(y,d) x -> do
-    writePoint color (Pair x y) $ pic
+    writePoint color x y $ pic
     return $ if d < 0 then (y,d+a+a) else (y+1,d+a+a+b+b)
   where a = y2 - y1
         b = x1 - x2
         di = a + a + b
 
-writeLine' Second (Pair !x1 !y1) (Pair !x2 !y2) color pic = do
+writeLine' Second !x1 !y1 !x2 !y2 color pic = do
   void $ forLoopState y1 (<= y2) (+1) (x1,di) $ \(x,d) y -> do
-    writePoint color (Pair x y) pic
+    writePoint color x y pic
     return $ if d > 0 then (x,d+b+b) else (x+1,d+a+a+b+b)
   where a = y2 - y1
         b = x1 - x2
         di = a + b + b
 
-writeLine' Eighth (Pair !x1 !y1) (Pair !x2 !y2) color pic = do
+writeLine' Eighth !x1 !y1 !x2 !y2 color pic = do
   void $ forLoopState x1 (<= x2) (+1) (y1,di) $ \(y,d) x -> do
-    writePoint color (Pair x y) pic
+    writePoint color x y pic
     return $ if d > 0 then (y,d+a+a) else (y-1,d+a+a-b-b)
   where a = y2 - y1
         b = x1 - x2
         di = a + a - b
 
-writeLine' Seventh (Pair !x1 !y1) (Pair !x2 !y2) color pic = do
+writeLine' Seventh !x1 !y1 !x2 !y2 color pic = do
   void $ forLoopState y1 (>= y2) (\n -> n-1) (x1,di) $ \(x,d) y -> do
-    writePoint color (Pair x y) pic
+    writePoint color x y pic
     return $ if d < 0 then (x,d-b-b) else (x+1,d+a+a-b-b)
   where a = y2 - y1
         b = x1 - x2
         di = a - b - b
 
-drawColorLine :: Color -> Point -> Point -> Picture -> Picture
-drawColorLine !color !p1 !p2 = line p1 p2 color
+drawColorLine :: Color -> Int -> Int -> Int -> Int -> Picture -> Picture
+drawColorLine color !x1 !y1 !x2 !y2 = line x1 y1 x2 y2 color
 
-drawLine :: Point -> Point -> Picture -> Picture
+drawLine :: Int -> Int -> Int -> Int -> Picture -> Picture
 drawLine = drawColorLine white

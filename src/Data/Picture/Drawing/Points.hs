@@ -18,33 +18,33 @@ import Data.Color
 import Data.Pair
 import Data.Picture.Picture
 
-writePoint, rawWritePoint, unsafeRawWritePoint :: PrimMonad m => Color -> Pair Int -> MPicture (PrimState m) -> m ()
-unsafeRawWritePoint (Triple !r !g !b) !point (MPicture !rs !gs !bs !s) = do
-  let !i = encode s point
+writePoint, rawWritePoint, unsafeRawWritePoint :: PrimMonad m => Color -> Int -> Int -> MPicture (PrimState m) -> m ()
+unsafeRawWritePoint (Triple !r !g !b) !x !y (MPicture !rs !gs !bs !s) = do
+  let !i = encode s $ Pair x y
   writeByteArray rs i r
   writeByteArray gs i g
   writeByteArray bs i b
 {-# INLINE unsafeRawWritePoint #-}
 
-rawWritePoint !color !point !pic = do
+rawWritePoint !color x y !pic = do
   s <- getSizeM pic
-  when (point `inRange` s) $
-    unsafeRawWritePoint color point pic
+  when (Pair x y `inRange` s) $
+    unsafeRawWritePoint color x y pic
 {-# INLINE rawWritePoint #-}
 
-writePoint !color !point !pic = do
+writePoint !color !x !y !pic = do
   Pair _ yMax <- getSizeM pic
-  let point' = reflect yMax point
-  rawWritePoint color point' pic
+  let Pair x' y' = reflect yMax $ Pair x y
+  rawWritePoint color x' y' pic
 {-# INLINE writePoint #-}
 
-setPointColor :: Color -> Pair Int -> Picture -> Picture
-setPointColor _ point pic | point `inRange` getSize pic = pic
-setPointColor !color !point !pic = mutPic pic $ \p -> do
-  unsafeRawWritePoint color point' p
+setPointColor :: Color -> Int -> Int -> Picture -> Picture
+setPointColor _ !x !y pic | Pair x y `inRange` getSize pic = pic
+setPointColor !color !x !y !pic = mutPic pic $ \p -> do
+  unsafeRawWritePoint color x' y' p
   return p
   where
-    point' = reflect yMax point
+    Pair x' y' = reflect yMax $ Pair x y
     Pair _ yMax = getSize pic
 {-# INLINE setPointColor #-}
 
@@ -57,7 +57,7 @@ reflect !yMax (Pair !x !y) = Pair x (fromIntegral yMax - y - 1)
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Pair Int] -> Picture -> Picture
 setColor !color !points !pic = mutPic pic $ \mp -> do
-  forM_ points $ \point -> rawWritePoint color (reflect yMax point) mp
+  forM_ points $ \point -> uncurryPair (rawWritePoint color) (reflect yMax point) mp
   return mp
   where
     Pair _ yMax = getSize pic

@@ -180,13 +180,20 @@ getD2Point :: Matrix D3Coord -> Int -> D2Point
 getD2Point m n = round <$> Pair x y
   where
     x = col `V.unsafeIndex` 0
+    {-# INLINE x #-}
     y = col `V.unsafeIndex` 1
+    {-# INLINE y #-}
     col = unsafeGetCol (n+1) m
+{-# INLINE getD2Point #-}
 
 getD3Point :: Matrix D3Coord -> Int -> D3Point
 getD3Point m n = Triple x y z
   where
     x = col `V.unsafeIndex` 0
+    {-# INLINE x #-}
     y = col `V.unsafeIndex` 1
+    {-# INLINE y #-}
     z = col `V.unsafeIndex` 2
+    {-# INLINE z #-}
     col = unsafeGetCol (n+1) m
+{-# INLINE getD3Point #-}

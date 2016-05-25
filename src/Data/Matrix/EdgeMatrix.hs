@@ -8,6 +8,7 @@ import Data.Monoid
 import qualified Data.Vector.Unboxed as V
 
 import Data.D3Point
+import Data.Pair
 import Data.Matrix.Base
 import Data.Matrix.ShapeMatrix
 import Data.Picture.Drawing.Line
@@ -15,7 +16,7 @@ import Data.Picture.Drawing.Line
 newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
 instance ShapeMatrix EdgeMatrix where
-  drawColor color (EdgeMatrix m) = appEndo $ foldMap Endo [drawColorLine color (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
+  drawColor color (EdgeMatrix m) = appEndo $ foldMap Endo [(\(Pair x1 y1) (Pair x2 y2) -> drawColorLine color x1 y1 x2 y2) (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
   unwrap = runEM
   wrap = EdgeMatrix
 

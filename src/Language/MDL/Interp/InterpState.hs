@@ -10,7 +10,7 @@ import Data.Picture
 import Language.MDL.SymTab
 
 data InterpState = InterpState
-  { picFunc        :: !(Picture -> Picture)
+  { picFunc        :: Picture -> IO ()
   , transStack     :: ![TransformMatrix]
   , maxP           :: !(Maybe D2Point)
   , symtab         :: !SymTab

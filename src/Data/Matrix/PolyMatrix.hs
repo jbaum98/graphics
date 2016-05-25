@@ -20,7 +20,7 @@ import Data.Picture.Drawing.Line
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PolyMatrix where
-  drawColor color (PolyMatrix m) = appEndo $ foldMap Endo [connect p1 p2 . connect p2 p3 . connect p3 p1 . scanLine color p1 p2 p3
+  drawColor color (PolyMatrix m) = appEndo $ foldMap Endo [connect p1 p2 . connect p2 p3 . connect p3 p1 . scan p1 p2 p3
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1
@@ -29,10 +29,11 @@ instance ShapeMatrix PolyMatrix where
                                  n `dot` v < 0
                                ]
     where
-      connect (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
+      scan (Triple !x1 !y1 _) (Triple !x2 !y2 _) (Triple !x3 !y3 _) = scanLine color x1 y1 x2 y2 x3 y3
+      connect (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (round x) (round y) (round x') (round y')
       v = Triple 0 0 (-1)
 
-  draw (PolyMatrix m) = appEndo $ foldMap Endo [connect3 color p1 p2 p3 . scanLine color p1 p2 p3
+  draw (PolyMatrix m) = appEndo $ foldMap Endo [connect3 color p1 p2 p3 . scan color p1 p2 p3
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1
@@ -42,8 +43,9 @@ instance ShapeMatrix PolyMatrix where
                                | color <- cycle [red, orange, yellow, green, blue, indigo, violet, pink, turqouise ]
                                ]
     where
-      connect3 !color !p1 !p2 !p3 = connect color p1 p2 . connect color p2 p3 . connect color p3 p1
-      connect !color (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (Pair (round x) (round y)) (Pair (round x') (round y'))
+      scan color (Triple !x1 !y1 _) (Triple !x2 !y2 _) (Triple !x3 !y3 _) = scanLine color x1 y1 x2 y2 x3 y3
+      connect3 color p1 p2 p3 = connect color p1 p2 . connect color p2 p3 . connect color p3 p1
+      connect color (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (round x) (round y) (round x') (round y')
       v = Triple 0 0 (-1)
 
   unwrap = runPM
