@@ -26,9 +26,9 @@ eval (Line _ p1 cs1 p2 cs2) = do
 
 eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
 
-eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 10
+eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 100
 
-eval (Torus _ center r1 r2 cs) = drawInCS cs $ torus center r1 r2 10
+eval (Torus _ center r1 r2 cs) = drawInCS cs $ torus center r1 r2 50
 
 eval (Move trans Nothing) = multTop $ transMatrix trans
 eval (Move trans (Just knob)) = scaledMat knob transMatrix trans

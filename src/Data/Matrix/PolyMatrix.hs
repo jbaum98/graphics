@@ -12,11 +12,12 @@ import Data.Matrix.Base
 import Data.Matrix.ShapeMatrix
 import Data.Pair
 import Data.Picture.Drawing.Line
+import Data.Picture.Drawing.ScanLine
 
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PolyMatrix where
-  drawColor color (PolyMatrix m) = appEndo $ foldMap Endo [connect p1 p2 . connect p2 p3 . connect p3 p1
+  drawColor color (PolyMatrix m) = appEndo $ foldMap Endo [connect p1 p2 . connect p2 p3 . connect p3 p1 . scanLine color p1 p2 p3
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1

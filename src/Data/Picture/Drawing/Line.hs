@@ -6,6 +6,7 @@ Provides an implementation of Bresenham's Line Algorithm.
 -}
 module Data.Picture.Drawing.Line (
   line,
+  writeLine,
   drawColorLine,
   drawLine
   ) where

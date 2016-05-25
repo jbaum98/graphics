@@ -7,6 +7,7 @@ module Data.Picture.Drawing.Points (
   reflect
   ) where
 
+import Control.Monad
 import Control.Monad.ST
 import Data.Array.MArray
 import Data.Array.ST
@@ -23,10 +24,18 @@ type Point = D2Point
 
 writePoint :: Color -> Point -> STUArray s (Coord,Coord,Int) ColorVal -> ST s ()
 writePoint (Triple r g b) point arr = do
-  mutColorVal 0 r
-  mutColorVal 1 g
-  mutColorVal 2 b
+  inB <- inArBounds point arr
+  when inB $ do
+    mutColorVal 0 r
+    mutColorVal 1 g
+    mutColorVal 2 b
   where mutColorVal n = writeArray arr (toTup point n)
+
+inArBounds :: Point -> STUArray s (Coord,Coord,Int) ColorVal -> ST s Bool
+inArBounds point ar = do
+  b <- getBounds ar
+  return $ inRange b $ toTup point 0
+{-# INLINE inArBounds #-}
 
 -- |Set the value of a single 'Point' in a 'Picture' to a given 'Color'
 setPointColor :: Color -> Point -> Picture -> Picture
@@ -42,9 +51,11 @@ setPointColor color point pic@(Picture arr) = runST $ do
 inBounds :: Point -> Picture -> Bool
 inBounds point pic = inRange (bounds $ runPicture pic) (toTup point 0)
 
-reflect :: Picture -> D2Point -> D2Point
-reflect pic (Pair x y) = Pair x (yMax - y - 1)
+reflect :: Num a => Picture -> Pair a -> Pair a
+reflect pic (Pair x y) = Pair x (fromIntegral yMax - y - 1)
   where Pair _ yMax = size pic
+{-# SPECIALIZE reflect :: Picture -> Pair Int -> Pair Int #-}
+{-# SPECIALIZE reflect :: Picture -> Pair Double -> Pair Double #-}
 
 -- |Set every 'Point' in a list to a single 'Color'
 setColor :: Color -> [Point] -> Picture -> Picture

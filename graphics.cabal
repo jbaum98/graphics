@@ -48,6 +48,7 @@ library
                        Data.Picture.Drawing
                        Data.Picture.Drawing.Line
                        Data.Picture.Drawing.Points
+                       Data.Picture.Drawing.ScanLine
                        Data.Picture.Drawing.Shapes
                        Data.Picture.Output
                        Data.Picture.Output.Pbm

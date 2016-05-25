@@ -12,5 +12,3 @@ type SymTab = Map ByteString Val
 
 data Val = DoubleVal Double
          | MatrixVal (Matrix Double)
-         -- | ConstantsVal Constants
-         -- | LightVal Light
