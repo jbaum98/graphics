@@ -1,3 +1,5 @@
+{-# LANGUAGE ParallelListComp #-}
+
 module Data.Matrix.PolyMatrix (
   PolyMatrix,
   poly,
@@ -11,8 +13,9 @@ import Data.D3Point
 import Data.Matrix.Base
 import Data.Matrix.ShapeMatrix
 import Data.Pair
-import Data.Picture.Drawing.Line
+import Data.Color
 import Data.Picture.Drawing.ScanLine
+import Data.Picture.Drawing.Line
 
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
@@ -27,6 +30,20 @@ instance ShapeMatrix PolyMatrix where
                                ]
     where
       connect (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
+      v = Triple 0 0 (-1)
+
+  draw (PolyMatrix m) = appEndo $ foldMap Endo [connect3 color p1 p2 p3 . scanLine color p1 p2 p3
+                               | i <- [0,3.. cols m - 2],
+                                 let p1 = getD3Point m i
+                                     p2 = getD3Point m $ i + 1
+                                     p3 = getD3Point m $ i + 2
+                                     n = p2 - p1 `cross` p3 - p1
+                               , n `dot` v < 0
+                               | color <- cycle [red, orange, yellow, green, blue, indigo, violet, pink, turqouise ]
+                               ]
+    where
+      connect3 color p1 p2 p3 = connect color p1 p2 . connect color p2 p3 . connect color p3 p1
+      connect color (Triple x y _) (Triple x' y' _) = drawColorLine color (round <$> Pair x y) (round <$> Pair x' y')
       v = Triple 0 0 (-1)
 
   unwrap = runPM
