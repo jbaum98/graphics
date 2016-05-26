@@ -10,6 +10,7 @@ module Data.Picture.Output (
 
 import Control.Monad
 import System.IO
+import Control.Monad.Primitive
 
 import System.Posix.IO
 import System.Posix.Process
@@ -18,13 +19,13 @@ import qualified Control.Exception(try, IOException)
 import Data.Picture.Output.Pbm as X
 import Data.Picture.Picture
 
-savePic :: FilePath -> Picture -> IO ()
+savePic :: FilePath -> Picture RealWorld -> IO ()
 savePic name = writePicToProcess "convert" ["-", name]
 
-displayPic :: Picture -> IO ()
+displayPic :: Picture RealWorld -> IO ()
 displayPic = writePicToProcess "display" []
 
-writePicToProcess :: FilePath -> [String] -> Picture -> IO ()
+writePicToProcess :: FilePath -> [String] -> Picture RealWorld -> IO ()
 writePicToProcess cmd args pic =
   pOpen cmd args $ writePbm pic
 

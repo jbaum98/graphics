@@ -1,6 +1,6 @@
 module Data.Picture.Drawing (
-    setPointColor,
-    setColor,
+    writePoint,
+    writePoints,
     drawColorLine,
     drawLine,
     parametric,

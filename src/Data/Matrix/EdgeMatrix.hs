@@ -1,10 +1,12 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Data.Matrix.EdgeMatrix (
     EdgeMatrix,
     edge,
     addEdge
     ) where
 
-import Data.Monoid
+import Control.Monad
 import qualified Data.Vector.Unboxed as V
 
 import Data.D3Point
@@ -16,7 +18,7 @@ import Data.Picture.Drawing.Line
 newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
 instance ShapeMatrix EdgeMatrix where
-  drawColor color (EdgeMatrix m) = appEndo $ foldMap Endo [(\(Pair x1 y1) (Pair x2 y2) -> drawColorLine color x1 y1 x2 y2) (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]]
+  drawColor color (EdgeMatrix m) = forM_ [Pair (getD2Point m i) (getD2Point m (i+1)) | i <- [0,2.. cols m - 1]] . \pic (Pair (Pair !x1 !y1) (Pair !x2 !y2)) -> drawColorLine color x1 y1 x2 y2 pic
   unwrap = runEM
   wrap = EdgeMatrix
 

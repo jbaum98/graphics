@@ -4,16 +4,15 @@ module Language.MDL.Interp.InterpState (
   initState
   ) where
 
-import Data.D2Point
+import GHC.Prim
 import Data.Matrix hiding (empty)
 import Data.Picture
 import Language.MDL.SymTab
 
 data InterpState = InterpState
-  { picFunc        :: Picture -> IO ()
-  , transStack     :: ![TransformMatrix]
-  , maxP           :: !(Maybe D2Point)
-  , symtab         :: !SymTab
+  { picFunc    :: Picture RealWorld -> IO ()
+  , transStack :: ![TransformMatrix]
+  , symtab     :: !SymTab
   }
 
 topTransMat :: InterpState -> TransformMatrix
@@ -22,8 +21,7 @@ topTransMat ps = case transStack ps of
                        []      -> idMatrix
 
 initState :: InterpState
-initState    = InterpState
-  { picFunc    = id
+initState = InterpState
+  { picFunc    = const $ return ()
   , transStack = []
-  , maxP       = Nothing
   , symtab     = empty }

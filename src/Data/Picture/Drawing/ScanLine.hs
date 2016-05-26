@@ -5,8 +5,8 @@ module Data.Picture.Drawing.ScanLine (
   ) where
 
 import Control.Monad
-import Control.Monad.ST
 
+import Control.Monad.Primitive
 import Control.Loop
 
 import Data.Color
@@ -15,17 +15,17 @@ import Data.Picture.Drawing.Line (writeLine)
 import Data.Picture.Drawing.Points (reflect)
 import Data.Picture.Picture
 
-scanLine :: Color -> Double -> Double -> Double -> Double -> Double -> Double -> Picture -> Picture
-scanLine color !x1 !y1 !x2 !y2 !x3 !y3 pic = mutPic pic $ \mpic -> writeScanLine color xb yb xm ym xt yt mpic >> return mpic
+scanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
+scanLine color !x1 !y1 !x2 !y2 !x3 !y3 mpic = writeScanLine color xb yb xm ym xt yt mpic
   where
     Triple (Pair !xt !yt) (Pair !xm !ym) (Pair !xb !yb) = sortPoints p1' p2' p3'
     p1' = reflect yMax $ Pair x1 y1
     p2' = reflect yMax $ Pair x2 y2
     p3' = reflect yMax $ Pair x3 y3
-    Pair _ yMax = getSize pic
+    Pair _ yMax = getSize mpic
 {-# INLINE scanLine #-}
 
-writeScanLine :: Color -> Double -> Double -> Double -> Double -> Double -> Double -> MPicture s -> ST s ()
+writeScanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
 writeScanLine color xb yb xm ym xt yt mArr = do
   Pair l _ <- forLoopState yb (< ym) (+1) (pure xb) $ \(Pair xl xr) y -> do
     writeLine (round xl) (round y) (round xr) (round y) color mArr

@@ -14,11 +14,12 @@ import Data.D3Point
 import Data.Matrix.Base
 import Data.Matrix.Mult
 import Data.Picture.Picture
+import Control.Monad.Primitive
 
 class ShapeMatrix d where
-  drawColor :: Color -> d -> Picture -> Picture
+  drawColor :: PrimMonad m => Color -> d -> Picture (PrimState m) -> m ()
 
-  draw :: d -> Picture -> Picture
+  draw :: PrimMonad m => d -> Picture (PrimState m) -> m ()
   draw = drawColor white
 
   unwrap :: d -> Matrix D3Coord

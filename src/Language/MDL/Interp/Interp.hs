@@ -25,6 +25,8 @@ module Language.MDL.Interp.Interp (
 
 import Data.Maybe
 import Prelude hiding (lookup)
+import Control.Monad
+import GHC.Prim
 
 import Control.Monad.State.Strict
 import Data.ByteString.Lazy.Char8
@@ -85,11 +87,14 @@ getKnob knob = do
 -- |
 -- == Modifying InterpState
 
-modPicFunc :: ((Picture -> Picture) -> (Picture -> Picture)) -> Interp ()
+modPicFunc :: ((Picture RealWorld -> IO ()) -> (Picture RealWorld -> IO ())) -> Interp ()
 modPicFunc f = modify $ \st -> st { picFunc = f $ picFunc st }
 
-addF :: (Picture -> Picture) -> Interp ()
-addF = modPicFunc . (.)
+addF :: (Picture RealWorld -> IO ()) -> Interp ()
+addF newF = modPicFunc $ \oldF ->
+                           \pic -> do
+                             oldF pic
+                             newF pic
 
 modTransStack :: ([TransformMatrix] -> [TransformMatrix]) -> Interp ()
 modTransStack f = modify $ \st -> st { transStack = f $ transStack st }
@@ -112,6 +117,10 @@ modSymTab f = modify $ \st -> st { symtab = f $ symtab st }
 
 drawShape :: ShapeMatrix m => m -> Interp ()
 drawShape = addF . draw
+{-# INLINE drawShape #-}
 
 drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
-drawInCS cs m = getTM cs >>= drawShape . flip matMultD m
+drawInCS cs m = do
+  tm <- getTM cs
+  drawShape $! tm `matMultD` m
+{-# INLINE drawInCS #-}

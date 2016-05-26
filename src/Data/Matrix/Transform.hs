@@ -15,9 +15,9 @@ module Data.Matrix.Transform (
     rotYMatrix,
     rotZMatrix,
     transform,
-    progress,
-    drawProgress,
-    drawProgressColors
+--    progress,
+--    drawProgress,
+--    drawProgressColors
     ) where
 
 import Control.Monad.ST
@@ -114,14 +114,14 @@ rotZMatrix = rotZMatrixRad . degToRad
 
 transform :: TransformMatrix -> D3Point -> D3Point
 transform tm = flip getD3Point 0 . unwrap . matMultD tm . point
-
+{-
 progress :: [TransformMatrix] -> Matrix D3Coord -> Matrix D3Coord
 progress ts e = runST $ do
   (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ ->
     return (ts', t `matMult` e `mergeCols` e')
   return eFinal
 
-drawProgress :: ShapeMatrix d => [TransformMatrix] -> d -> Picture -> Picture
+drawProgress :: ShapeMatrix d => [TransformMatrix] -> d -> Picture -> m ()
 drawProgress ts em p = flip draw p $ liftDraw (progress ts) em
 
 drawProgressColors :: ShapeMatrix d => [(TransformMatrix, Color)] -> d -> Picture -> Picture
@@ -131,6 +131,6 @@ drawProgressColors tcs e p = runST $ do
         !newP = drawColor color newE p'
     return (tcs', newP)
   return pFinal
-
+-}
 degToRad :: (Num a, RealFrac a, Floating a) => a -> a
 degToRad = (/ 180) . (* pi)

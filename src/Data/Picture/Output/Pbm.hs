@@ -11,6 +11,7 @@ module Data.Picture.Output.Pbm (writePbm, savePbm) where
 import System.IO
 import Data.Primitive.ByteArray
 import GHC.Word
+import Control.Monad.Primitive
 
 import Data.ByteString.Builder (hPutBuilder)
 import Data.ByteString.Builder.Prim
@@ -20,12 +21,12 @@ import Data.Pair
 import Data.Picture.Picture
 
 -- |Write a 'Picture' to a 'FilePath' in the NetPBM format
-savePbm :: FilePath -> Picture -> IO ()
+savePbm :: FilePath -> Picture RealWorld -> IO ()
 savePbm path = withFile path WriteMode . writePbm
 
 -- |Write a 'Picture' to a 'Handle' in the NetPBM format
-writePbm :: Picture -> Handle -> IO ()
-writePbm pic h = do
+writePbm :: Picture RealWorld -> Handle -> IO ()
+writePbm !pic h = do
   hSetBinaryMode h True
   hSetBuffering h $ BlockBuffering Nothing
   let w = hPutBuilder h
@@ -42,11 +43,11 @@ writePbm pic h = do
   w $ primBounded p3 (xres, yres, maxColor)
   w $ primMapListBounded trip [indexTup pic x y | x <- [1..xres], y <- [1..yres]]
 
-indexTup :: Picture -> Int -> Int -> (Word8,(Word8,Word8))
+indexTup :: Picture RealWorld -> Int -> Int -> (Word8,(Word8,Word8))
 indexTup (Picture rs gs bs s) x y = (r,(g,b))
   where
     i = encode s $ Pair x y
-    r = indexByteArray rs i
-    g = indexByteArray gs i
-    b = indexByteArray bs i
+    r = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray rs) i
+    g = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray gs) i
+    b = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray bs) i
 {-# INLINE indexTup #-}

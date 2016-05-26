@@ -14,7 +14,7 @@ import Data.Picture.Drawing.Points
 newtype PointMatrix = PointMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PointMatrix where
-  drawColor color (PointMatrix m) = setColor color [getD2Point m i | i <- [0..cols m - 1]]
+  drawColor color (PointMatrix m) = writePoints color [getD2Point m i | i <- [0..cols m - 1]]
   unwrap = runPM
   wrap = PointMatrix
 
