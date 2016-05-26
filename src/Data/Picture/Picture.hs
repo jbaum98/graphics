@@ -14,15 +14,15 @@ module Data.Picture.Picture (
     ) where
 
 import Control.Monad.Primitive
-import Data.Primitive.ByteArray
+import Data.Vector.Unboxed.Mutable
 
 import Data.Color
 import Data.Pair
 
-data Picture s = Picture {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(MutableByteArray s) {-# UNPACK #-} !(Pair Int)
+data Picture s = Picture {-# UNPACK #-} !(MVector s Color) {-# UNPACK #-} !(Pair Int)
 
 getSize :: Picture s -> Pair Int
-getSize (Picture _ _ _ s) = s
+getSize (Picture _ s) = s
 {-# INLINE getSize #-}
 
 encode :: Pair Int -> Pair Int -> Int
@@ -44,13 +44,10 @@ Pair r c `inRange` Pair rs cs = r <= rs &&
 
 unsafeIndexM, indexM :: PrimMonad m => Picture (PrimState m) -> Pair Int -> m Color
 
-(Picture rs gs bs maxP) `unsafeIndexM` point = do
+(Picture v maxP) `unsafeIndexM` point = do
   let i = encode maxP point
-  r <- readByteArray rs i
-  g <- readByteArray gs i
-  b <- readByteArray bs i
-  return $ Triple r g b
+  unsafeRead v i
 {-# INLINE unsafeIndexM #-}
 
-pic@(Picture _ _ _ s) `indexM` p | p `inRange` s = pic `unsafeIndexM` p
-                                 | otherwise     = error "Index out of bounds accessing Picture"
+pic@(Picture _ s) `indexM` p | p `inRange` s = pic `unsafeIndexM` p
+                             | otherwise     = error "Index out of bounds accessing Picture"

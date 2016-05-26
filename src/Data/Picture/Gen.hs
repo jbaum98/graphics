@@ -9,25 +9,15 @@ module Data.Picture.Gen (
 import Data.Picture.Picture
 import Data.Pair
 import Data.Color
+import Data.Vector.Unboxed.Mutable
+import Data.Vector.Unboxed (generate, unsafeThaw)
+import Prelude hiding (replicate)
 
 import Control.Monad.Primitive
-import Data.Primitive.ByteArray
-import Control.Monad.ST
-import Control.Loop
 
 solidPic :: PrimMonad m => Color -> Pair Int -> m (Picture (PrimState m))
 {-# INLINE solidPic #-}
-solidPic (Triple r g b) (Pair x y) = do
-  rs <- newByteArray l
-  gs <- newByteArray l
-  bs <- newByteArray l
-  fill rs r
-  fill gs g
-  fill bs b
-  return $ Picture rs gs bs $ Pair x y
-  where
-    l = x * y
-    fill ar c = fillByteArray ar 0 l c
+solidPic color (Pair x y) = flip Picture (Pair x y) <$> replicate  (x*y) color
 
 -- |Create a completely white 'Picture s'
 blankPic :: PrimMonad m => Pair Int -- ^The size of the 'Picture s'
@@ -40,16 +30,6 @@ mathPic :: PrimMonad m => Triple (Int -> Int -> ColorVal) -- ^The three function
         -> Pair Int                   -- ^The size of the 'Picture s'
         -> m (Picture (PrimState m))
 {-# INLINE mathPic #-}
-mathPic (Triple fr fg fb) (Pair x y) = do
-  rs <- newByteArray l
-  gs <- newByteArray l
-  bs <- newByteArray l
-  numLoop 0 (x - 1) $ \xi ->
-    numLoop 0 (y - 1) $ \yi -> do
-                          let i = encode (Pair x y) (Pair xi yi)
-                          writeByteArray rs i $ fr xi yi
-                          writeByteArray gs i $ fg xi yi
-                          writeByteArray bs i $ fb xi yi
-  return $ Picture rs gs bs $ Pair x y
+mathPic (Triple fr fg fb) (Pair x y) = flip Picture (Pair x y) <$> vec
   where
-    l = x * y
+    vec = unsafeThaw $ generate (x*y) $ \i -> case decode (Pair x y) i of Pair x' y' -> Triple (fr x' y') (fg x' y') (fb x' y')

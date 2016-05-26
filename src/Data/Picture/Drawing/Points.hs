@@ -10,7 +10,7 @@ module Data.Picture.Drawing.Points (
 
 import Control.Monad
 
-import Data.Primitive.ByteArray
+import Data.Vector.Unboxed.Mutable
 import Control.Monad.Primitive
 
 import Data.Color
@@ -18,11 +18,8 @@ import Data.Pair
 import Data.Picture.Picture
 
 writePoint, rawWritePoint, unsafeRawWritePoint :: PrimMonad m => Color -> Int -> Int -> Picture (PrimState m) -> m ()
-unsafeRawWritePoint (Triple !r !g !b) !x !y (Picture !rs !gs !bs !s) = do
-  let !i = encode s $ Pair x y
-  writeByteArray rs i r
-  writeByteArray gs i g
-  writeByteArray bs i b
+unsafeRawWritePoint color !x !y (Picture vec s) = unsafeWrite vec i color
+  where !i = encode s $ Pair x y
 {-# INLINE unsafeRawWritePoint #-}
 
 rawWritePoint !color x y !pic = do

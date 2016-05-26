@@ -44,10 +44,7 @@ writePbm !pic h = do
   w $ primMapListBounded trip [indexTup pic x y | x <- [1..xres], y <- [1..yres]]
 
 indexTup :: Picture RealWorld -> Int -> Int -> (Word8,(Word8,Word8))
-indexTup (Picture rs gs bs s) x y = (r,(g,b))
+indexTup pic x y = (r,(g,b))
   where
-    i = encode s $ Pair x y
-    r = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray rs) i
-    g = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray gs) i
-    b = indexByteArray (unsafeInlineIO $ unsafeFreezeByteArray bs) i
+    Triple !r !g !b = unsafeInlineIO $ indexM pic $ Pair x y
 {-# INLINE indexTup #-}
