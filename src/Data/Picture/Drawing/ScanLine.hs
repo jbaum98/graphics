@@ -15,38 +15,42 @@ import Data.Picture.Drawing.Line (writeLine)
 import Data.Picture.Drawing.Points (reflect)
 import Data.Picture.Picture
 
-scanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
-scanLine color !x1 !y1 !x2 !y2 !x3 !y3 mpic = writeScanLine color xb yb xm ym xt yt mpic
+scanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
+scanLine color !x1 !y1 !z1 !x2 !y2 !z2 !x3 !y3 !z3 mpic = writeScanLine color xb yb zb xm ym zm xt yt zt mpic
   where
-    Triple (Pair !xt !yt) (Pair !xm !ym) (Pair !xb !yb) = sortPoints p1' p2' p3'
-    p1' = reflect yMax $ Pair x1 y1
-    p2' = reflect yMax $ Pair x2 y2
-    p3' = reflect yMax $ Pair x3 y3
+    Triple (Triple !xt !yt !zt) (Triple !xm !ym !zm) (Triple !xb !yb !zb) = sortPoints p1' p2' p3'
+    p1' = reflect' $ Triple x1 y1 z1
+    p2' = reflect' $ Triple x2 y2 z2
+    p3' = reflect' $ Triple x3 y3 z3
     Pair _ yMax = getSize mpic
+    reflect' (Triple x y z) = case reflect yMax (Pair x y) of Pair x' y' -> Triple x' y' z
 {-# INLINE scanLine #-}
 
-writeScanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
-writeScanLine color xb yb xm ym xt yt mArr = do
-  Pair l _ <- forLoopState yb (< ym) (+1) (pure xb) $ \(Pair xl xr) y -> do
-    writeLine (round xl) (round y) (round xr) (round y) color mArr
-    return $ Pair (xl + dxL) (xr + dxR1)
-  void $ forLoopState ym (< yt) (+1) (Pair l xm) $ \(Pair xl xr) y -> do
-    writeLine (round xl) (round y) (round xr) (round y) color mArr
-    return $ Pair (xl+dxL) (xr+dxR2)
+writeScanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Picture (PrimState m) -> m ()
+writeScanLine color xb yb zb xm ym zm xt yt zt mArr = do
+  Pair l _ <- forLoopState yb (< ym) (+1) (pure (xb,zb)) $ \(Pair (xl,zl) (xr,zr)) y -> do
+    writeLine (round xl) (round y) zl (round xr) (round y) zr color mArr
+    return $ Pair (xl + dxL, zl + dzL) (xr + dxR1, zr + dzR1)
+  void $ forLoopState ym (< yt) (+1) (Pair l (xm,zm)) $ \(Pair (xl,zl) (xr,zr)) y -> do
+    writeLine (round xl) (round y) zl (round xr) (round y) zr color mArr
+    return $ Pair (xl+dxL,zl+dzL) (xr+dxR2,zr+dzR2)
   where
     dxL  = fSlope xb yb xt yt
+    dzL  = fSlope zb yb zt yt
     dxR1 = fSlope xb yb xm ym
+    dzR1 = fSlope zb yb zm ym
     dxR2 = fSlope xm ym xt yt
+    dzR2 = fSlope zm ym zt yt
 
 fSlope :: Double -> Double -> Double -> Double -> Double
 fSlope x0 y0 x1 y1 = (x1 - x0) / (y1 - y0)
 
-sortPoints :: Pair Double -> Pair Double -> Pair Double -> Triple (Pair Double)
-sortPoints p1@(Pair _ !y1) p2@(Pair _ !y2) p3@(Pair _ !y3) | y1 >= y2 && y1 >= y3 && y2 >= y3 = Triple p1 p2 p3
-sortPoints p1@(Pair _ !y1) p2@(Pair _ !y2) p3@(Pair _ !y3) | y1 >= y2 && y1 >= y3           = Triple p1 p3 p2
+sortPoints :: Triple Double -> Triple Double -> Triple Double -> Triple (Triple Double)
+sortPoints p1@(Triple _ !y1 _ ) p2@(Triple _ !y2 _) p3@(Triple _ !y3 _ ) | y1 >= y2 && y1 >= y3 && y2 >= y3 = Triple p1 p2 p3
+sortPoints p1@(Triple _ !y1 _ ) p2@(Triple _ !y2 _) p3@(Triple _ !y3 _ ) | y1 >= y2 && y1 >= y3           = Triple p1 p3 p2
 
-sortPoints p1@(Pair _ !y1) p2@(Pair _ !y2) p3@(Pair _ !y3) | y2 >= y1 && y2 >= y3 && y1 >= y3 = Triple p2 p1 p3
-sortPoints p1@(Pair _ !y1) p2@(Pair _ !y2) p3@(Pair _ !y3) | y2 >= y1 && y2 >= y3           = Triple p2 p3 p1
+sortPoints p1@(Triple _ !y1 _ ) p2@(Triple _ !y2 _) p3@(Triple _ !y3 _ ) | y2 >= y1 && y2 >= y3 && y1 >= y3 = Triple p2 p1 p3
+sortPoints p1@(Triple _ !y1 _ ) p2@(Triple _ !y2 _) p3@(Triple _ !y3 _ ) | y2 >= y1 && y2 >= y3           = Triple p2 p3 p1
 
-sortPoints p1@(Pair _ !y1) p2@(Pair _ !y2) p3              |                     y1 >= y2 = Triple p3 p1 p2
-sortPoints p1              p2              p3              | otherwise                   = Triple p3 p2 p1
+sortPoints p1@(Triple _ !y1 _ ) p2@(Triple _ !y2 _) p3                   |                     y1 >= y2 = Triple p3 p1 p2
+sortPoints p1              p2              p3                            | otherwise                   = Triple p3 p2 p1

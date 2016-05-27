@@ -30,8 +30,8 @@ instance ShapeMatrix PolyMatrix where
                                  n `dot` v < 0
                                ] $ \(p1,p2,p3) -> connect p1 p2 pic >> connect p2 p3 pic >> connect p3 p1 pic >> scan p1 p2 p3 pic
     where
-      scan (Triple !x1 !y1 _) (Triple !x2 !y2 _) (Triple !x3 !y3 _) = scanLine color x1 y1 x2 y2 x3 y3
-      connect (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (round x) (round y) (round x') (round y')
+      scan (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2) (Triple !x3 !y3 !z3) = scanLine color x1 y1 z1 x2 y2 z2 x3 y3 z3
+      connect (Triple !x !y !z) (Triple !x' !y' !z') = drawColorLine color (round x) (round y) z (round x') (round y') z'
       v = Triple 0 0 (-1)
 
   draw (PolyMatrix m) pic = forM_ [ (p1,p2,p3,color)
@@ -44,9 +44,9 @@ instance ShapeMatrix PolyMatrix where
                                | color <- cycle [red, orange, yellow, green, blue, indigo, violet, pink, turqouise ]
                                ] $ \(p1,p2,p3,color) -> connect3 color p1 p2 p3 pic >> scan color p1 p2 p3 pic
     where
-      scan color (Triple !x1 !y1 _) (Triple !x2 !y2 _) (Triple !x3 !y3 _) = scanLine color x1 y1 x2 y2 x3 y3
+      scan color (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2) (Triple !x3 !y3 !z3) = scanLine color x1 y1 z1 x2 y2 z2 x3 y3 z3
       connect3 color p1 p2 p3 p = connect color p1 p2 p >> connect color p2 p3 p >> connect color p3 p1 p
-      connect color (Triple !x !y _) (Triple !x' !y' _) = drawColorLine color (round x) (round y) (round x') (round y')
+      connect color (Triple !x !y !z) (Triple !x' !y' !z') = drawColorLine color (round x) (round y) z (round x') (round y') z'
       v = Triple 0 0 (-1)
 
   unwrap = runPM

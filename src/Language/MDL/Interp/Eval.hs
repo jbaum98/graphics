@@ -22,9 +22,9 @@ eval (Set knob val) = modSymTab $ insert knob (DoubleVal val)
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
   tm2 <- getTM cs2
-  let Triple x1 y1 _ = transform tm1 p1
-      Triple x2 y2 _ = transform tm2 p2
-  addF $ drawLine (round x1) (round y1) (round x2) (round y2)
+  let Triple x1 y1 z1 = transform tm1 p1
+      Triple x2 y2 z2 = transform tm2 p2
+  addF $ drawLine (round x1) (round y1) z1 (round x2) (round y2) z2
 
 eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
 

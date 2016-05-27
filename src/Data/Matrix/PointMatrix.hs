@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Data.Matrix.PointMatrix (
   PointMatrix,
   point,
@@ -6,15 +8,15 @@ module Data.Matrix.PointMatrix (
 
 import qualified Data.Vector.Unboxed as V
 
-import Data.D3Point
+import Data.Pair
 import Data.Matrix.Base
 import Data.Matrix.ShapeMatrix
 import Data.Picture.Drawing.Points
 
-newtype PointMatrix = PointMatrix { runPM :: Matrix D3Coord }
+newtype PointMatrix = PointMatrix { runPM :: Matrix Double }
 
 instance ShapeMatrix PointMatrix where
-  drawColor color (PointMatrix m) = writePoints color [getD2Point m i | i <- [0..cols m - 1]]
+  drawColor color (PointMatrix m) = writePoints color [case getD3Point m i of Triple !x !y !z -> (Pair (round x) (round y), z)| i <- [0..cols m - 1]]
   unwrap = runPM
   wrap = PointMatrix
 
@@ -22,8 +24,8 @@ instance Monoid PointMatrix where
   mempty = wrap empty
   mappend = liftDraw2 mergeCols
 
-point :: D3Point -> PointMatrix
+point :: Triple Double -> PointMatrix
 point (Triple x y z) = PointMatrix $ Matrix 4 1 3 $ V.fromList [x, y, z, 1]
 
-addPoint :: D3Point -> PointMatrix -> PointMatrix
+addPoint :: Triple Double -> PointMatrix -> PointMatrix
 addPoint p = wrap . addP p . unwrap
