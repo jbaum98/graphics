@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Language.MDL.Interp.Interp (
   Interp,
   runInterp,
@@ -121,6 +123,6 @@ drawShape = addF . draw
 
 drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
 drawInCS cs m = do
-  tm <- getTM cs
+  !tm <- getTM cs
   drawShape $! tm `matMultD` m
 {-# INLINE drawInCS #-}
