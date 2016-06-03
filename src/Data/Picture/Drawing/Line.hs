@@ -4,8 +4,7 @@
 Module      : Line
 Description : Draw lines between two 'Int -> Int's
 
-Provides an implementation of Bresenham's Line Algorithm.
--}
+Provides an implementation of Bresenham's Line Algorithm. -}
 module Data.Picture.Drawing.Line (
   line,
   writeLine,
@@ -27,7 +26,7 @@ data Octant = First | Second | Third   | Fourth |
               Fifth | Sixth  | Seventh | Eighth
 
 line :: PrimMonad m => Int -> Int -> Double -> Int -> Int -> Double -> Color -> Picture (PrimState m)-> m ()
-line !x1 !y1 !z1 !x2 !y2 !z2 !color !mpic = writeLine x1' y1' z1 x2' y2' z2 color mpic
+line !x1 !y1 !z1 !x2 !y2 !z2 !color !mpic = writeLine x1 y1 z1 x2 y2 z2 color mpic
   where
     Pair !x1' !y1' = reflect yMax $ Pair x1 y1
     Pair !x2' !y2' = reflect yMax $ Pair x2 y2
@@ -63,16 +62,16 @@ writeLine' Fourth !x1 !y1 !z1 !x2 !y2 !z2 color pic = writeLine' Eighth  x2 y2 z
 writeLine' Fifth  !x1 !y1 !z1 !x2 !y2 !z2 color pic = writeLine' First   x2 y2 z2 x1 y1 z1 color pic
 writeLine' Sixth  !x1 !y1 !z1 !x2 !y2 !z2 color pic = writeLine' Second  x2 y2 z2 x1 y1 z1 color pic
 
-writeLine' First !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
+writeLine' First !x1 !y1 !z1 !x2 !y2 !z2 color pic =
   void $ forLoopState x1 (<= x2) (+1) (y1,z1,di) $ \(y,z,d) x -> do
-    writePoint color x y z $ pic
+    writePoint color x y z pic
     return $ if d < 0 then (y,z+dz,d+a+a) else (y+1,z+dz,d+a+a+b+b)
   where a = y2 - y1
         b = x1 - x2
         di = a + a + b
         dz = (z2 - z1) / fromIntegral (x2 - x1)
 
-writeLine' Second !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
+writeLine' Second !x1 !y1 !z1 !x2 !y2 !z2 color pic =
   void $ forLoopState y1 (<= y2) (+1) (x1,z1,di) $ \(x,z,d) y -> do
     writePoint color x y z pic
     return $ if d > 0 then (x,z+dz,d+b+b) else (x+1,z+dz,d+a+a+b+b)
@@ -81,7 +80,7 @@ writeLine' Second !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
         di = a + b + b
         dz = (z2 - z1) / fromIntegral (y2 - y1)
 
-writeLine' Eighth !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
+writeLine' Eighth !x1 !y1 !z1 !x2 !y2 !z2 color pic =
   void $ forLoopState x1 (<= x2) (+1) (y1,z1,di) $ \(y,z,d) x -> do
     writePoint color x y z pic
     return $ if d > 0 then (y,z+dz,d+a+a) else (y-1,z+dz,d+a+a-b-b)
@@ -90,7 +89,7 @@ writeLine' Eighth !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
         di = a + a - b
         dz = (z2 - z1) / fromIntegral (x2 - x1)
 
-writeLine' Seventh !x1 !y1 !z1 !x2 !y2 !z2 color pic = do
+writeLine' Seventh !x1 !y1 !z1 !x2 !y2 !z2 color pic =
   void $ forLoopState y1 (>= y2) (\n -> n-1) (x1,z1,di) $ \(x,z,d) y -> do
     writePoint color x y z pic
     return $ if d < 0 then (x,z+dz,d-b-b) else (x+1,z+dz,d+a+a-b-b)

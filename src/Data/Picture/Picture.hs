@@ -27,7 +27,7 @@ getSize (Picture _ _ _ _ s) = s
 
 encode :: Pair Int -> Pair Int -> Int
 {-# INLINE encode #-}
-encode (Pair rs _) (Pair i j) = (i-1)*rs + (j-1)
+encode (Pair rs _) (Pair i j) = i*rs + j
 
 decode :: Pair Int -> Int -> Pair Int
 {-# INLINE decode #-}

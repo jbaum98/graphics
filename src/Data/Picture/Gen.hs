@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE MagicHash #-}
 
 module Data.Picture.Gen (
     solidPic,
@@ -11,6 +11,8 @@ import Data.Pair
 import Data.Color
 
 import Control.Monad.Primitive
+import Data.Primitive.Types
+import GHC.Exts
 import Data.Primitive.ByteArray
 import Control.Loop
 
@@ -20,15 +22,16 @@ solidPic (Triple r g b) (Pair x y) = do
   rs <- newByteArray l
   gs <- newByteArray l
   bs <- newByteArray l
-  zs <- newByteArray l
+  zs <- newByteArray lD
   fill rs r
   fill gs g
   fill bs b
-  fill zs negInf
+  setByteArray zs 0 l negInf
   return $ Picture rs gs bs zs $ Pair x y
   where
     l = x * y
-    fill ar c = setByteArray ar 0 l c
+    lD = l * I# (sizeOf# (0 :: Double))
+    fill ar = fillByteArray ar 0 l
 
 -- |Create a completely white 'Picture s'
 blankPic :: PrimMonad m => Pair Int -- ^The size of the 'Picture s'

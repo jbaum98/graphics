@@ -13,6 +13,7 @@ data Token = TokenDouble !Double
            | TokenSphere
            | TokenBox
            | TokenLine
+           | TokenPoint
            | TokenMesh
            | TokenTexture
            | TokenSet

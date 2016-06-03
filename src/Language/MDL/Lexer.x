@@ -29,6 +29,7 @@ tokens :-
   camera {\_ _ -> TokenCamera}
   ambient {\_ _ -> TokenAmbient}
 
+  point {\_ _ -> TokenPoint}
   torus {\_ _ -> TokenTorus}
   sphere {\_ _ -> TokenSphere}
   box {\_ _ -> TokenBox}

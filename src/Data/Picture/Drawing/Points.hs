@@ -25,9 +25,10 @@ unsafeRawWritePoint (Triple !r !g !b) !x !y !z (Picture !rs !gs !bs !zs !s) = do
     writeByteArray rs i r
     writeByteArray gs i g
     writeByteArray bs i b
+    writeByteArray zs i z
 {-# INLINE unsafeRawWritePoint #-}
 
-rawWritePoint color !x !y !z !pic = do
+rawWritePoint color !x !y !z !pic =
   when (Pair x y `inRange` s) $
     unsafeRawWritePoint color x y z pic
   where s = getSize pic
@@ -39,7 +40,7 @@ writePoint !color !x !y !z !pic = do
   where Pair _ yMax = getSize pic
 {-# INLINE writePoint #-}
 
-reflect :: Num a => Int -> Pair a -> Pair a
+reflect :: (Num a,Show a) => Int -> Pair a -> Pair a
 reflect !yMax (Pair !x !y) = Pair x (fromIntegral yMax - y - 1)
 {-# SPECIALIZE reflect :: Int -> Pair Int -> Pair Int #-}
 {-# SPECIALIZE reflect :: Int -> Pair Double -> Pair Double #-}

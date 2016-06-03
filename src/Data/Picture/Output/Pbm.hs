@@ -41,7 +41,7 @@ writePbm !pic h = do
       p3 = (\(x,y,m) -> ('P',('3',(' ',(x,(' ',(y,(' ', (m,'\n'))))))))) >$< c' >*< c' >*< c' >*< intDec >*< c'>*< intDec >*< c' >*< word8Dec >*< c'
       {-# INLINE p3 #-}
   w $ primBounded p3 (xres, yres, maxColor)
-  w $ primMapListBounded trip [indexTup pic x y | x <- [1..xres], y <- [1..yres]]
+  w $ primMapListBounded trip [indexTup pic x y | y <- [0..xres-1], x <- [0..yres-1]]
 
 indexTup :: Picture RealWorld -> Int -> Int -> (Word8,(Word8,Word8))
 indexTup (Picture rs gs bs _ s) x y = (r,(g,b))

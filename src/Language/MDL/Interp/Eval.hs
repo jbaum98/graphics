@@ -4,9 +4,11 @@ module Language.MDL.Interp.Eval where
 
 import Data.Maybe
 import GHC.Prim
+import Data.Primitive.ByteArray
 
 import Data.ByteString.Lazy.Char8
 
+import Data.Color
 import Data.D2Point
 import Data.D3Point
 import Data.Matrix
@@ -19,6 +21,9 @@ eval :: Expr -> Interp ()
 
 eval (Set knob val) = modSymTab $ insert knob (DoubleVal val)
 
+
+eval (Point (Triple x y z)) = addF (writePoint green (round x) (round y) z)
+
 eval (Line _ p1 cs1 p2 cs2) = do
   tm1 <- getTM cs1
   tm2 <- getTM cs2
@@ -28,7 +33,7 @@ eval (Line _ p1 cs1 p2 cs2) = do
 
 eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
 
-eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 100
+eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 20
 
 eval (Torus _ center r1 r2 cs) = drawInCS cs $ torus center r1 r2 30
 

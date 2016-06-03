@@ -23,6 +23,7 @@ import Language.MDL.Expr
     TORUS { TokenTorus }
     BOX { TokenBox }
     LINE { TokenLine }
+     POINT { TokenPoint }
     MESH { TokenMesh }
     TEXTURE { TokenTexture }
     STRING { TokenString $$ }
@@ -92,6 +93,7 @@ command :: { Expr }
             Line (Just $2) (Triple $3 $4 $5) Nothing (Triple $6 $7 $8) (Just $9) }
         | LINE STRING DOUBLE DOUBLE DOUBLE STRING DOUBLE DOUBLE DOUBLE STRING {
             Line (Just $2) (Triple $3 $4 $5) (Just $6) (Triple $7 $8 $9) (Just $10) }
+        | POINT DOUBLE DOUBLE DOUBLE                             { Point(Triple $2 $3 $4) }
         | MESH CO STRING                                         { Mesh Nothing $3 Nothing }
         | MESH STRING CO STRING {- name and constants -}         { Mesh (Just $2) $4 Nothing }
         | MESH STRING CO STRING STRING                           { Mesh (Just $2) $4 (Just $5)}

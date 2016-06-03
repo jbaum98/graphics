@@ -23,6 +23,7 @@ data Expr = Light ByteString (Triple Double) (Triple Double)
           | Torus (Maybe ByteString) (Triple Double) Double Double (Maybe ByteString)
           | Box (Maybe ByteString) (Triple Double) (Triple Double) (Maybe ByteString)
           | Line (Maybe ByteString) (Triple Double) (Maybe ByteString) (Triple Double) (Maybe ByteString)
+          | Point (Triple Double)
           | Mesh (Maybe ByteString) ByteString (Maybe ByteString)
           | Set ByteString Double
           | Scale (Triple Double) (Maybe ByteString)

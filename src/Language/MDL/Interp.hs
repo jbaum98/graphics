@@ -55,6 +55,7 @@ genSymTab :: Foldable f => f Expr -> Int -> SymTab
 genSymTab exprs i = foldl (flip $ addVaryVal i) empty exprs
 
 addVaryVal :: Int -> Expr -> SymTab -> SymTab
+addVaryVal i (Vary _     startFrame endFrame _       _) | i < round startFrame || i > round endFrame = id
 addVaryVal i (Vary knob startFrame endFrame startVal endVal) = insert knob $ DoubleVal val
   where val = lerp (round $ endFrame - startFrame) startVal endVal i
 addVaryVal _ _ = id
