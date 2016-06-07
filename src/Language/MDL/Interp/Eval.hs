@@ -62,6 +62,14 @@ eval Display = passPicTo displayPic
 
 eval (Save path) = passPicTo $ savePic $ unpack path
 
+eval (Light name color loc) =
+
+eval (Ambient color) = undefined
+
+eval (Constants name consts _) = undefined
+
+eval (Shading _) = undefined
+
 eval _ = return ()
 
 

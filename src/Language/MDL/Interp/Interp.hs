@@ -110,9 +110,15 @@ modTopTrans f = modTransStack $ \tstack ->
 multTop :: TransformMatrix -> Interp ()
 multTop = modTopTrans . flip matMult
 
-
 modSymTab :: (SymTab -> SymTab) -> Interp ()
 modSymTab f = modify $ \st -> st { symtab = f $ symtab st }
+
+modLighting :: (Lighting -> Lighting) -> Interp ()
+modLighting f = modify $ \st -> st { lighting = f $ lighting st }
+
+setAmbient :: Color -> Interp ()
+
+addPointLight :: PointLight :: Interp ()
 
 -- |
 -- == Drawing shapes

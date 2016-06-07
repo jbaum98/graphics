@@ -12,3 +12,4 @@ type SymTab = Map ByteString Val
 
 data Val = DoubleVal Double
          | MatrixVal (Matrix Double)
+         | ConstsVal (Triple (Triple Double))
