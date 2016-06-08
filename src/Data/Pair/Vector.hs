@@ -3,7 +3,8 @@
 module Data.Pair.Vector (
   dot,
   cross,
-  norm
+  norm,
+  normalize
   ) where
 
 import Data.Pair.Triple
@@ -21,3 +22,6 @@ cross (Triple !a1 !a2 !a3) (Triple !b1 !b2 !b3) = Triple (a2 * b3 - a3 * b2) (a3
 norm :: Floating a => Triple a -> a
 norm (Triple !x !y !z) = sqrt $ x*x + y*y + z*z
 {-# INLINE norm #-}
+
+normalize :: Floating a => Triple a -> Triple a
+normalize v = v / (pure $ norm v)

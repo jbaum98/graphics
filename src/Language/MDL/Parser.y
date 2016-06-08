@@ -55,7 +55,8 @@ commands :: { DList Expr }
 
 command :: { Expr }
         : COMMENT { Comment }
-        | LIGHT STRING DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE { Light $2 (Triple $3 $4 $5) (Triple $6 $7 $8) }
+        | LIGHT DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE        { Light Nothing (Triple $2 $3 $4) (Triple $5 $6 $7) }
+        | LIGHT STRING DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE { Light (Just $2) (Triple $3 $4 $5) (Triple $6 $7 $8) }
         | MOVE DOUBLE DOUBLE DOUBLE STRING                       { Move (Triple $2 $3 $4) (Just $5) }
         | MOVE DOUBLE DOUBLE DOUBLE                              { Move (Triple $2 $3 $4) Nothing }
         | CONSTANTS STRING DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE {

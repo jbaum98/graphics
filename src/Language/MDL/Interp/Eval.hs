@@ -62,7 +62,7 @@ eval Display = passPicTo displayPic
 
 eval (Save path) = passPicTo $ savePic $ unpack path
 
-eval (Light name color loc) = addPointLight $ PointLight (truncate <$> color) loc
+eval (Light _ color loc) = addPointLight $ PointLight (truncate <$> color) loc
 
 eval (Ambient color) = setAmbient $ truncate <$> color
 

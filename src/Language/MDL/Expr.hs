@@ -13,7 +13,7 @@ import Data.ByteString.Lazy
 
 import Data.Pair
 
-data Expr = Light ByteString (Triple Double) (Triple Double)
+data Expr = Light (Maybe ByteString) (Triple Double) (Triple Double)
           | Move (Triple Double) (Maybe ByteString)
           | Constants ByteString (Triple (Triple Double)) (Maybe (Triple Double))
           | SaveCoords ByteString
