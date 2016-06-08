@@ -17,11 +17,12 @@ import Data.Color
 import Data.Picture.Drawing.ScanLine
 import Data.Picture.Drawing.Line
 import Control.Monad
+import Data.Lighting
 
 newtype PolyMatrix = PolyMatrix { runPM :: Matrix D3Coord }
 
 instance ShapeMatrix PolyMatrix where
-  drawColor color (PolyMatrix m) pic = forM_ [ (p1,p2,p3)
+  drawColor color _ (PolyMatrix m) pic = forM_ [ (p1,p2,p3)
                                | i <- [0,3.. cols m - 2],
                                  let p1 = getD3Point m i
                                      p2 = getD3Point m $ i + 1
@@ -34,15 +35,16 @@ instance ShapeMatrix PolyMatrix where
       connect (Triple !x !y !z) (Triple !x' !y' !z') = drawColorLine color (round x) (round y) z (round x') (round y') z'
       v = Triple 0 0 (-1)
 
-  draw (PolyMatrix m) pic = forM_ [ (p1,p2,p3,color)
-                               | i <- [0,3.. cols m - 2],
-                                 let p1 = getD3Point m i
-                                     p2 = getD3Point m $ i + 1
-                                     p3 = getD3Point m $ i + 2
-                                     n = p2 - p1 `cross` p3 - p1
-                               , n `dot` v < 0
-                               | color <- cycle [red, orange, yellow, green, blue, indigo, violet, pink, turqouise ]
-                               ] $ \(p1,p2,p3,color) -> connect3 color p1 p2 p3 pic << scan color p1 p2 p3 pic
+  draw lighting (PolyMatrix m) pic =
+    forM_ [ (p1,p2,p3,color)
+          | i <- [0,3.. cols m - 2],
+            let p1 = getD3Point m i
+                p2 = getD3Point m $ i + 1
+                p3 = getD3Point m $ i + 2
+                n = p2 - p1 `cross` p3 - p1
+                color = ambient lighting
+          , n `dot` v < 0
+    ] $ \(p1,p2,p3,color) -> connect3 color p1 p2 p3 pic << scan color p1 p2 p3 pic
     where
       scan color (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2) (Triple !x3 !y3 !z3) = scanLine color x1 y1 z1 x2 y2 z2 x3 y3 z3
       connect3 color p1 p2 p3 p = connect color p1 p2 p >> connect color p2 p3 p >> connect color p3 p1 p

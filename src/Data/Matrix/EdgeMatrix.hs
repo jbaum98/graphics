@@ -18,7 +18,7 @@ import Data.Picture.Drawing.Line
 newtype EdgeMatrix = EdgeMatrix { runEM :: Matrix D3Coord }
 
 instance ShapeMatrix EdgeMatrix where
-  drawColor color (EdgeMatrix m) = forM_ [Pair (getD3Point m i) (getD3Point m (i+1)) | i <- [0,2.. cols m - 1]] . \pic (Pair (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2)) -> drawColorLine color (round x1) (round y1) z1 (round x2) (round y2) z2 pic
+  drawColor color _ (EdgeMatrix m) = forM_ [Pair (getD3Point m i) (getD3Point m (i+1)) | i <- [0,2.. cols m - 1]] . \pic (Pair (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2)) -> drawColorLine color (round x1) (round y1) z1 (round x2) (round y2) z2 pic
   unwrap = runEM
   wrap = EdgeMatrix
 

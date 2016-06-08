@@ -10,7 +10,10 @@ module Language.MDL.Interp.Interp (
   gets,
   modify,
   liftIO,
-  module Language.MDL.Interp.InterpState,
+  --module Language.MDL.Interp.InterpState,
+  PointLight(PointLight),
+  InterpState(..),
+  initState,
   failKnobType,
   failNoKnob,
   getSym,
@@ -21,6 +24,8 @@ module Language.MDL.Interp.Interp (
   modTransStack,
   modTopTrans,
   multTop,
+  setAmbient,
+  addPointLight,
   modSymTab,
   drawInCS
   ) where
@@ -33,6 +38,7 @@ import GHC.Prim
 import Control.Monad.State.Strict
 import Data.ByteString.Lazy.Char8
 
+import Data.Color
 import Data.Matrix hiding (empty)
 import Data.Picture
 import Language.MDL.Interp.InterpState
@@ -117,14 +123,16 @@ modLighting :: (Lighting -> Lighting) -> Interp ()
 modLighting f = modify $ \st -> st { lighting = f $ lighting st }
 
 setAmbient :: Color -> Interp ()
+setAmbient color = modLighting $ \lighting -> lighting { ambient = color }
 
-addPointLight :: PointLight :: Interp ()
+addPointLight :: PointLight -> Interp ()
+addPointLight light = modLighting $ \lighting -> lighting { lights = light:(lights lighting) }
 
 -- |
 -- == Drawing shapes
 
 drawShape :: ShapeMatrix m => m -> Interp ()
-drawShape = addF . draw
+drawShape shape = gets lighting >>= addF . flip draw shape
 {-# INLINE drawShape #-}
 
 drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()

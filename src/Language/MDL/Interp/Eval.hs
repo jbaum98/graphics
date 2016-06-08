@@ -19,7 +19,7 @@ import Language.MDL.SymTab
 
 eval :: Expr -> Interp ()
 
-eval (Set knob val) = modSymTab $ insert knob (DoubleVal val)
+eval (Set knob val) = modSymTab $ insert knob $ DoubleVal val
 
 
 eval (Point (Triple x y z)) = addF (writePoint green (round x) (round y) z)
@@ -62,13 +62,13 @@ eval Display = passPicTo displayPic
 
 eval (Save path) = passPicTo $ savePic $ unpack path
 
-eval (Light name color loc) =
+eval (Light name color loc) = addPointLight $ PointLight (truncate <$> color) loc
 
-eval (Ambient color) = undefined
+eval (Ambient color) = setAmbient $ truncate <$> color
 
-eval (Constants name consts _) = undefined
+eval (Constants name consts _) = modSymTab $ insert name $ ConstsVal consts
 
-eval (Shading _) = undefined
+-- eval (Shading _) = undefined
 
 eval _ = return ()
 

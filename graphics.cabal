@@ -35,6 +35,7 @@ library
   other-modules:       Data.Color
                        Data.D2Point
                        Data.D3Point
+                       Data.Lighting
                        Data.Matrix
                        Data.Matrix.Base
                        Data.Matrix.EdgeMatrix

@@ -3,6 +3,7 @@ module Language.MDL.SymTab (
   module Data.Map
   ) where
 
+import Data.Pair
 import Data.Map
 import Data.ByteString.Lazy.Char8
 

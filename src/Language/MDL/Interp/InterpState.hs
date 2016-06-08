@@ -7,11 +7,10 @@ module Language.MDL.Interp.InterpState (
   ) where
 
 import GHC.Prim
-import Data.Color
-import Data.Pair
 import Data.Matrix hiding (empty)
 import Data.Picture
 import Language.MDL.SymTab
+import Data.Lighting
 
 data InterpState = InterpState
   { picFunc    :: Picture RealWorld -> IO ()
@@ -19,14 +18,6 @@ data InterpState = InterpState
   , symtab     :: !SymTab
   , lighting   :: !Lighting
   }
-
-data Lighting = Lighting
-  { ambient :: !Color
-  , lights  :: ![PointLight] }
-
-data PointLight = PointLight
-  { color :: !Color
-  , loc   :: !(Triple Double) }
 
 topTransMat :: InterpState -> TransformMatrix
 topTransMat ps = case transStack ps of
