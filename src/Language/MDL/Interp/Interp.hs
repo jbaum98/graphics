@@ -38,6 +38,7 @@ import GHC.Prim
 import Control.Monad.State.Strict
 import Data.ByteString.Lazy.Char8
 
+import Data.Lighting
 import Data.Color
 import Data.Matrix hiding (empty)
 import Data.Picture
@@ -132,7 +133,10 @@ addPointLight light = modLighting $ \lighting -> lighting { lights = light:(ligh
 -- == Drawing shapes
 
 drawShape :: ShapeMatrix m => m -> Interp ()
-drawShape shape = gets lighting >>= addF . flip draw shape
+drawShape shape = do
+  l <- gets lighting
+  let k = pure $ pure 0.3
+  addF $ draw (l,k) shape
 {-# INLINE drawShape #-}
 
 drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()

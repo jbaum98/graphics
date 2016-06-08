@@ -35,14 +35,17 @@ instance ShapeMatrix PolyMatrix where
       connect (Triple !x !y !z) (Triple !x' !y' !z') = drawColorLine color (round x) (round y) z (round x') (round y') z'
       v = Triple 0 0 (-1)
 
-  draw lighting (PolyMatrix m) pic =
+  draw (lighting,(Triple kr kg kb)) (PolyMatrix m) pic =
     forM_ [ (p1,p2,p3,color)
           | i <- [0,3.. cols m - 2],
             let p1 = getD3Point m i
                 p2 = getD3Point m $ i + 1
                 p3 = getD3Point m $ i + 2
                 n = p2 - p1 `cross` p3 - p1
-                color = ambient lighting
+                iamb = fmap truncate $ kamb * (fromIntegral <$> ambient lighting)
+                idiff = pure 0
+                ispec = pure 0
+                color = iamb + idiff + ispec
           , n `dot` v < 0
     ] $ \(p1,p2,p3,color) -> connect3 color p1 p2 p3 pic << scan color p1 p2 p3 pic
     where
@@ -51,6 +54,12 @@ instance ShapeMatrix PolyMatrix where
       connect color (Triple !x !y !z) (Triple !x' !y' !z') = drawColorLine color (round x) (round y) z (round x') (round y') z'
       v = Triple 0 0 (-1)
       (<<) = flip (>>)
+      kamb = Triple kar kag kab
+      kdiff = Triple kdr kdg kdb
+      kspec = Triple ksr ksg ksb
+      Triple kar kdr ksr = kr
+      Triple kag kdg ksg = kg
+      Triple kab kdb ksb = kb
 
   unwrap = runPM
   wrap = PolyMatrix

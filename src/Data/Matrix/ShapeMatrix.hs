@@ -18,9 +18,9 @@ import Control.Monad.Primitive
 import Data.Lighting
 
 class ShapeMatrix d where
-  drawColor :: PrimMonad m => Color -> Lighting -> d -> Picture (PrimState m) -> m ()
+  drawColor :: PrimMonad m => Color -> (Lighting,LightingConsts) -> d -> Picture (PrimState m) -> m ()
 
-  draw :: PrimMonad m => Lighting -> d -> Picture (PrimState m) -> m ()
+  draw :: PrimMonad m => (Lighting,LightingConsts) -> d -> Picture (PrimState m) -> m ()
   draw = drawColor white
 
   unwrap :: d -> Matrix D3Coord

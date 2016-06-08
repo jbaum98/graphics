@@ -4,6 +4,7 @@ module Language.MDL.SymTab (
   ) where
 
 import Data.Pair
+import Data.Lighting
 import Data.Map
 import Data.ByteString.Lazy.Char8
 
@@ -13,4 +14,4 @@ type SymTab = Map ByteString Val
 
 data Val = DoubleVal Double
          | MatrixVal (Matrix Double)
-         | ConstsVal (Triple (Triple Double))
+         | ConstsVal LightingConsts

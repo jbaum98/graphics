@@ -1,6 +1,7 @@
 module Data.Lighting (
   Lighting(..),
-  PointLight(..)
+  PointLight(..),
+  LightingConsts
 ) where
 
 import Data.Color
@@ -13,3 +14,5 @@ data Lighting = Lighting
 data PointLight = PointLight
   { color :: !Color
   , loc   :: !(Triple Double) }
+
+type LightingConsts = Triple (Triple Double)
