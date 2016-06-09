@@ -44,7 +44,7 @@ instance ShapeMatrix PolyMatrix where
                 n = p2 - p1 `cross` p3 - p1
                 color = calcLighting lightinfo n v
           , n `dot` v < 0
-    ] $ \(p1,p2,p3,color) -> connect3 color p1 p2 p3 pic >> scan color p1 p2 p3 pic
+    ] $ \(p1,p2,p3,color) -> {-connect3 color p1 p2 p3 pic >>-} scan color p1 p2 p3 pic
     where
       scan color (Triple !x1 !y1 !z1) (Triple !x2 !y2 !z2) (Triple !x3 !y3 !z3) = scanLine color x1 y1 z1 x2 y2 z2 x3 y3 z3
       connect3 color p1 p2 p3 p = connect color p1 p2 p >> connect color p2 p3 p >> connect color p3 p1 p
