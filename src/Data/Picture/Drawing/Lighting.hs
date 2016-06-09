@@ -61,7 +61,7 @@ pointLighting pointLights n' v' = mapSum pointLights $ \(PointLight c l) ->
   in (* c') <$> Pair (diff l' n') (spec l' n' v')
 
 diff :: Triple Double -> Triple Double -> Triple Double
-diff l' n' = pure (l' `dot` n')
+diff l' n' = pure ((-l') `dot` n')
 
 spec :: Triple Double -> Triple Double -> Triple Double -> Triple Double
 spec l' n' v' = pure $ (r `dot` v') ^ k
