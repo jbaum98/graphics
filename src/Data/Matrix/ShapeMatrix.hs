@@ -15,7 +15,7 @@ import Data.Matrix.Base
 import Data.Matrix.Mult
 import Data.Picture.Picture
 import Control.Monad.Primitive
-import Data.Lighting
+import Data.Picture.Drawing.Lighting
 
 class ShapeMatrix d where
   drawColor :: PrimMonad m => Color -> (Lighting,LightingConsts) -> d -> Picture (PrimState m) -> m ()

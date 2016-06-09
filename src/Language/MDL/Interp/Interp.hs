@@ -38,7 +38,7 @@ import GHC.Prim
 import Control.Monad.State.Strict
 import Data.ByteString.Lazy.Char8
 
-import Data.Lighting
+import Data.Picture.Drawing.Lighting
 import Data.Color
 import Data.Matrix hiding (empty)
 import Data.Picture

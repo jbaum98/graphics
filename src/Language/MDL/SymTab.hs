@@ -4,7 +4,7 @@ module Language.MDL.SymTab (
   ) where
 
 import Data.Pair
-import Data.Lighting
+import Data.Picture.Drawing.Lighting
 import Data.Map
 import Data.ByteString.Lazy.Char8
 

@@ -39,7 +39,7 @@ writeScanLine :: PrimMonad m => Color -> Double -> Double -> Double -> Double ->
 writeScanLine color xb yb zb xm ym zm xt yt zt mArr = void $
   --trace (show color) $ return ()
   --trace (show (round yb, round ym, round yt)) $ return ()
-  numLoopState (truncate yb) (truncate yt) initState $ \(xl, zl, xr, zr, dxr, dzr, flipYet) y -> do
+  numLoopState (floor yb) (ceiling yt) initState $ \(xl, zl, xr, zr, dxr, dzr, flipYet) y -> do
     writeLine (round xl) y zl (round xr) y zr color mArr
     --trace (show (xl,xr,y)) $ return ()
     if not flipYet && fromIntegral y + 1 >= ym

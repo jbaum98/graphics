@@ -35,7 +35,6 @@ library
   other-modules:       Data.Color
                        Data.D2Point
                        Data.D3Point
-                       Data.Lighting
                        Data.Matrix
                        Data.Matrix.Base
                        Data.Matrix.EdgeMatrix
@@ -50,6 +49,7 @@ library
                        Data.Pair.Vector
                        Data.Picture
                        Data.Picture.Drawing
+                       Data.Picture.Drawing.Lighting
                        Data.Picture.Drawing.Line
                        Data.Picture.Drawing.Points
                        Data.Picture.Drawing.ScanLine

@@ -10,7 +10,7 @@ import GHC.Prim
 import Data.Matrix hiding (empty)
 import Data.Picture
 import Language.MDL.SymTab
-import Data.Lighting
+import Data.Picture.Drawing.Lighting
 
 data InterpState = InterpState
   { picFunc    :: Picture RealWorld -> IO ()
