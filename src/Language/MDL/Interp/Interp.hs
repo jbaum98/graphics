@@ -135,7 +135,7 @@ addPointLight light = modLighting $ \lighting -> lighting { lights = light:(ligh
 drawShape :: ShapeMatrix m => m -> Interp ()
 drawShape shape = do
   l <- gets lighting
-  let k = pure $ pure 0.3
+  let k = pure $ pure 0.3 -- TODO
   addF $ draw (l,k) shape
 {-# INLINE drawShape #-}
 

@@ -5,15 +5,11 @@ module Data.Picture.Drawing.Lighting (
   calcLighting
 ) where
 
-import Debug.Trace
-
 import Data.Monoid
 import Control.Applicative
 
 import Data.Color
 import Data.Pair
-
-trace' x = trace (show x) x
 
 data Lighting = Lighting
   { ambient :: !Color
@@ -34,7 +30,7 @@ calcLighting (Lighting amb pointLights, Triple kr kg kb) n v =
     iamb  = kamb * (fromIntegral <$> amb)
     idiff = kdiff * diffLight
     ispec = kspec * specLight
-    Pair diffLight specLight = trace' $ pointLighting pointLights n' v'
+    Pair diffLight specLight = pointLighting pointLights n' v'
 
     kamb = Triple kar kag kab
     kdiff = Triple kdr kdg kdb

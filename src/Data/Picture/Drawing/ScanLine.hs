@@ -4,7 +4,7 @@ module Data.Picture.Drawing.ScanLine (
   scanLine, sortPoints
   ) where
 
-import Debug.Trace
+-- import Debug.Trace
 
 import Control.Monad
 
@@ -42,7 +42,7 @@ writeScanLine color xb yb zb xm ym zm xt yt zt mArr = void $
   forLoopState (round yb) (<= round yt) (+1) initState $ \(xl, zl, xr, zr, dxr, dzr, flipYet) y -> do
     let Pair xl' xr' = if xl < xr then Pair xl xr else Pair xr xl
     writeLine (floor xl') y zl (ceiling xr') y zr color mArr
-    trace (show (xl,xr,y)) $ return ()
+    -- trace (show (xl,xr,y)) $ return ()
     if not flipYet && fromIntegral y + 1 >= ym
       then return (xl, zl, xm, zm, dxR2, dzR2, True)
       else return (xl + dxL, zl + dzL, xr + dxr, zr + dzr, dxr, dzr, flipYet)
