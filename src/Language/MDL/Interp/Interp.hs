@@ -93,6 +93,16 @@ getKnob knob = do
       _           -> failKnobType "double"
     Nothing -> failNoKnob knob
 
+getConsts :: Maybe ByteString -> Interp LightingConsts
+getConsts (Just knob) = do
+  mknob <- getSym knob
+  case mknob of
+    Just val -> case val of
+      ConstsVal k -> return k
+      _           -> failKnobType "constants"
+    Nothing  -> failNoKnob knob
+getConsts Nothing = return defaultLightingConsts
+
 -- |
 -- == Modifying InterpState
 
@@ -132,15 +142,15 @@ addPointLight light = modLighting $ \lighting -> lighting { lights = light:(ligh
 -- |
 -- == Drawing shapes
 
-drawShape :: ShapeMatrix m => m -> Interp ()
-drawShape shape = do
+drawShape :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
+drawShape kname shape = do
   l <- gets lighting
-  let k = pure $ pure 0.3 -- TODO
+  k <- getConsts kname
   addF $ draw (l,k) shape
 {-# INLINE drawShape #-}
 
-drawInCS :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
-drawInCS cs m = do
+drawInCS :: ShapeMatrix m => Maybe ByteString -> Maybe ByteString -> m -> Interp ()
+drawInCS cs kname m = do
   !tm <- getTM cs
-  drawShape $! tm `matMultD` m
+  drawShape kname $! tm `matMultD` m
 {-# INLINE drawInCS #-}

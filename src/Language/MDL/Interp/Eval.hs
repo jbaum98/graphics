@@ -31,11 +31,11 @@ eval (Line _ p1 cs1 p2 cs2) = do
       Triple x2 y2 z2 = transform tm2 p2
   addF $ drawLine (round x1) (round y1) z1 (round x2) (round y2) z2
 
-eval (Box _ topLeft dims cs) = drawInCS cs $ box topLeft dims
+eval (Box k topLeft dims cs) = drawInCS cs k $ box topLeft dims
 
-eval (Sphere _ center r cs) = drawInCS cs $ sphere center r 20
+eval (Sphere k center r cs) = drawInCS cs k $ sphere center r 20
 
-eval (Torus _ center r1 r2 cs) = drawInCS cs $ torus center r1 r2 30
+eval (Torus k center r1 r2 cs) = drawInCS cs k $ torus center r1 r2 30
 
 eval (Move trans Nothing) = multTop $ transMatrix trans
 eval (Move trans (Just knob)) = scaledMat knob transMatrix trans

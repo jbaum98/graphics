@@ -2,6 +2,7 @@ module Data.Picture.Drawing.Lighting (
   Lighting(..),
   PointLight(..),
   LightingConsts,
+  defaultLightingConsts,
   calcLighting
 ) where
 
@@ -20,6 +21,9 @@ data PointLight = PointLight
   , loc   :: !(Triple Double) }
 
 type LightingConsts = Triple (Triple Double)
+
+defaultLightingConsts :: LightingConsts
+defaultLightingConsts = pure . pure $ 0.3
 
 calcLighting :: (Lighting, LightingConsts) -> Triple Double -> Triple Double -> Color
 calcLighting (Lighting amb pointLights, Triple kr kg kb) n v =
