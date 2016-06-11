@@ -1,16 +1,21 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Data.Picture.Drawing.Lighting (
   Lighting(..),
   PointLight(..),
   LightingConsts,
   defaultLightingConsts,
-  calcLighting
+  calcLighting,
+  vertexNormals
 ) where
 
+import Data.Map hiding (foldl)
 import Data.Monoid
-import Control.Applicative
 
 import Data.Color
 import Data.Pair
+import {-# SOURCE #-} Data.Matrix.PolyMatrix (PolyMatrix(..))
+import Data.Matrix.Base
 
 data Lighting = Lighting
   { ambient :: !Color
@@ -68,3 +73,20 @@ spec l' n' v' = pure $ (r `dot` v') ^ k
   where
     r = (pure (2 * l' `dot` n') * n') - l'
     k = 7 :: Int
+
+vertexNormals :: PolyMatrix -> Map (Triple Double) (Triple Double)
+vertexNormals (PolyMatrix m) = Data.Map.map normalize $
+  foldl addNormals mempty [ (p1,p2,p3)
+                          | i <- [0,3.. cols m - 2],
+                            let p1 = getD3Point m i
+                                p2 = getD3Point m $ i + 1
+                                p3 = getD3Point m $ i + 2
+                          ]
+
+addNormals :: Map (Triple Double) (Triple Double) -> (Triple Double, Triple Double, Triple Double) -> Map (Triple Double) (Triple Double)
+addNormals hashmap (p1,p2,p3) = addNormal p1 . addNormal p2 . addNormal p3 $ hashmap
+  where
+    addNormal     = alter $ \case
+      Nothing     -> Just n
+      (Just oldN) -> Just $ n + oldN
+    n = p2 - p1 `cross` p3 - p1

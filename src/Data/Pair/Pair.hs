@@ -9,7 +9,7 @@ import Control.DeepSeq
 
 -- |Represents two objects of the same type
 data Pair a = Pair !a !a
-            deriving (Show, Eq, Generic)
+            deriving (Show, Eq, Ord, Generic)
 
 instance NFData a => NFData (Pair a)
 

@@ -9,7 +9,7 @@ import Control.DeepSeq
 
 -- |Represents three objects of the same type
 data Triple a = Triple !a !a !a
-              deriving (Show, Eq, Generic)
+              deriving (Show, Eq, Ord, Generic)
 
 instance NFData a => NFData (Triple a)
 
