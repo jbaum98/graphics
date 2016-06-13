@@ -37,8 +37,10 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 
 import Control.Loop (numLoop)
 
-import Data.D2Point
-import Data.D3Point
+import Data.Pair
+
+type D2Point = Pair Int
+type D3Point = Triple Double
 
 data Matrix a = Matrix {
   rows :: {-# UNPACK #-} !Int,
@@ -144,7 +146,7 @@ prettyMatrix (Matrix rs cs _ xs) =  unlines [unwords $ fmap (showEl r) [1..cs] |
     maxLen = V.maximum $ V.map (length . show) xs
 
 
-addP :: D3Point -> Matrix D3Coord -> Matrix D3Coord
+addP :: D3Point -> Matrix Double -> Matrix Double
 addP p@(Triple x y z) m@(Matrix r c l v) | space m >= 4 = Matrix r (c+1) (l + 4) (runST $ V.unsafeThaw v >>= addAction)
                                              | otherwise = addP p $ growMat m 1000
   where
@@ -176,7 +178,7 @@ mergeCols b a | rows a  /= rows b = error "The two matrices have a different num
                   return $ Matrix (rows a) (cols a + cols b) newLast newV
 
 
-getD2Point :: Matrix D3Coord -> Int -> D2Point
+getD2Point :: Matrix Double -> Int -> D2Point
 getD2Point m n = round <$> Pair x y
   where
     x = col `V.unsafeIndex` 0
@@ -186,7 +188,7 @@ getD2Point m n = round <$> Pair x y
     col = unsafeGetCol (n+1) m
 {-# INLINE getD2Point #-}
 
-getD3Point :: Matrix D3Coord -> Int -> D3Point
+getD3Point :: Matrix Double -> Int -> D3Point
 getD3Point m n = Triple x y z
   where
     x = col `V.unsafeIndex` 0

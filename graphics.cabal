@@ -32,8 +32,6 @@ library
                      , ghc-prim >= 0.4 && < 1
                      , primitive >= 0.6 && < 1
   other-modules:       Data.Color
-                       Data.D2Point
-                       Data.D3Point
                        Data.Matrix
                        Data.Matrix.Base
                        Data.Matrix.EdgeMatrix

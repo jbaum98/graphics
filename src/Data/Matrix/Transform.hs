@@ -25,7 +25,6 @@ import Control.Monad.ST
 import Control.Loop
 
 import Data.Color
-import Data.D3Point
 import Data.Matrix.Base
 import Data.Matrix.Mult
 import Data.Matrix.PointMatrix (point)
@@ -37,7 +36,7 @@ import Data.Picture.Picture
 -- preimage on the left by the 'TansformMatrix'. Because of matrix
 -- multiplication's associativity, they can be composed themselves using matrix
 -- multiplication and will be applied from right to left.
-type TransformMatrix = Matrix D3Coord
+type TransformMatrix = Matrix Double
 
 -- |Produces an 4 by 4 identity 'Matrix'
 idMatrix :: TransformMatrix
@@ -50,7 +49,7 @@ idMatrix = fromLists [
   ]
 
 -- |Create a translation 'Matrix'
-transMatrix :: D3Point -> TransformMatrix
+transMatrix :: Triple Double -> TransformMatrix
 {-# INLINE transMatrix #-}
 transMatrix (Triple x y z) = fromLists [
   [ 1, 0, 0, x ],
@@ -61,7 +60,7 @@ transMatrix (Triple x y z) = fromLists [
 
 -- |Create a scaling matrix that independently scales the x, y, and z
 -- directions.
-scaleMatrix :: D3Point -> TransformMatrix
+scaleMatrix :: Triple Double -> TransformMatrix
 {-# INLINE scaleMatrix #-}
 scaleMatrix (Triple x y z) = fromLists [
   [ x, 0, 0, 0 ],
@@ -112,10 +111,10 @@ rotZMatrix = rotZMatrixRad . degToRad
       [ 0,          0,         0, 1 ]
       ]
 
-transform :: TransformMatrix -> D3Point -> D3Point
+transform :: TransformMatrix -> Triple Double -> Triple Double
 transform tm = flip getD3Point 0 . unwrap . matMultD tm . point
 {-
-progress :: [TransformMatrix] -> Matrix D3Coord -> Matrix D3Coord
+progress :: [TransformMatrix] -> Matrix Double -> Matrix Double
 progress ts e = runST $ do
   (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ ->
     return (ts', t `matMult` e `mergeCols` e')

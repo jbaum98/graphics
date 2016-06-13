@@ -9,9 +9,8 @@ import Data.Primitive.ByteArray
 import Data.ByteString.Lazy.Char8
 
 import Data.Color
-import Data.D2Point
-import Data.D3Point
 import Data.Matrix
+import Data.Pair
 import Data.Picture
 import Language.MDL.Expr
 import Language.MDL.Interp.Interp
@@ -84,7 +83,7 @@ passPicTo f = do
     pf pic
     f pic
 
-scaledMat :: ByteString -> (D3Point -> TransformMatrix) -> D3Point -> Interp ()
+scaledMat :: ByteString -> (Triple Double -> TransformMatrix) -> Triple Double -> Interp ()
 scaledMat knob rotMat p =
   getKnob knob >>= multTop . rotMat . (*p) . pure
 
@@ -92,5 +91,5 @@ scaledRot :: ByteString -> (Double -> TransformMatrix) -> Double -> Interp ()
 scaledRot knob rotMat degs =
   getKnob knob >>= multTop . rotMat . (*degs)
 
-roundoff :: D3Point -> D2Point
+roundoff :: Triple Double -> Pair Int
 roundoff (Triple x y _) = round <$> Pair x y

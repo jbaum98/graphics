@@ -16,22 +16,24 @@ import qualified Data.Vector.Unboxed as V
 
 import Data.Matrix
 import Data.Pair
-import Data.D3Point
 
-parametric :: Int -> (Double -> D3Point) -> EdgeMatrix
+type Coord = Double
+type Point = Triple Coord
+
+parametric :: Int -> (Double -> Point) -> EdgeMatrix
 parametric steps f = addPoints $ wrap $ emptyWith (round $ 4 / step)
   where
     addPoints = appEndo $ foldMap Endo [addEdge p p' | t <- [0,step..1], let (Pair p p') = f <$> Pair t (t + step)]
     step = recip $ fromIntegral steps - 1
 
-parametric2 :: Int -> (Double -> Double -> D3Point) -> PointMatrix
+parametric2 :: Int -> (Double -> Double -> Point) -> PointMatrix
 parametric2 steps f = addPoints $ wrap $ emptyWith (4 * steps * steps)
   where
     addPoints = appEndo $ foldMap Endo [ addPoint $ f i j
                         | j <- [0,step..1], i <- [0,step..1]]
     step = recip $ fromIntegral steps - 1
 
-circle :: Int -> D3Point -> D3Coord -> EdgeMatrix
+circle :: Int -> Point -> Coord -> EdgeMatrix
 circle steps (Triple cx cy cz) r = addEdge firstPoint lastPoint $ parametric steps f
   where
     f t = Triple (x t) (y t) cz
@@ -42,10 +44,10 @@ circle steps (Triple cx cy cz) r = addEdge firstPoint lastPoint $ parametric ste
     step = recip $ fromIntegral steps - 1
 
 hermite, bezier :: Int
-                -> D3Point
-                -> D3Point
-                -> D3Point
-                -> D3Point
+                -> Point
+                -> Point
+                -> Point
+                -> Point
                 -> EdgeMatrix
 
 hermite p0 r0 p1 r1 = matCurve hermMat p0 p1 r0 r1
@@ -64,7 +66,7 @@ bezier = matCurve bezMat
           [  1,  0,  0, 0 ]
           ]
 
-matCurve :: Matrix D3Coord -> Int -> D3Point -> D3Point -> D3Point -> D3Point -> EdgeMatrix
+matCurve :: Matrix Coord -> Int -> Point -> Point -> Point -> Point -> EdgeMatrix
 matCurve cMat steps p1 p2 p3 p4  = parametric steps $ \t ->
   let t' = pure t
   in t' * (t' * (t' * a + b) + c) + d
@@ -82,7 +84,7 @@ matCurve cMat steps p1 p2 p3 p4  = parametric steps $ \t ->
       ]
     explode (Triple x y z) = [x, y, z]
 
-box :: D3Point -> D3Point -> PolyMatrix
+box :: Point -> Point -> PolyMatrix
 box topLeft (Triple x y z) = addPolys $ wrap $ emptyWith 47
   where
     addPolys = appEndo $ foldMap Endo [
@@ -110,13 +112,13 @@ box topLeft (Triple x y z) = addPolys $ wrap $ emptyWith 47
     topRight = topLeft + Triple x 0 0
     d = Triple 0 0 (-z)
 
-torus :: D3Point -> D3Coord -> D3Coord -> Int -> PolyMatrix
+torus :: Point -> Coord -> Coord -> Int -> PolyMatrix
 torus c r1 r2 steps = crissCross steps connectSlice True $ wrap $ emptyWith (6 * steps * steps)
   where
     torusPoints = genTorus c r1 r2 steps
     connectSlice = connectShapeSlice (torusPoints, steps)
 
-genTorus :: D3Point -> D3Coord -> D3Coord -> Int -> PointMatrix
+genTorus :: Point -> Coord -> Coord -> Int -> PointMatrix
 genTorus c r1 r2 steps = parametric2 steps f
   where
     f t p = Triple (x t p) (y t p) (z t p) + c
@@ -124,7 +126,7 @@ genTorus c r1 r2 steps = parametric2 steps f
     y thetaT _ = r1 * sin (thetaT * 2 * pi)
     z thetaT phiT = sin(phiT * 2 * pi) * (r1 * cos(thetaT * 2 * pi) + r2)
 
-sphere :: D3Point -> D3Coord -> Int -> PolyMatrix
+sphere :: Point -> Coord -> Int -> PolyMatrix
 sphere c r steps = connectMiddles . connectCaps $ wrap $ emptyWith (6 * (steps - 2) * steps)
   where
     connectMiddles = crissCross steps connectSlice False
@@ -132,7 +134,7 @@ sphere c r steps = connectMiddles . connectCaps $ wrap $ emptyWith (6 * (steps -
     spherePoints = genSphere c r steps
     connectSlice = connectShapeSlice (spherePoints, steps)
 
-genSphere :: D3Point -> D3Coord -> Int -> PointMatrix
+genSphere :: Point -> Coord -> Int -> PointMatrix
 genSphere c r steps = parametric2 steps f
   where
     f t p = Triple (x t p) (y t p) (z t p) + c
