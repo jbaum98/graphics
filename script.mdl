@@ -1,3 +1,7 @@
+frames 25
+basename pic
+vary spinny 0 24 0 1
+
 ambient 200 200 200
 light 200   0   0  100   0 1
 light 0   200   0 -100   0 1
@@ -9,17 +13,132 @@ push
 move 0 250 0
 
 shading flat
-move 100 0 0
-sphere 0 0 0 65
+move 30 0 0
+
+push
+scale 0.4 0.4 0.4
+rotate y 720 spinny
+#body
+move 250 250 0
+rotate y 45
+box -100 150 25 200 300 50
+#head
+push
+move 0 201 0
+rotate y 360 spinny
+torus 0 30 0 10 60
+sphere 0 0 0 50
+#right arm
+pop
+push
+move 100 150 0
+rotate x 50
+box 0 0 20 50 200 40
+#left arm
+pop
+push
+move -100 150 0
+rotate x -50
+box -50 0 0 50 200 40
+#right leg
+pop
+push
+move 100 -150 0
+rotate x -20
+box -60 0 20 60 100 40
+#left leg
+pop
+push
+move -100 -150 0
+rotate x 20
+box 0 0 20 60 100 40
+pop
+pop
 
 push
 shading goroud
 move 150 0 0
-sphere 0 0 0 65
+
+push
+scale 0.4 0.4 0.4
+#body
+move 250 250 0
+rotate y 45
+box -100 150 25 200 300 50
+#head
+push
+move 0 201 0
+rotate y 360 spinny
+torus 0 30 0 10 60
+sphere 0 0 0 50
+#right arm
+pop
+push
+move 100 150 0
+rotate x 50
+box 0 0 20 50 200 40
+#left arm
+pop
+push
+move -100 150 0
+rotate x -50
+box -50 0 0 50 200 40
+#right leg
+pop
+push
+move 100 -150 0
+rotate x -20
+box -60 0 20 60 100 40
+#left leg
+pop
+push
+move -100 -150 0
+rotate x 20
+box 0 0 20 60 100 40
+pop
+pop
 
 push
 shading phong
 move 150 0 0
-sphere 0 0 0 65
+
+push
+scale 0.4 0.4 0.4
+#body
+move 250 250 0
+rotate y 45
+box -100 150 25 200 300 50
+#head
+push
+move 0 201 0
+rotate y 360 spinny
+torus 0 30 0 10 60
+sphere 0 0 0 50
+#right arm
+pop
+push
+move 100 150 0
+rotate x 50
+box 0 0 20 50 200 40
+#left arm
+pop
+push
+move -100 150 0
+rotate x -50
+box -50 0 0 50 200 40
+#right leg
+pop
+push
+move 100 -150 0
+rotate x -20
+box -60 0 20 60 100 40
+#left leg
+pop
+push
+move -100 -150 0
+rotate x 20
+box 0 0 20 60 100 40
+pop
+pop
 
 save pic.png
