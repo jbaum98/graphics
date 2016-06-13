@@ -1,15 +1,14 @@
-{-# LANGUAGE BangPatterns, ViewPatterns #-}
+{-# LANGUAGE BangPatterns, ViewPatterns, TupleSections #-}
 
 module Data.Picture.Drawing.ScanLine (
-  scanLine, sortPoints
+  scanLine, sortPoints, scanLineFlat
   ) where
-
-import Debug.Trace
 
 import Control.Monad
 
 import Control.Monad.Primitive
 import Control.Loop
+import qualified Data.Map as M
 
 import Data.Picture.Drawing.Lighting
 import Data.Color
@@ -17,28 +16,54 @@ import Data.Pair
 import Data.Picture.Drawing.Line (writeLine)
 import Data.Picture.Picture
 
-type Point = (Double,Double,Double,Triple Double)
+newtype Point           = P   (Double,Double,Double) deriving (Eq)
+
+instance Ord Point where
+  compare (P (_,y1,_)) (P (_,y2,_)) = compare y1 y2
+
+newtype PointWithColor = PWC (Double,Double,Double,Triple Double) deriving (Eq)
+
+instance Ord PointWithColor where
+  compare (PWC (_,y1,_,_)) (PWC (_,y2,_,_)) = compare y1 y2
+
+newtype PointWithNormal = PWN (Double,Double,Double,Triple Double) deriving (Eq)
+
+instance Ord PointWithNormal where
+  compare (PWN (_,y1,_,_)) (PWN (_,y2,_,_)) = compare y1 y2
+
+scanLineFlat :: PrimMonad m => (Double,Double,Double) -> (Double,Double,Double) -> (Double,Double,Double)
+             -> Color -> Picture (PrimState m) -> m ()
+scanLineFlat p1 p2 p3 = flat pb pm pt . fmap fromIntegral
+  where
+    Triple pt pm pb = sortPoints (P p1) (P p2) (P p3)
 
 scanLine :: PrimMonad m
-         => (Lighting, LightingConsts)
-         -> Triple Double
-         -> Point -> Point -> Point
+         => (Lighting, LightingConsts) -> ShadingType
+         -> Triple Double -> Triple Double
+         -> M.Map (Triple Double) (Triple Double)
+         -> (Double,Double,Double) -> (Double,Double,Double) -> (Double,Double,Double)
          -> Picture (PrimState m) -> m ()
-scanLine l v p1 p2 p3 = writeScanLine l v pb pm pt
+
+scanLine l Flat v n _ p1 p2 p3 = flat pb pm pt $ fromIntegral <$> calcLighting l n v
   where
-    Triple pt pm pb = sortPoints p1 p2 p3
+    Triple pt pm pb = sortPoints (P p1) (P p2) (P p3)
+
+
+scanLine l Goroud v _ normals p1 p2 p3 = goroud pb pm pt
+  where
+    Triple pt pm pb = sortPoints p1' p2' p3'
+    p1' = package p1
+    p2' = package p2
+    p3' = package p3
+    package (x,y,z) = PWC $ (x,y,z,) $ fmap fromIntegral $ flip (calcLighting l) v $ normals M.! Triple x y z
+
+scanLine _ s _ _ _ _ _ _  = error $ "Unsupported shading type: " ++ show s
 {-# INLINE scanLine #-}
 
-writeScanLine :: PrimMonad m
-              => (Lighting, LightingConsts)
-              -> Triple Double
-              -> Point -> Point -> Point
-              -> Picture (PrimState m) -> m ()
-writeScanLine l v (!xb,!yb,!zb,!nb) (!xm,!ym,!zm,!nm) (!xt,!yt,!zt,!nt) mArr = void $ do
-  --trace (show (xb,yb,zb) ++ " => " ++ show cb) $ return ()
-  --trace (show (xm,ym,zm) ++ " => " ++ show cm) $ return ()
-  --trace (show (xt,yt,zt) ++ " => " ++ show ct) $ return ()
-  --trace (show (dcL,dcR1,dcR2)) $ return ()
+goroud :: PrimMonad m
+       => PointWithColor -> PointWithColor -> PointWithColor
+       -> Picture (PrimState m) -> m ()
+goroud (PWC (!xb,!yb,!zb,!cb)) (PWC (!xm,!ym,!zm,!cm)) (PWC (!xt,!yt,!zt,!ct)) mArr = void $ do
   forLoopState (round yb) (<= round yt) (+1) initState $ \((xl,zl,cl), (xr,zr,cr), (dxr,dzr,dcr), flipYet) y -> do
     let Pair (xl',zl',cl') (xr',zr',cr') = if xl < xr then Pair (xl,zl,cl) (xr,zr,cr) else Pair (xr,zr,cr) (xl,zl,cl)
     writeLine (floor xl') y zl' cl' (ceiling xr') y zr' cr' mArr
@@ -56,11 +81,23 @@ writeScanLine l v (!xb,!yb,!zb,!nb) (!xm,!ym,!zm,!nm) (!xt,!yt,!zt,!nt) mArr = v
     dxR2 = fSlope xm ym xt yt
     dzR2 = fSlope zm ym zt yt
     dcR2 = vSlope cm ym ct yt
-    cb = fromIntegral <$> calcLighting l nb v
-    cm = fromIntegral <$> calcLighting l nm v
-    ct = fromIntegral <$> calcLighting l nt v
 
-{-# INLINE writeScanLine #-}
+flat :: PrimMonad m => Point -> Point -> Point -> Triple Double -> Picture (PrimState m) -> m ()
+flat (P (!xb,!yb,!zb)) (P (!xm,!ym,!zm)) (P (!xt,!yt,!zt)) c mArr = void $
+  forLoopState (round yb) (<= round yt) (+1) initState $ \(xl, zl, xr, zr, dxr, dzr, flipYet) y -> do
+    let Pair (xl',zl') (xr',zr') = if xl < xr then Pair (xl,zl) (xr,zr) else Pair (xr,zr) (xl,zl)
+    writeLine (floor xl') y zl' c (ceiling xr') y zr' c mArr
+    if not flipYet && fromIntegral y + 1 >= ym
+      then return (xl, zl, xm, zm, dxR2, dzR2, True)
+      else return (xl + dxL, zl + dzL, xr + dxr, zr + dzr, dxr, dzr, flipYet)
+  where
+    initState = (xb, zb, xb, zb, dxR1, dzR1, False)
+    dxL  = fSlope xb yb xt yt
+    dzL  = fSlope zb yb zt yt
+    dxR1 = fSlope xb yb xm ym
+    dzR1 = fSlope zb yb zm ym
+    dxR2 = fSlope xm ym xt yt
+    dzR2 = fSlope zm ym zt yt
 
 fSlope :: Double -> Double -> Double -> Double -> Double
 fSlope x0 y0 x1 y1 = (x1 - x0) / (y1 - y0)
@@ -70,16 +107,15 @@ vSlope :: Triple Double -> Double -> Triple Double -> Double -> Triple Double
 vSlope x0 y0 x1 y1 = (x1 - x0) / pure (y1 - y0)
 {-# INLINE vSlope #-}
 
-sortPoints :: Point -> Point -> Point -> Triple Point
-sortPoints p1@(getY -> !y1) p2@(getY -> !y2) p3@(getY -> !y3) | y1 >= y2 && y1 >= y3 && y2 >= y3 = Triple p1 p2 p3
-sortPoints p1@(getY -> !y1) p2@(getY -> !y2) p3@(getY -> !y3) | y1 >= y2 && y1 >= y3           = Triple p1 p3 p2
+sortPoints :: Ord p => p -> p -> p -> Triple p
+sortPoints p1 p2 p3 | p1 >= p2 && p1 >= p3 && p2 >= p3 = Triple p1 p2 p3
+sortPoints p1 p2 p3 | p1 >= p2 && p1 >= p3           = Triple p1 p3 p2
 
-sortPoints p1@(getY -> !y1) p2@(getY -> !y2) p3@(getY -> !y3) | y2 >= y1 && y2 >= y3 && y1 >= y3 = Triple p2 p1 p3
-sortPoints p1@(getY -> !y1) p2@(getY -> !y2) p3@(getY -> !y3) | y2 >= y1 && y2 >= y3           = Triple p2 p3 p1
+sortPoints p1 p2 p3 | p2 >= p1 && p2 >= p3 && p1 >= p3 = Triple p2 p1 p3
+sortPoints p1 p2 p3 | p2 >= p1 && p2 >= p3           = Triple p2 p3 p1
 
-sortPoints p1@(getY -> !y1) p2@(getY -> !y2) p3              |                     y1 >= y2 = Triple p3 p1 p2
-sortPoints p1              p2              p3                                            = Triple p3 p2 p1
-{-# INLINE sortPoints #-}
-
-getY :: Point -> Double
-getY (_,y,_,_) = y
+sortPoints p1 p2 p3 |                     p1 >= p2 = Triple p3 p1 p2
+sortPoints p1 p2 p3                               = Triple p3 p2 p1
+{-# SPECIALIZE INLINE sortPoints :: Point -> Point -> Point -> Triple Point #-}
+{-# SPECIALIZE INLINE sortPoints :: PointWithColor -> PointWithColor -> PointWithColor -> Triple PointWithColor #-}
+{-# SPECIALIZE INLINE sortPoints :: PointWithNormal -> PointWithNormal -> PointWithNormal -> Triple PointWithNormal #-}

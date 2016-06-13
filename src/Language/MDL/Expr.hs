@@ -12,6 +12,7 @@ module Language.MDL.Expr (
 import Data.ByteString.Lazy
 
 import Data.Pair
+import Data.Picture.Drawing.Lighting
 
 data Expr = Light (Maybe ByteString) (Triple Double) (Triple Double)
           | Move (Triple Double) (Maybe ByteString)
@@ -56,13 +57,6 @@ strToAxis "Y" = Y
 strToAxis "z" = Z
 strToAxis "Z" = Z
 strToAxis _   = error "Invalid rotation axis"
-
-data ShadingType = Phong
-                 | Flat
-                 | Goroud
-                 | Raytrace
-                 | Wireframe
-                 deriving (Eq, Show)
 
 strToShadingType :: ByteString -> ShadingType
 strToShadingType "wireframe" = Wireframe

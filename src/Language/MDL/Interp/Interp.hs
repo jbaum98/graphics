@@ -26,6 +26,7 @@ module Language.MDL.Interp.Interp (
   multTop,
   setAmbient,
   addPointLight,
+  setShading,
   modSymTab,
   drawInCS
   ) where
@@ -139,6 +140,9 @@ setAmbient color = modLighting $ \lighting -> lighting { ambient = color }
 addPointLight :: PointLight -> Interp ()
 addPointLight light = modLighting $ \lighting -> lighting { lights = light:(lights lighting) }
 
+setShading :: ShadingType -> Interp ()
+setShading s = modify $ \st -> st { shading = s }
+
 -- |
 -- == Drawing shapes
 
@@ -146,7 +150,8 @@ drawShape :: ShapeMatrix m => Maybe ByteString -> m -> Interp ()
 drawShape kname shape = do
   l <- gets lighting
   k <- getConsts kname
-  addF $ draw (l,k) shape
+  s <- gets shading
+  addF $ draw (l,k) s shape
 {-# INLINE drawShape #-}
 
 drawInCS :: ShapeMatrix m => Maybe ByteString -> Maybe ByteString -> m -> Interp ()

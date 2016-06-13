@@ -4,6 +4,7 @@ module Data.Picture.Drawing.Lighting (
   Lighting(..),
   PointLight(..),
   LightingConsts,
+  ShadingType(..),
   defaultLightingConsts,
   calcLighting,
   vertexNormals
@@ -90,3 +91,10 @@ addNormals hashmap (p1,p2,p3) = addNormal p1 . addNormal p2 . addNormal p3 $ has
       Nothing     -> Just n
       (Just oldN) -> Just $ n + oldN
     n = p2 - p1 `cross` p3 - p1
+
+data ShadingType = Phong
+                 | Flat
+                 | Goroud
+                 | Raytrace
+                 | Wireframe
+                 deriving (Eq, Show)

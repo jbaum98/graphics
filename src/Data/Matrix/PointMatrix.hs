@@ -16,7 +16,7 @@ import Data.Picture.Drawing.Points
 newtype PointMatrix = PointMatrix { runPM :: Matrix Double }
 
 instance ShapeMatrix PointMatrix where
-  drawColor color _ (PointMatrix m) = writePoints color [case getD3Point m i of Triple !x !y !z -> (Pair (round x) (round y), z)| i <- [0..cols m - 1]]
+  drawColor color _ _ (PointMatrix m) = writePoints color [case getD3Point m i of Triple !x !y !z -> (Pair (round x) (round y), z)| i <- [0..cols m - 1]]
   unwrap = runPM
   wrap = PointMatrix
 

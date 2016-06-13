@@ -68,7 +68,7 @@ eval (Ambient color) = setAmbient $ truncate <$> color
 
 eval (Constants name consts _) = modSymTab $ insert name $ ConstsVal consts
 
--- eval (Shading _) = undefined
+eval (Shading s) = setShading s
 
 eval _ = return ()
 
