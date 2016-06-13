@@ -57,8 +57,43 @@ scanLine l Goroud v _ normals p1 p2 p3 = goroud pb pm pt
     p3' = package p3
     package (x,y,z) = PWC $ (x,y,z,) $ fmap fromIntegral $ flip (calcLighting l) v $ normals M.! Triple x y z
 
+scanLine l Phong v _ normals p1 p2 p3 = phong l v pb pm pt
+  where
+    Triple pt pm pb = sortPoints p1' p2' p3'
+    p1' = package p1
+    p2' = package p2
+    p3' = package p3
+    package (x,y,z) = PWN $ (x,y,z,) $ normals M.! Triple x y z
+
 scanLine _ s _ _ _ _ _ _  = error $ "Unsupported shading type: " ++ show s
 {-# INLINE scanLine #-}
+
+phong :: PrimMonad m
+       => (Lighting, LightingConsts) -> Triple Double
+       -> PointWithNormal -> PointWithNormal -> PointWithNormal
+       -> Picture (PrimState m) -> m ()
+phong l v (PWN (!xb,!yb,!zb,!nb)) (PWN (!xm,!ym,!zm,!nm)) (PWN (!xt,!yt,!zt,!nt)) mArr = void $ do
+  forLoopState (round yb) (<= round yt) (+1) initState $ \((xl,zl,nl), (xr,zr,nr), (dxr,dzr,dnr), flipYet) y -> do
+    let Pair (xl',zl',nl') (xr',zr',nr') = if xl < xr then Pair (xl,zl,nl) (xr,zr,nr) else Pair (xr,zr,nr) (xl,zl,nl)
+        cl = light nl'
+        cr = light nr'
+    writeLine (floor xl') y zl' cl (ceiling xr') y zr' cr mArr
+    if not flipYet && fromIntegral y + 1 >= ym
+      then return ((xl,zl,nl), (xm,zm,nm), (dxR2,dzR2,dnR2), True)
+      else return ((xl + dxL, zl + dzL, nl + dnL), (xr + dxr, zr + dzr, nr + dnr), (dxr, dzr, dnr), flipYet)
+  where
+    initState = ((xb,zb,nb),(xb,zb,nb),(dxR1,dzR1,dnR1), False)
+    dxL  = fSlope xb yb xt yt
+    dzL  = fSlope zb yb zt yt
+    dnL  = vSlope nb yb nt yt
+    dxR1 = fSlope xb yb xm ym
+    dzR1 = fSlope zb yb zm ym
+    dnR1 = vSlope nb yb nm ym
+    dxR2 = fSlope xm ym xt yt
+    dzR2 = fSlope zm ym zt yt
+    dnR2 = vSlope nm ym nt yt
+
+    light = fmap fromIntegral . flip (calcLighting l) v
 
 goroud :: PrimMonad m
        => PointWithColor -> PointWithColor -> PointWithColor
