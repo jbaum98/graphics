@@ -128,7 +128,7 @@ sphere :: D3Point -> D3Coord -> Int -> PolyMatrix
 sphere c r steps = connectMiddles . connectCaps $ wrap $ emptyWith (6 * (steps - 2) * steps)
   where
     connectMiddles = crissCross steps connectSlice False
-    connectCaps = appEndo $ foldMap Endo [connect (0, steps+1, 1) . connect (steps + steps - 2, steps - 1, steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
+    connectCaps = appEndo $ foldMap Endo [connect (1, steps+1, 0) . connect (steps - 2, steps - 1, steps + steps - 2) | sliceN <- [0..steps - 2], let connect = connectSlice sliceN]
     spherePoints = genSphere c r steps
     connectSlice = connectShapeSlice (spherePoints, steps)
 
@@ -142,8 +142,8 @@ genSphere c r steps = parametric2 steps f
 
 crissCross :: Int -> (Int -> (Int, Int, Int) -> PolyMatrix -> PolyMatrix) -> Bool -> PolyMatrix -> PolyMatrix
 crissCross steps connectSlice startFromTop = appEndo $ foldMap Endo [
-  connect (i, i', i+1) .
-  connect (i'+1, i+1, i')
+  connect (i+1, i', i) .
+  connect (i', i+1, i'+1)
   | i      <- [start..steps-2],
     sliceN <- [0..steps-2],
     let connect = connectSlice sliceN
