@@ -1,0 +1,25 @@
+ambient 200 200 200
+light 200   0   0  100   0 1
+light 0   200   0 -100   0 1
+light 0     0 200    0 100 1
+
+
+
+push
+move 0 250 0
+
+shading flat
+move 100 0 0
+sphere 0 0 0 65
+
+push
+shading goroud
+move 150 0 0
+sphere 0 0 0 65
+
+push
+shading phong
+move 150 0 0
+sphere 0 0 0 65
+
+save pic.png
