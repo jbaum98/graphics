@@ -3,15 +3,15 @@
 module Data.Pair.Triple (Triple(..), uncurryTriple) where
 
 import Control.Applicative
-import GHC.Generics
 
 import Control.DeepSeq
 
 -- |Represents three objects of the same type
 data Triple a = Triple !a !a !a
-              deriving (Show, Eq, Ord, Generic)
+              deriving (Show, Eq, Ord)
 
-instance NFData a => NFData (Triple a)
+instance NFData a => NFData (Triple a) where
+  rnf (Triple a b c) = rnf a `seq` rnf b `seq` rnf c
 
 instance Functor Triple where
   fmap f (Triple a b c) = Triple (f a) (f b) (f c)

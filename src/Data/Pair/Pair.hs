@@ -3,15 +3,15 @@
 module Data.Pair.Pair (Pair(..), uncurryPair) where
 
 import Control.Applicative
-import GHC.Generics
 
 import Control.DeepSeq
 
 -- |Represents two objects of the same type
 data Pair a = Pair !a !a
-            deriving (Show, Eq, Ord, Generic)
+            deriving (Show, Eq, Ord)
 
-instance NFData a => NFData (Pair a)
+instance NFData a => NFData (Pair a) where
+  rnf (Pair a b) = rnf a `seq` rnf b
 
 instance Functor Pair where
   fmap f (Pair a b) = Pair (f a) (f b)
