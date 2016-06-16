@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Language.MDL
+  exposed-modules:     Language.MDL, Data.Color, Data.Matrix, Data.Pair, Data.Picture
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 1
                      , bytestring >= 0.10 && < 1
@@ -31,25 +31,23 @@ library
                      , unix >= 2.7 && < 3
                      , ghc-prim >= 0.4 && < 1
                      , primitive >= 0.6 && < 1
-  other-modules:       Data.Color
-                       Data.Matrix
-                       Data.Matrix.Base
-                       Data.Matrix.EdgeMatrix
+  other-modules:       Data.Matrix.Base
+                       Data.Matrix.Points
                        Data.Matrix.Mult
-                       Data.Matrix.PointMatrix
-                       Data.Matrix.PolyMatrix
-                       Data.Matrix.ShapeMatrix
                        Data.Matrix.Transform
-                       Data.Pair
                        Data.Pair.Pair
                        Data.Pair.Triple
                        Data.Pair.Vector
-                       Data.Picture
                        Data.Picture.Drawing
                        Data.Picture.Drawing.Lighting
                        Data.Picture.Drawing.Line
                        Data.Picture.Drawing.Points
                        Data.Picture.Drawing.ScanLine
+                       Data.Picture.Drawing.ShapeMatrix
+                       Data.Picture.Drawing.ShapeMatrix.ShapeMatrix
+                       Data.Picture.Drawing.ShapeMatrix.PolyMatrix
+                       Data.Picture.Drawing.ShapeMatrix.PointMatrix
+                       Data.Picture.Drawing.ShapeMatrix.EdgeMatrix
                        Data.Picture.Drawing.Shapes
                        Data.Picture.Gen
                        Data.Picture.Output

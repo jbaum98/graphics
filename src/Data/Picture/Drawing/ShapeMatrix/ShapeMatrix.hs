@@ -1,4 +1,4 @@
-module Data.Matrix.ShapeMatrix (
+module Data.Picture.Drawing.ShapeMatrix.ShapeMatrix (
   ShapeMatrix,
   drawColor,
   draw,
@@ -9,12 +9,13 @@ module Data.Matrix.ShapeMatrix (
   matMultD
   ) where
 
-import Data.Color
-import Data.Matrix.Base
-import Data.Matrix.Mult
-import Data.Picture.Picture
+
 import Control.Monad.Primitive
+
+import Data.Color
+import Data.Matrix
 import Data.Picture.Drawing.Lighting
+import Data.Picture.Picture
 
 class ShapeMatrix d where
   drawColor :: PrimMonad m => Color -> (Lighting,LightingConsts) -> ShadingType -> d -> Picture (PrimState m) -> m ()

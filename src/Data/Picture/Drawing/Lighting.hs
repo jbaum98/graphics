@@ -15,8 +15,8 @@ import Data.Monoid
 
 import Data.Color
 import Data.Pair
-import {-# SOURCE #-} Data.Matrix.PolyMatrix (PolyMatrix(..))
-import Data.Matrix.Base
+import {-# SOURCE #-} Data.Picture.Drawing.ShapeMatrix.PolyMatrix (PolyMatrix(..))
+import Data.Matrix
 
 data Lighting = Lighting
   { ambient :: !Color
@@ -79,9 +79,9 @@ vertexNormals :: PolyMatrix -> Map (Triple Double) (Triple Double)
 vertexNormals (PolyMatrix m) = Data.Map.map normalize $
   foldl addNormals mempty [ (p1,p2,p3)
                           | i <- [0,3.. cols m - 2],
-                            let p1 = getD3Point m i
-                                p2 = getD3Point m $ i + 1
-                                p3 = getD3Point m $ i + 2
+                            let p1 = get3DPoint m i
+                                p2 = get3DPoint m $ i + 1
+                                p3 = get3DPoint m $ i + 2
                           ]
 
 addNormals :: Map (Triple Double) (Triple Double) -> (Triple Double, Triple Double, Triple Double) -> Map (Triple Double) (Triple Double)

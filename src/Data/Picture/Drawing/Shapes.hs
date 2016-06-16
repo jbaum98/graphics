@@ -14,7 +14,10 @@ import Data.Monoid
 
 import qualified Data.Vector.Unboxed as V
 
-import Data.Matrix
+import Data.Picture.Drawing.ShapeMatrix
+import Data.Matrix.Base
+import Data.Matrix.Points
+import Data.Matrix.Mult
 import Data.Pair
 
 type Coord = Double
