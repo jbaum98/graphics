@@ -1,5 +1,5 @@
 {
-module Language.MDL.Parser (parse, Expr(..)) where
+module Language.MDL.Parser (parseMDL, Expr(..)) where
 
 import Data.DList
 
@@ -120,6 +120,10 @@ command :: { Expr }
         | AMBIENT DOUBLE DOUBLE DOUBLE                           { Ambient (Triple $2 $3 $4) }
 
 {
+
+-- | Parse 'Token's into 'Expr's
+parseMDL :: [Token] -> DList Expr
+parseMDL = parse
 
 parseError :: [Token] -> a
 parseError _ = error "Parse error"

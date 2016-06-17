@@ -1,10 +1,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.MDL.Interp.Eval where
+module Language.MDL.Interp.Eval (
+  eval,
+  -- * Misc. Helpers
+  passPicTo,
+  scaledMat,
+  scaledRot,
+  roundoff
+) where
 
-import Data.Maybe
 import GHC.Prim
-import Data.Primitive.ByteArray
 
 import Data.ByteString.Lazy.Char8
 
@@ -16,6 +21,8 @@ import Language.MDL.Expr
 import Language.MDL.Interp.Interp
 import Language.MDL.SymTab
 
+-- | Evaluate a given 'Expr' by modifying internal state of the 'Interp' and/or
+-- executing some external 'IO' action
 eval :: Expr -> Interp ()
 
 eval (Set knob val) = modSymTab $ insert knob $ DoubleVal val
@@ -72,9 +79,8 @@ eval (Shading s) = setShading s
 eval _ = return ()
 
 
--- |
--- = Misc Helpers
-
+-- | Given a function that produces an 'IO' action from a 'Picture', constructs
+-- the 'Picture from the state and executes the function on it
 passPicTo :: (Picture RealWorld -> IO ()) -> Interp ()
 passPicTo f = do
   pf <- gets picFunc
@@ -83,13 +89,23 @@ passPicTo f = do
     pf pic
     f pic
 
+-- | Given the name of a knob, multiplies the top of the transformation stack by
+-- a 'TransformMatrix' that has been scaled by the value of the knob. Used for
+-- 'TransformMatrix's that operate on the 3 dimensions individually and
+-- therefore need a @Triple Double@ to be constructed, like translations or
+-- scalings.
 scaledMat :: ByteString -> (Triple Double -> TransformMatrix) -> Triple Double -> Interp ()
 scaledMat knob rotMat p =
   getKnob knob >>= multTop . rotMat . (*p) . pure
 
+-- | Given the name of a knob, multiplies the top of the transformation stack by
+-- a 'TransformMatrix' that has been scaled by the value of the knob. Used for
+-- 'TransformMatrix's that depend only on a single scalar argument, like
+-- rotations.
 scaledRot :: ByteString -> (Double -> TransformMatrix) -> Double -> Interp ()
 scaledRot knob rotMat degs =
   getKnob knob >>= multTop . rotMat . (*degs)
 
+-- | Round and discard the z value of a 3D point to obtain a 2D point/pixel
 roundoff :: Triple Double -> Pair Int
 roundoff (Triple x y _) = round <$> Pair x y

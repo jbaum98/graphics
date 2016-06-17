@@ -14,6 +14,7 @@ import Language.MDL.Interp.Eval
 import Language.MDL.Interp.Interp
 import Language.MDL.SymTab hiding (foldl)
 
+-- | Exexecute the actions represented by the 'Expr's
 execute :: Foldable f => f Expr -> IO ()
 execute exprs = if any animCmds exprs
                  then withSystemTempDirectory "graphics" $
@@ -27,11 +28,18 @@ execute exprs = if any animCmds exprs
     animCmds Basename {} = True
     animCmds _           = False
 
+-- | Execute the actoins represented by the 'Expr's to produce a single picture
 executeSinglePic :: Foldable f => f Expr -> IO ()
 executeSinglePic exprs = evalInterp interp initState
   where interp = mapM_ eval exprs
 
-executeAnimation :: Foldable f => ByteString -> Int -> f Expr -> FilePath -> IO ()
+-- | Execute the actions represented by the 'Expr's to produce an animation
+executeAnimation :: Foldable f
+                 => ByteString -- ^ The basename of the output file
+                 -> Int        -- ^ The number of frames
+                 -> f Expr
+                 -> FilePath   -- ^ The path to the system temporary directory
+                 -> IO ()
 executeAnimation bname nFrames exprs tmpdir = do
   res <- mapM (\(st, i) -> evalInterp (interp >> saveFrame i) st) (zip states [1..])
   return $ seq res ()
@@ -45,27 +53,47 @@ executeAnimation bname nFrames exprs tmpdir = do
     saveFrame i = eval $ Save $ pack $ tmpdir </> mkName (unpack bname) i
     combos s = [mkName (tmpdir </> s) i | i <- [1..nFrames]]
 
+-- | Create a name from a number and a base name, like "pic-1.png"
 mkName :: FilePath -> Int -> FilePath
 mkName fp i = fp <> show i <.> "png"
 
-genVarySymTabs :: Foldable f => Int -> f Expr -> [SymTab]
+-- | Generate a list of 'SymTab's, one for each frame of an animation containing
+-- the correct values for each knob
+genVarySymTabs :: Foldable f
+               => Int    -- ^ The number of frames
+               -> f Expr -> [SymTab]
 genVarySymTabs nFrames exprs = genSymTab exprs <$> [0..nFrames - 1]
 
-genSymTab :: Foldable f => f Expr -> Int -> SymTab
+-- | Generate the correct 'SymTab' for a single frame of an animation
+genSymTab :: Foldable f => f Expr
+          -> Int -- ^ The number of the current frame
+          -> SymTab
 genSymTab exprs i = foldl (flip $ addVaryVal i) empty exprs
 
-addVaryVal :: Int -> Expr -> SymTab -> SymTab
-addVaryVal i (Vary _     startFrame endFrame _       _) | i < round startFrame || i > round endFrame = id
-addVaryVal i (Vary knob startFrame endFrame startVal endVal) = insert knob $ DoubleVal val
+-- | Add the correct value for a varying knob to a 'SymTab' for a single frame
+addVaryVal :: Int -- ^ The number of the current frame
+           -> Expr -> SymTab -> SymTab
+addVaryVal i (Vary _     startFrame endFrame _       _)
+  | i < round startFrame || i > round endFrame = id
+addVaryVal i (Vary knob startFrame endFrame startVal endVal) =
+  insert knob $ DoubleVal val
   where val = lerp (round $ endFrame - startFrame) startVal endVal i
 addVaryVal _ _ = id
 
-lerp :: Fractional a => Int -> a -> a -> Int -> a
+-- | Linearly interpolate between two values in a given number of steps
+lerp :: Fractional a
+     => Int -- ^ The total number of steps
+     -> a   -- ^ The starting value
+     -> a   -- ^ The ending value
+     -> Int -- ^ The number of the step
+     -> a   -- ^ The value at that step
 lerp n start end i = ((end - start) / n' * i' ) + start
   where n' = fromIntegral n
         i' = fromIntegral i
 {-# SPECIALIZE lerp :: Int -> Double -> Double -> Int -> Double #-}
 
+-- | Find the number of frames set by the last "frames" statement, if there are
+-- any
 getNumFrames :: Foldable f => f Expr -> Maybe Int
 getNumFrames = fmap (round . getFrames) . findLast isFrames
   where
@@ -75,6 +103,7 @@ getNumFrames = fmap (round . getFrames) . findLast isFrames
     -- should never happen
     getFrames _          = error "getFrames called on some non-Frame Expr"
 
+-- | Find the basename set by the last "basename" statement, if there are any
 getBasename :: Foldable f => f Expr -> Maybe ByteString
 getBasename = fmap getName . findLast isBasename
   where
@@ -84,6 +113,7 @@ getBasename = fmap getName . findLast isBasename
     -- should never happen
     getName _          = error "getName called on some non-Basename Expr"
 
+-- | Find the last element satisfying a predicate
 findLast :: Foldable t => (a -> Bool) -> t a -> Maybe a
 findLast p = getLast . foldMap f
   where f x = if p x then Last (Just x) else Last Nothing

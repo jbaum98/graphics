@@ -2,11 +2,14 @@
 
 module Language.MDL.Expr (
   Expr(..),
+  -- * Axes of Rotation
   Axis(..),
   strToAxis,
+  -- * Shading Types
   ShadingType(..),
   strToShadingType,
-  Triple(..),
+  -- * Triple
+  Triple(..)
   ) where
 
 import Data.ByteString.Lazy
@@ -14,6 +17,7 @@ import Data.ByteString.Lazy
 import Data.Pair
 import Data.Picture.Drawing.Lighting
 
+-- | Represents all possible expressions of MDL
 data Expr = Light (Maybe ByteString) (Triple Double) (Triple Double)
           | Move (Triple Double) (Maybe ByteString)
           | Constants ByteString (Triple (Triple Double)) (Maybe (Triple Double))
@@ -47,8 +51,10 @@ data Expr = Light (Maybe ByteString) (Triple Double) (Triple Double)
           | Comment
           deriving (Eq, Show)
 
+-- | An axis of rotation
 data Axis = X | Y | Z deriving (Eq, Show)
 
+-- | Parses an 'Axis'
 strToAxis :: ByteString -> Axis
 strToAxis "x" = X
 strToAxis "X" = X
@@ -58,6 +64,7 @@ strToAxis "z" = Z
 strToAxis "Z" = Z
 strToAxis _   = error "Invalid rotation axis"
 
+-- | Parses a 'ShadingType'
 strToShadingType :: ByteString -> ShadingType
 strToShadingType "wireframe" = Wireframe
 strToShadingType "flat"      = Flat

@@ -1,7 +1,7 @@
 module Language.MDL (
   parseStr,
   lexMDL,
-  parse,
+  parseMDL,
   execute
   ) where
 
@@ -12,5 +12,6 @@ import Data.DList
 
 import qualified Data.ByteString.Lazy as ByteString
 
+-- | Parses a script into a 'DList' of 'Expr's
 parseStr :: ByteString.ByteString -> DList Expr
-parseStr = parse . lexMDL
+parseStr = parseMDL . lexMDL

@@ -67,6 +67,7 @@ tokens :-
 
 {
 
+-- | Lex a script into 'Token's
 lexMDL :: ByteString.ByteString -> [Token]
 lexMDL = alexScanTokens
 
