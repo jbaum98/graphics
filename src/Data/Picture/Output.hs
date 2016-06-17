@@ -19,13 +19,19 @@ import qualified Control.Exception(try, IOException)
 import Data.Picture.Output.Pbm as X
 import Data.Picture.Picture
 
+-- | Write a 'Picture' to a 'FilePath' in the file format corresponding to the
+-- file extension of the path.
 savePic :: FilePath -> Picture RealWorld -> IO ()
 savePic name = writePicToProcess "convert" ["-", name]
 
+-- | Display a 'Picture' using Imagemagick
 displayPic :: Picture RealWorld -> IO ()
 displayPic = writePicToProcess "display" []
 
-writePicToProcess :: FilePath -> [String] -> Picture RealWorld -> IO ()
+-- | Write a 'Picture' to a process
+writePicToProcess :: FilePath -- ^ name of the executable
+                  -> [String] -- ^ arguments
+                  -> Picture RealWorld -> IO ()
 writePicToProcess cmd args pic =
   pOpen cmd args $ writePbm pic
 

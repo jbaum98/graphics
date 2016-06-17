@@ -20,11 +20,11 @@ import Data.Color
 import Data.Pair
 import Data.Picture.Picture
 
--- |Write a 'Picture' to a 'FilePath' in the NetPBM format
+-- | Write a 'Picture' to a 'FilePath' in the NetPBM format
 savePbm :: FilePath -> Picture RealWorld -> IO ()
 savePbm path = withFile path WriteMode . writePbm
 
--- |Write a 'Picture' to a 'Handle' in the NetPBM format
+-- | Write a 'Picture' to a 'Handle' in the NetPBM format
 writePbm :: Picture RealWorld -> Handle -> IO ()
 writePbm !pic h = do
   hSetBinaryMode h True

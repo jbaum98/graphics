@@ -16,6 +16,7 @@ import GHC.Exts
 import Data.Primitive.ByteArray
 import Control.Loop
 
+-- | Generate a 'Picture' of completely one 'Color'
 solidPic :: PrimMonad m => Color -> Pair Int -> m (Picture (PrimState m))
 {-# INLINE solidPic #-}
 solidPic (Triple r g b) (Pair x y) = do
@@ -33,13 +34,13 @@ solidPic (Triple r g b) (Pair x y) = do
     lD = l * I# (sizeOf# (0 :: Double))
     fill ar = fillByteArray ar 0 l
 
--- |Create a completely white 'Picture s'
-blankPic :: PrimMonad m => Pair Int -- ^The size of the 'Picture s'
+-- |Create a completely black 'Picture'
+blankPic :: PrimMonad m => Pair Int -- ^The size of the 'Picture'
          -> m (Picture (PrimState m))
 {-# INLINE blankPic #-}
 blankPic = solidPic black
 
--- |Create a picture that generates the RGB values for each 'Point' from three different functions
+-- |Create a 'Picture' that generates the RGB values for each 'Point' from three different functions
 mathPic :: PrimMonad m => Triple (Int -> Int -> ColorVal) -- ^The three functions to produce the RGB values
         -> Pair Int                   -- ^The size of the 'Picture s'
         -> m (Picture (PrimState m))
@@ -59,7 +60,6 @@ mathPic (Triple fr fg fb) (Pair x y) = do
   return $ Picture rs gs bs zs $ Pair x y
   where
     l = x * y
-
 
 negInf :: Double
 negInf = -1 / 0

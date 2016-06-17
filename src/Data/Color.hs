@@ -5,7 +5,7 @@ Description : RGB pixel type
 The 'Color' type represents an RGB pixel.
 -}
 module Data.Color (
-  ColorVal, Color,
+  ColorVal, Color, PreciseColor,
   Triple(..),
   maxColor,
   -- * Getters
@@ -18,14 +18,17 @@ module Data.Color (
 import Data.Pair (Triple(..))
 import Data.Word
 
--- |The type of a singe color value
+-- | The type of a singe color value
 type ColorVal = Word8
 
--- |An RGB pixel consists of three numbers
--- representing the amount of red, green, and blue respectively
+-- | An RGB pixel consists of three numbers representing the amount of red,
+-- green, and blue respectively
 type Color = Triple ColorVal
 
--- |The maximum color value
+-- | A higher precision color used when interpolating between color values
+type PreciseColor = Triple Double
+
+-- | The maximum color value
 maxColor :: ColorVal
 maxColor = 255
 
@@ -34,17 +37,17 @@ getRed   (Triple r _ _) = r
 getGreen (Triple _ g _) = g
 getBlue  (Triple _ _ b) = b
 
--- |Convert a color value from a system with a different maximum color value
--- to the system with a maximum color value of 'maxColor'
+-- | Convert a color value from a system with a different maximum color value to
+-- the system with a maximum color value of 'maxColor'
 relative :: RealFrac a
-           => a -- ^The maximum color value of the original system
-           -> a -- ^The color value to be converted in the original system
+           => a        -- ^The maximum color value of the original system
+           -> a        -- ^The color value to be converted in the original system
            -> ColorVal -- ^The converted color value for our system
 relative oldMax oldVal = round $ fromIntegral maxColor * oldVal / oldMax
 
--- |Convert from a 255-based color system
--- This allows us to specify colors in the very common 255-based system
--- and still switch to a new system only by changing 'maxColor'
+-- | Convert from a 255-based color system. This allows us to specify colors in
+-- the very common 255-based system and still switch to a new system only by
+-- changing 'maxColor'
 rel255 :: RealFrac a => a -> ColorVal
 rel255 = relative 255
 

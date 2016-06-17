@@ -3,7 +3,6 @@
 {-|
 Module      : Matrix.Transform
 Description : Defines transformation 'Matrix's
-
 -}
 
 module Data.Matrix.Transform (
@@ -15,9 +14,6 @@ module Data.Matrix.Transform (
     rotYMatrix,
     rotZMatrix,
     transform,
---    progress,
---    drawProgress,
---    drawProgressColors
     ) where
 
 import Data.Color
@@ -25,14 +21,14 @@ import Data.Matrix.Base
 import Data.Matrix.Mult
 import Data.Matrix.Points
 
--- |'Matrix's that apply transformations using matrix multiplication and
+-- | 'Matrix's that apply transformations using matrix multiplication and
 -- homogenous coordinates. To apply the transformation, matrix multiply the
 -- preimage on the left by the 'TansformMatrix'. Because of matrix
 -- multiplication's associativity, they can be composed themselves using matrix
 -- multiplication and will be applied from right to left.
 type TransformMatrix = Matrix Double
 
--- |Produces an 4 by 4 identity 'Matrix'
+-- | Produces an 4 by 4 identity 'Matrix'
 idMatrix :: TransformMatrix
 idMatrix = fromLists [
   [ 1, 0, 0, 0 ],
@@ -42,7 +38,7 @@ idMatrix = fromLists [
   ]
 {-# INLINE idMatrix #-}
 
--- |Create a translation 'Matrix'
+-- | Create a translation 'Matrix'
 transMatrix :: Triple Double -> TransformMatrix
 transMatrix (Triple x y z) = fromLists [
   [ 1, 0, 0, x ],
@@ -52,7 +48,7 @@ transMatrix (Triple x y z) = fromLists [
   ]
 {-# INLINE transMatrix #-}
 
--- |Create a scaling matrix that independently scales the x, y, and z
+-- | Create a scaling matrix that independently scales the x, y, and z
 -- directions.
 scaleMatrix :: Triple Double -> TransformMatrix
 scaleMatrix (Triple x y z) = fromLists [
@@ -63,7 +59,7 @@ scaleMatrix (Triple x y z) = fromLists [
   ]
 {-# INLINE scaleMatrix #-}
 
--- |Create a rotation matrix that rotates clockwise about the x-axis when the
+-- | Create a rotation matrix that rotates clockwise about the x-axis when the
 -- positive x-axis is pointing at you.
 rotXMatrix :: Double -- ^The angle of rotation in degrees
            -> TransformMatrix
@@ -77,7 +73,7 @@ rotXMatrix = rotXMatrixRad . degToRad
       ]
 {-# INLINE rotXMatrix #-}
 
--- |Create a rotation matrix that rotates clockwise about the y-axis when the
+-- | Create a rotation matrix that rotates clockwise about the y-axis when the
 -- positive y-axis is pointing at you.
 rotYMatrix :: Double -- ^The angle of rotation in degrees
            -> TransformMatrix
@@ -91,7 +87,7 @@ rotYMatrix = rotYMatrixRad . degToRad
       ]
 {-# INLINE rotYMatrix #-}
 
--- |Create a rotation matrix that rotates clockwise about the z-axis when the
+-- | Create a rotation matrix that rotates clockwise about the z-axis when the
 -- positive z-axis is pointing at you.
 rotZMatrix :: Double -- ^The angle of rotation in degrees
            -> TransformMatrix
@@ -105,29 +101,13 @@ rotZMatrix = rotZMatrixRad . degToRad
       ]
 {-# INLINE rotZMatrix #-}
 
+-- | Transform a single point
 transform :: TransformMatrix -> Triple Double -> Triple Double
 transform tm (Triple x y z) = flip get3DPoint 0 $ tm `matMult` pointMat
   where
     pointMat = fromList (4,1) [x, y, z, 1]
-{-
-progress :: [TransformMatrix] -> Matrix Double -> Matrix Double
-progress ts e = runST $ do
-  (_,eFinal) <- numLoopState 1 (length ts) (ts,empty) $ \(t:ts',e') _ ->
-    return (ts', t `matMult` e `mergeCols` e')
-  return eFinal
 
-drawProgress :: ShapeMatrix d => [TransformMatrix] -> d -> Picture -> m ()
-drawProgress ts em p = flip draw p $ liftDraw (progress ts) em
-
-drawProgressColors :: ShapeMatrix d => [(TransformMatrix, Color)] -> d -> Picture -> Picture
-drawProgressColors tcs e p = runST $ do
-  (_,pFinal) <- numLoopState 1 (length tcs) (tcs,p) $ \((t,color):tcs',p') _ -> do
-    let newE = t `matMultD` e
-        !newP = drawColor color newE p'
-    return (tcs', newP)
-  return pFinal
--}
-
+-- | Convert an angle from degrees to radians
 degToRad :: (Num a, RealFrac a, Floating a) => a -> a
 degToRad = (/ 180) . (* pi)
 {-# SPECIALIZE INLINE degToRad :: Double -> Double #-}
